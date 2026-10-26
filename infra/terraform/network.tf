@@ -11,7 +11,9 @@ resource "aws_internet_gateway" "main" {
   tags   = { Name = "${local.name}-igw" }
 }
 
-resource "aws_subnet" "public" {
+# Decisión de costo: las EC2 viven en subred pública con IP pública para descargar de ECR sin NAT (~USD 32/mes).
+# No quedan expuestas: su Security Group solo acepta tráfico del ALB. RDS y Redis sí están en subred privada.
+resource "aws_subnet" "public" { # nosemgrep: aws-subnet-has-public-ip-address
   count                   = 2
   vpc_id                  = aws_vpc.main.id
   cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index)

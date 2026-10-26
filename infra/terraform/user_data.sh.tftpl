@@ -29,7 +29,8 @@ aws s3 cp "s3://$BUCKET/deploy/backup-mysql-to-s3.sh" /usr/local/bin/legrandhote
 /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s \
   -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
-export API_IMAGE="${api_image}"
+# La imagen a usar vive en SSM (/legrandhotel/<env>/API_IMAGE) y ya está en .env.
+export API_IMAGE=$(grep '^API_IMAGE=' .env | cut -d= -f2-)
 docker compose pull
 RUN_MIGRATIONS=true docker compose up -d
 

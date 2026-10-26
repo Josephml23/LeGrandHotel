@@ -30,6 +30,11 @@ Cada requisito de seguridad tiene una implementación concreta y una prueba que 
 | `npm audit` | `react-router` 6.x: open redirect (GHSA-wrjc-x8rr-h8h6, moderada) | Actualizado a `react-router-dom` 7.18 (compatible con React 18) |
 | `npm audit` | `zod` < 4.6.6 vía `javascript-obfuscator → @vercel/blob` (GHSA-mrhx-c7xc-m3w5, alta, solo en build) | `overrides` en `web/package.json` fuerza `zod ^4.6.7` |
 | Resultado | **0 vulnerabilidades** en ambos | |
+| Semgrep (`p/php`, `p/owasp-top-ten`, `p/typescript`, `p/react`, `p/secrets`) | 17 acciones de GitHub con tags mutables | Fijadas por SHA de commit |
+| Semgrep | Inyección de shell en `deploy.yml` (mensaje del commit dentro de `run:`) | Pasa por `env` y se serializa con `jq` |
+| Semgrep | Repositorio ECR con tags mutables | `IMMUTABLE`; cada versión es el SHA y el rollback vuelve al SHA anterior vía SSM |
+| Semgrep | Subred pública con IP pública para las EC2 | Aceptado y documentado: evita el NAT (~USD 32/mes); el SG solo permite tráfico del ALB; RDS y Redis en subred privada |
+| Semgrep final | **0 hallazgos** | |
 
 Antes de cada entrega: `composer audit`, `npm audit` y Semgrep (plugin `static-analysis` de Trail of Bits;
 en CI con `semgrep scan --config p/php --config p/laravel ...`). Los hallazgos y su corrección van en esta tabla.

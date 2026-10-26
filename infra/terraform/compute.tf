@@ -1,7 +1,7 @@
 # ── ECR: imagen Docker de la API ──
 resource "aws_ecr_repository" "api" {
   name                 = "legrandhotel-api"
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE" # cada versión es el SHA del commit; nadie puede sobrescribir un tag
   image_scanning_configuration { scan_on_push = true }
 }
 
@@ -86,7 +86,6 @@ resource "aws_launch_template" "api" {
   user_data = base64encode(templatefile("${path.module}/user_data.sh.tftpl", {
     region       = var.region
     environment  = var.environment
-    api_image    = "${aws_ecr_repository.api.repository_url}:${var.api_image_tag}"
     ecr_registry = split("/", aws_ecr_repository.api.repository_url)[0]
   }))
 

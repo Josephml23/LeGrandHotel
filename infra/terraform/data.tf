@@ -137,6 +137,14 @@ resource "aws_ssm_parameter" "env" {
   value = each.value
 }
 
+# Imagen que arrancan las instancias. El pipeline la actualiza en cada despliegue (y en el rollback).
+resource "aws_ssm_parameter" "api_image" {
+  name  = "/legrandhotel/${var.environment}/API_IMAGE"
+  type  = "String"
+  value = "${aws_ecr_repository.api.repository_url}:${var.api_image_tag}"
+  lifecycle { ignore_changes = [value] }
+}
+
 resource "aws_ssm_parameter" "db_password" {
   name  = "/legrandhotel/${var.environment}/DB_PASSWORD"
   type  = "SecureString"

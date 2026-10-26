@@ -82,7 +82,7 @@ variable "github_repository" {
 }
 
 variable "api_image_tag" {
-  description = "Tag de la imagen en ECR que arrancan las instancias nuevas."
+  description = "Tag inicial de la imagen (SHA del primer commit desplegado). Luego lo gestiona el pipeline en SSM."
   type        = string
-  default     = "latest"
+  default     = "bootstrap"
 }

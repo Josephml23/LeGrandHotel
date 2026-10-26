@@ -32,16 +32,16 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Smoke test previo (la producción actual está sana)
         if: vars.FIRST_DEPLOY != 'true'
-        uses: grafana/run-k6-action@v1
+        uses: grafana/run-k6-action@4082a08c7e40cf6d65863911077dfb60ae0a4f04 # v1
         env:
           BASE_URL: ${{ vars.API_URL }}
           DURATION: 20s
@@ -51,20 +51,21 @@ jobs:
 
       - name: Login en ECR
         id: ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2
 
-      - name: Imagen anterior (para rollback)
+      - name: Imagen actual (para rollback)
         id: previous
         run: |
-          PREV=$(aws ecr describe-images --repository-name legrandhotel-api --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]' --output text || echo none)
-          echo "tag=$PREV" >> "$GITHUB_OUTPUT"
+          PREV=$(aws ssm get-parameter --name /legrandhotel/prod/API_IMAGE --query Parameter.Value --output text 2>/dev/null || echo none)
+          echo "image=$PREV" >> "$GITHUB_OUTPUT"
 
+      # ECR es inmutable: cada versión tiene su propio tag (el SHA del commit) y nunca se sobrescribe.
       - name: Build y push de la API
         run: |
-          IMAGE=${{ vars.ECR_REPOSITORY_URL }}
-          docker build -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" api
-          docker push "$IMAGE:${{ github.sha }}"
-          docker push "$IMAGE:latest"
+          IMAGE="${{ vars.ECR_REPOSITORY_URL }}:${{ github.sha }}"
+          docker build -t "$IMAGE" api
+          docker push "$IMAGE"
+          aws ssm put-parameter --name /legrandhotel/prod/API_IMAGE --type String --overwrite --value "$IMAGE"
 
       - name: Publicar archivos de despliegue
         run: |
@@ -73,7 +74,7 @@ jobs:
           aws s3 cp infra/cloudwatch/amazon-cloudwatch-agent.json s3://${{ vars.BACKUP_BUCKET }}/deploy/amazon-cloudwatch-agent.json
           aws s3 cp infra/scripts/backup-mysql-to-s3.sh s3://${{ vars.BACKUP_BUCKET }}/deploy/backup-mysql-to-s3.sh
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -108,22 +109,21 @@ jobs:
 
       - name: Smoke test posterior (20 VU, 1 minuto)
         id: smoke
-        uses: grafana/run-k6-action@v1
+        uses: grafana/run-k6-action@4082a08c7e40cf6d65863911077dfb60ae0a4f04 # v1
         env:
           BASE_URL: ${{ vars.API_URL }}
         with:
           path: tests/k6/smoke.js
 
       - name: Rollback a la imagen anterior
-        if: failure() && steps.previous.outputs.tag != 'none'
+        if: failure() && steps.previous.outputs.image != 'none'
+        env:
+          PREVIOUS_IMAGE: ${{ steps.previous.outputs.image }}
         run: |
-          IMAGE=${{ vars.ECR_REPOSITORY_URL }}
-          docker pull "$IMAGE:${{ steps.previous.outputs.tag }}"
-          docker tag "$IMAGE:${{ steps.previous.outputs.tag }}" "$IMAGE:latest"
-          docker push "$IMAGE:latest"
+          aws ssm put-parameter --name /legrandhotel/prod/API_IMAGE --type String --overwrite --value "$PREVIOUS_IMAGE"
           aws autoscaling start-instance-refresh --auto-scaling-group-name "${{ vars.ASG_NAME }}" \
             --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":90}'
-          echo "::error::El smoke test falló: se revirtió a ${{ steps.previous.outputs.tag }}. Registra la caída en docs/incidentes.md"
+          echo "::error::El smoke test falló: se revirtió a $PREVIOUS_IMAGE. Registra la caída en docs/incidentes.md"
 
       - name: Invalidar caché de CloudFront
         if: success()
@@ -131,6 +131,10 @@ jobs:
 
       - name: Aviso al equipo
         if: always() && vars.DISCORD_WEBHOOK_URL != ''
+        # El mensaje del commit va por variable de entorno (nunca interpolado en el script) y se serializa con jq.
+        env:
+          WEBHOOK: ${{ vars.DISCORD_WEBHOOK_URL }}
+          STATUS: ${{ job.status }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
-          curl -sS -H "Content-Type: application/json" -X POST "${{ vars.DISCORD_WEBHOOK_URL }}" \
-            -d "{\"content\":\"LeGrandHotel deploy ${{ job.status }} · ${{ github.sha }} · ${{ github.event.head_commit.message }}\"}"
+          jq -n --arg c "LeGrandHotel deploy $STATUS · $GITHUB_SHA · $COMMIT_MESSAGE" '{content: $c}'             | curl -sS -H "Content-Type: application/json" -X POST "$WEBHOOK" --data @-
