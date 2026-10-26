@@ -20,7 +20,7 @@ jobs:
       run:
         working-directory: api
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
@@ -52,7 +52,7 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -72,13 +72,13 @@ jobs:
     container:
       image: semgrep/semgrep
     steps:
-      - uses: actions/checkout@v4
-      - run: semgrep scan --config p/php --config p/laravel --config p/typescript --config p/react --config p/secrets --error --exclude api/vendor --exclude web/node_modules
+      - uses: actions/checkout@v5
+      - run: semgrep scan --config p/php --config p/owasp-top-ten --config p/typescript --config p/react --config p/secrets --error --exclude api/vendor --exclude web/node_modules
 
   k6-lint:
     name: Scripts k6 (sintaxis)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: grafana/setup-k6-action@v1
       - run: k6 inspect tests/k6/reservas.js && k6 inspect tests/k6/smoke.js
