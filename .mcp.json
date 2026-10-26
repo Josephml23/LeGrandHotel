@@ -1,0 +1,42 @@
+{
+  "mcpServers": {
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "env": {}
+    },
+    "aws-mcp": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "mcp-proxy-for-aws@latest",
+        "https://aws-mcp.us-east-1.api.aws/mcp"
+      ],
+      "env": {}
+    },
+    "cloudwatch": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "awslabs.cloudwatch-mcp-server@latest"
+      ],
+      "env": {}
+    },
+    "laravel-boost": {
+      "type": "stdio",
+      "command": "php",
+      "args": [
+        "api/artisan",
+        "boost:mcp"
+      ],
+      "env": {}
+    }
+  }
+}

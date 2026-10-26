@@ -1,0 +1,28 @@
+{
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true,
+    "accesslint@accesslint": true,
+    "static-analysis@trailofbits": true,
+    "differential-review@trailofbits": true
+  },
+  "extraKnownMarketplaces": {
+    "superpowers-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
+    },
+    "accesslint": {
+      "source": {
+        "source": "github",
+        "repo": "accesslint/skills"
+      }
+    },
+    "trailofbits": {
+      "source": {
+        "source": "github",
+        "repo": "trailofbits/skills"
+      }
+    }
+  }
+}

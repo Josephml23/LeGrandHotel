@@ -1,0 +1,37 @@
+#!/bin/bash
+# Arranque de cada EC2 del Auto Scaling Group (Amazon Linux 2023).
+set -euo pipefail
+
+dnf install -y docker amazon-cloudwatch-agent mariadb105 cronie
+systemctl enable --now docker crond
+mkdir -p /usr/local/lib/docker/cli-plugins
+curl -fsSL "https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-x86_64" -o /usr/local/lib/docker/cli-plugins/docker-compose
+chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+mkdir -p /opt/legrandhotel/nginx
+cd /opt/legrandhotel
+
+# Variables y secretos desde SSM Parameter Store (nunca en el repositorio).
+aws ssm get-parameters-by-path --region ${region} --path "/legrandhotel/${environment}/" --with-decryption \
+  --query "Parameters[*].[Name,Value]" --output text \
+  | while IFS=$'\t' read -r name value; do echo "$${name##*/}=$${value}"; done > .env
+chmod 600 .env
+
+aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${ecr_registry}
+
+# Archivos de compose y nginx publicados por el pipeline en el bucket de respaldos (prefijo deploy/).
+BUCKET=$(grep '^BACKUP_BUCKET=' .env | cut -d= -f2)
+aws s3 cp "s3://$BUCKET/deploy/docker-compose.prod.yml" docker-compose.yml
+aws s3 cp "s3://$BUCKET/deploy/nginx.conf" nginx/default.conf
+aws s3 cp "s3://$BUCKET/deploy/amazon-cloudwatch-agent.json" /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+aws s3 cp "s3://$BUCKET/deploy/backup-mysql-to-s3.sh" /usr/local/bin/legrandhotel-backup && chmod +x /usr/local/bin/legrandhotel-backup
+
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s \
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+export API_IMAGE="${api_image}"
+docker compose pull
+RUN_MIGRATIONS=true docker compose up -d
+
+# Respaldo diario a S3 a las 03:30 hora de Lima (08:30 UTC). Solo una instancia lo hace gracias al lock en S3.
+echo "30 8 * * * root /usr/local/bin/legrandhotel-backup >> /var/log/legrandhotel-backup.log 2>&1" > /etc/cron.d/legrandhotel-backup

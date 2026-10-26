@@ -1,0 +1,11 @@
+# Copia a terraform.tfvars (está en .gitignore) y completa.
+api_domain          = "api.legrandhotel.example"
+web_domain          = "app.legrandhotel.example"
+acm_certificate_arn = "arn:aws:acm:us-east-1:000000000000:certificate/xxxxxxxx"
+budget_email        = "equipo@example.com"
+
+# Para cuidar créditos en la entrega del 25%: sin Redis ni NAT.
+enable_redis = false
+enable_nat   = false
+asg_min      = 1
+asg_max      = 3

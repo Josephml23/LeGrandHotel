@@ -1,0 +1,425 @@
+openapi: 3.0.3
+info:
+  title: LeGrandHotel API
+  version: 1.0.0
+  description: |
+    API de gestión de hospedaje: habitaciones, reservas y estadías, cochera, clientes, personal e inventario.
+    Formato único de respuesta: `{ success, data, meta }` o `{ success: false, error: { code, message, details } }`.
+    Roles: admin, receptionist, storekeeper, client. Tokens Bearer de Sanctum con vencimiento de 60 minutos.
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local
+  - url: https://api.legrandhotel.example/api/v1
+    description: Producción (AWS)
+security:
+  - bearer: []
+
+tags:
+  - name: Salud
+  - name: Auth
+  - name: Habitaciones
+  - name: Clientes
+  - name: Reservas
+  - name: Estadías
+  - name: Cochera
+  - name: Inventario
+  - name: Personal y usuarios
+  - name: Reportes
+
+paths:
+  /health:
+    get:
+      tags: [Salud]
+      security: []
+      summary: Estado de la app, la BD y la caché (health check del ALB)
+      responses:
+        '200': { description: Todo sano }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Registro de huésped (rol Cliente). Rate limit 3/min.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, password_confirmation, document_type, document_number]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                password_confirmation: { type: string }
+                document_type: { type: string, enum: [DNI, PASAPORTE, CE] }
+                document_number: { type: string }
+                phone: { type: string }
+                nationality: { type: string }
+      responses:
+        '201': { $ref: '#/components/responses/Session' }
+        '422': { $ref: '#/components/responses/Validation' }
+        '429': { $ref: '#/components/responses/TooMany' }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Inicio de sesión. Rate limit 5/min por IP + correo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/Session' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '429': { $ref: '#/components/responses/TooMany' }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Usuario autenticado
+      responses:
+        '200': { description: Usuario con roles }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoca el token actual
+      responses:
+        '204': { description: Sesión cerrada }
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Emite un token nuevo y revoca el anterior
+      responses:
+        '200': { $ref: '#/components/responses/Session' }
+  /auth/google/redirect:
+    get:
+      tags: [Auth]
+      security: []
+      summary: Redirige a Google (Socialite)
+      responses:
+        '302': { description: Redirección a Google }
+  /auth/google/callback:
+    get:
+      tags: [Auth]
+      security: []
+      summary: Vuelve de Google y redirige al frontend con el token en el fragmento (#token=)
+      responses:
+        '302': { description: Redirección a FRONTEND_URL/auth/callback }
+  /email/verification-notification:
+    post:
+      tags: [Auth]
+      summary: Reenvía el enlace de verificación
+      responses:
+        '200': { description: Enviado }
+  /email/verify/{id}/{hash}:
+    get:
+      tags: [Auth]
+      security: []
+      summary: Enlace firmado del correo de verificación
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: hash, in: path, required: true, schema: { type: string } }
+      responses:
+        '302': { description: Redirige al frontend con status=verified|invalid }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /dashboard:
+    get:
+      tags: [Reportes]
+      summary: Resumen del panel según el rol
+      responses:
+        '200': { description: KPIs del día }
+
+  /room-types:
+    get:
+      tags: [Habitaciones]
+      summary: Lista paginada (Admin, Recepción, Cliente)
+      parameters: [{ $ref: '#/components/parameters/page' }, { $ref: '#/components/parameters/per_page' }, { $ref: '#/components/parameters/search' }]
+      responses:
+        '200': { $ref: '#/components/responses/Page' }
+    post:
+      tags: [Habitaciones]
+      summary: Crear tipo (Admin)
+      requestBody: { $ref: '#/components/requestBodies/RoomType' }
+      responses:
+        '201': { description: Creado }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /room-types/{id}:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    get:
+      tags: [Habitaciones]
+      summary: Detalle
+      responses:
+        '200': { description: OK }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Habitaciones]
+      summary: Editar (Admin)
+      requestBody: { $ref: '#/components/requestBodies/RoomType' }
+      responses:
+        '200': { description: OK }
+    delete:
+      tags: [Habitaciones]
+      summary: Eliminar (Admin). 409 si tiene habitaciones.
+      responses:
+        '204': { description: Eliminado }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /rooms:
+    get:
+      tags: [Habitaciones]
+      summary: Lista paginada con filtros status, room_type_id, floor, search
+      parameters:
+        - { $ref: '#/components/parameters/page' }
+        - { $ref: '#/components/parameters/per_page' }
+        - { $ref: '#/components/parameters/search' }
+        - { name: status, in: query, schema: { type: string, enum: [available, occupied, cleaning, maintenance] } }
+      responses:
+        '200': { $ref: '#/components/responses/Page' }
+    post:
+      tags: [Habitaciones]
+      summary: Crear habitación
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [room_type_id, number, floor]
+              properties:
+                room_type_id: { type: integer }
+                number: { type: string }
+                floor: { type: integer }
+                status: { type: string }
+      responses:
+        '201': { description: Creada }
+  /rooms/available:
+    get:
+      tags: [Habitaciones]
+      summary: Habitaciones libres en un rango de fechas
+      parameters:
+        - { name: from, in: query, required: true, schema: { type: string, format: date } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date } }
+        - { name: guests, in: query, schema: { type: integer } }
+      responses:
+        '200': { $ref: '#/components/responses/Page' }
+  /rooms/{id}:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    get: { tags: [Habitaciones], summary: Detalle, responses: { '200': { description: OK }, '404': { $ref: '#/components/responses/NotFound' } } }
+    put: { tags: [Habitaciones], summary: Editar, responses: { '200': { description: OK } } }
+    delete: { tags: [Habitaciones], summary: Eliminar (409 si tiene reservas), responses: { '204': { description: Eliminada }, '409': { $ref: '#/components/responses/Conflict' } } }
+  /rooms/{id}/status:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    patch:
+      tags: [Habitaciones]
+      summary: Cambiar estado (libre, ocupada, limpieza, mantenimiento)
+      responses: { '200': { description: OK } }
+
+  /clients:
+    get: { tags: [Clientes], summary: Lista con búsqueda por nombre o documento, responses: { '200': { $ref: '#/components/responses/Page' } } }
+    post: { tags: [Clientes], summary: Crear, responses: { '201': { description: Creado }, '422': { $ref: '#/components/responses/Validation' } } }
+  /clients/{id}:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    get: { tags: [Clientes], summary: Detalle, responses: { '200': { description: OK } } }
+    put: { tags: [Clientes], summary: Editar, responses: { '200': { description: OK } } }
+    delete: { tags: [Clientes], summary: Eliminar (409 si tiene reservas), responses: { '204': { description: Eliminado }, '409': { $ref: '#/components/responses/Conflict' } } }
+  /me/client:
+    get: { tags: [Clientes], summary: Perfil de huésped propio (Cliente), responses: { '200': { description: OK } } }
+    put: { tags: [Clientes], summary: Crear o editar el perfil propio, responses: { '200': { description: OK } } }
+
+  /reservations:
+    get:
+      tags: [Reservas]
+      summary: Lista (el Cliente solo ve las suyas). Filtros status, from, to, check_in, client_id, room_id, search.
+      responses: { '200': { $ref: '#/components/responses/Page' } }
+    post:
+      tags: [Reservas]
+      summary: Crear. El total lo calcula el servidor. 409 si la habitación ya está reservada.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [room_id, check_in, check_out]
+              properties:
+                client_id: { type: integer, description: Solo personal; el Cliente reserva a su nombre }
+                room_id: { type: integer }
+                check_in: { type: string, format: date }
+                check_out: { type: string, format: date }
+                guests: { type: integer }
+                notes: { type: string }
+      responses:
+        '201': { description: Creada }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Validation' }
+  /reservations/{id}:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    get: { tags: [Reservas], summary: Detalle, responses: { '200': { description: OK }, '403': { $ref: '#/components/responses/Forbidden' } } }
+    put: { tags: [Reservas], summary: Editar o cancelar (status=cancelled), responses: { '200': { description: OK }, '409': { $ref: '#/components/responses/Conflict' } } }
+    delete: { tags: [Reservas], summary: Eliminar (personal), responses: { '204': { description: Eliminada } } }
+  /reservations/{id}/check-in:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    post: { tags: [Estadías], summary: Check-in (crea la estadía y ocupa la habitación), responses: { '201': { description: Estadía creada }, '409': { $ref: '#/components/responses/Conflict' } } }
+  /stays:
+    get: { tags: [Estadías], summary: Estadías (?active=1 solo en curso), responses: { '200': { $ref: '#/components/responses/Page' } } }
+  /stays/{id}:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    get: { tags: [Estadías], summary: Detalle, responses: { '200': { description: OK } } }
+  /stays/{id}/check-out:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    post: { tags: [Estadías], summary: Check-out (habitación a limpieza, libera cochera), responses: { '200': { description: OK }, '409': { $ref: '#/components/responses/Conflict' } } }
+
+  /parking-spots:
+    get: { tags: [Cochera], summary: Espacios, responses: { '200': { $ref: '#/components/responses/Page' } } }
+    post: { tags: [Cochera], summary: Crear espacio, responses: { '201': { description: Creado } } }
+  /parking-spots/{id}:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    get: { tags: [Cochera], summary: Detalle, responses: { '200': { description: OK } } }
+    put: { tags: [Cochera], summary: Editar, responses: { '200': { description: OK } } }
+    delete: { tags: [Cochera], summary: Eliminar (409 si tiene historial), responses: { '204': { description: Eliminado } } }
+  /parking-assignments:
+    get: { tags: [Cochera], summary: Vehículos (?active=1, ?search=placa), responses: { '200': { $ref: '#/components/responses/Page' } } }
+    post: { tags: [Cochera], summary: Registrar entrada (409 si el espacio no está libre), responses: { '201': { description: Creado }, '409': { $ref: '#/components/responses/Conflict' } } }
+  /parking-assignments/{id}:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    get: { tags: [Cochera], summary: Detalle, responses: { '200': { description: OK } } }
+    put: { tags: [Cochera], summary: Registrar salida (left_at) o corregir, responses: { '200': { description: OK } } }
+    delete: { tags: [Cochera], summary: Eliminar, responses: { '204': { description: Eliminado } } }
+
+  /inventory-items:
+    get: { tags: [Inventario], summary: Insumos (?low_stock=1), responses: { '200': { $ref: '#/components/responses/Page' } } }
+    post: { tags: [Inventario], summary: Crear, responses: { '201': { description: Creado } } }
+  /inventory-items/{id}:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    get: { tags: [Inventario], summary: Detalle, responses: { '200': { description: OK } } }
+    put: { tags: [Inventario], summary: Editar (el stock solo cambia con movimientos), responses: { '200': { description: OK } } }
+    delete: { tags: [Inventario], summary: Eliminar, responses: { '204': { description: Eliminado } } }
+  /inventory-items/{id}/movements:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    get: { tags: [Inventario], summary: Historial de movimientos, responses: { '200': { $ref: '#/components/responses/Page' } } }
+    post:
+      tags: [Inventario]
+      summary: Entrada o salida de stock (409 si no alcanza)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, quantity]
+              properties:
+                type: { type: string, enum: [in, out] }
+                quantity: { type: integer, minimum: 1 }
+                reason: { type: string }
+      responses:
+        '201': { description: Registrado }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /staff:
+    get: { tags: [Personal y usuarios], summary: Personal (Admin), responses: { '200': { $ref: '#/components/responses/Page' } } }
+    post: { tags: [Personal y usuarios], summary: Crear ficha y cuenta con rol, responses: { '201': { description: Creado } } }
+  /staff/{id}:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    get: { tags: [Personal y usuarios], summary: Detalle, responses: { '200': { description: OK } } }
+    put: { tags: [Personal y usuarios], summary: Editar (incluye cambio de rol), responses: { '200': { description: OK } } }
+    delete: { tags: [Personal y usuarios], summary: Eliminar ficha y cuenta, responses: { '204': { description: Eliminado }, '409': { $ref: '#/components/responses/Conflict' } } }
+  /users:
+    get: { tags: [Personal y usuarios], summary: Usuarios (?role=), responses: { '200': { $ref: '#/components/responses/Page' } } }
+    post: { tags: [Personal y usuarios], summary: Crear usuario con roles, responses: { '201': { description: Creado } } }
+  /users/{id}:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    get: { tags: [Personal y usuarios], summary: Detalle, responses: { '200': { description: OK } } }
+    put: { tags: [Personal y usuarios], summary: Editar, responses: { '200': { description: OK } } }
+    delete: { tags: [Personal y usuarios], summary: Eliminar (no a sí mismo), responses: { '204': { description: Eliminado }, '409': { $ref: '#/components/responses/Conflict' } } }
+  /users/{id}/roles:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    put: { tags: [Personal y usuarios], summary: Reemplaza los roles y revoca sus tokens, responses: { '200': { description: OK } } }
+
+  /reports/occupancy:
+    get:
+      tags: [Reportes]
+      summary: Ocupación actual y noches vendidas en el rango
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses: { '200': { description: OK } }
+  /reports/income:
+    get: { tags: [Reportes], summary: Ingresos por mes (6 meses por defecto), responses: { '200': { description: OK } } }
+  /audit-logs:
+    get: { tags: [Reportes], summary: Auditoría (EXTRA), responses: { '200': { $ref: '#/components/responses/Page' } } }
+
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+  parameters:
+    id: { name: id, in: path, required: true, schema: { type: integer } }
+    page: { name: page, in: query, schema: { type: integer, default: 1 } }
+    per_page: { name: per_page, in: query, schema: { type: integer, default: 15, maximum: 50 } }
+    search: { name: search, in: query, schema: { type: string } }
+  requestBodies:
+    RoomType:
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name, capacity, price_per_night]
+            properties:
+              name: { type: string }
+              description: { type: string }
+              capacity: { type: integer }
+              price_per_night: { type: number }
+  schemas:
+    Error:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object }
+  responses:
+    Session:
+      description: Token Bearer con vencimiento y usuario
+      content:
+        application/json:
+          example: { success: true, data: { token: '1|abc…', token_type: Bearer, expires_at: '2026-10-26T18:00:00-05:00', user: { id: 1, name: Ana, roles: [client] } } }
+    Page:
+      description: Página de resultados
+      content:
+        application/json:
+          example: { success: true, data: [], meta: { page: 1, per_page: 15, total: 120, last_page: 8 } }
+    Unauthenticated:
+      description: Sin token, token expirado o credenciales inválidas
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Forbidden:
+      description: El rol no tiene permiso
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    NotFound:
+      description: Recurso inexistente
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Conflict:
+      description: Conflicto de negocio
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Validation:
+      description: Validación fallida; details trae los errores por campo
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    TooMany:
+      description: Rate limit superado; incluye la cabecera Retry-After
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Unavailable:
+      description: Servicio degradado; incluye Retry-After
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }

@@ -1,0 +1,43 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "php",
+      "runtimeArgs": [
+        "-d",
+        "extension=pdo_sqlite",
+        "-d",
+        "extension=sqlite3",
+        "-S",
+        "localhost:8000",
+        "-t",
+        "api/public",
+        "api/public/index.php"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "web-prod",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "web",
+        "run",
+        "preview"
+      ],
+      "port": 4173
+    },
+    {
+      "name": "web-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "web",
+        "run",
+        "dev"
+      ],
+      "port": 5173
+    }
+  ]
+}

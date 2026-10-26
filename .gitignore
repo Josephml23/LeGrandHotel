@@ -1,0 +1,20 @@
+# Secretos y entornos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+infra/terraform/terraform.tfvars
+infra/terraform/.terraform.lock.hcl
+
+# Artefactos locales de herramientas
+.taste-skill/inspect/
+.claude/settings.local.json
+node_modules/
+.DS_Store
+Thumbs.db

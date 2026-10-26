@@ -1,0 +1,86 @@
+# Entorno de desarrollo local: Nginx + PHP-FPM + worker + scheduler + MySQL 8 + Redis + frontend Vite.
+#   cp api/.env.example api/.env   (y pon DB_PASSWORD igual a MYSQL_PASSWORD de abajo)
+#   docker compose up -d --build
+#   docker compose exec app php artisan key:generate
+#   docker compose exec app php artisan migrate --seed
+# API: http://localhost:8000/api/v1/health · Web: http://localhost:5173
+
+x-api: &api
+  build:
+    context: ./api
+  image: legrandhotel-api:local
+  env_file: ./api/.env
+  environment:
+    APP_ENV: local
+    DB_HOST: mysql
+    REDIS_HOST: redis
+  volumes:
+    - ./api:/var/www/html
+  depends_on:
+    mysql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8000:80"
+    volumes:
+      - ./api:/var/www/html:ro
+      - ./infra/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
+  app:
+    <<: *api
+
+  worker:
+    <<: *api
+    command: php artisan queue:work --sleep=1 --tries=3 --max-time=3600
+
+  scheduler:
+    <<: *api
+    command: php artisan schedule:work
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: legrandhotel
+      MYSQL_USER: legrandhotel
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-cambia-esta-clave-local}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-cambia-esta-clave-root}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 20
+
+  web:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
+    environment:
+      VITE_API_URL: http://localhost:8000/api/v1
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./web:/app
+      - web-node-modules:/app/node_modules
+
+volumes:
+  mysql-data:
+  web-node-modules:

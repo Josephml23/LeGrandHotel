@@ -1,0 +1,136 @@
+# EXTRA del 100%: despliegue a AWS solo cuando todo pasa en main.
+#   1. CI completo  2. Imagen Docker → ECR  3. Frontend ofuscado → S3
+#   4. Instance refresh gradual del ASG (el ALB solo envía tráfico a instancias sanas en /health)
+#   5. Smoke test k6 (20 VU, 1 min) contra producción → si falla, rollback a la imagen anterior
+#   6. Invalidación de CloudFront y aviso al equipo
+# Se activa cuando las variables del repositorio están configuradas (ver infra/README.md).
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # OIDC con AWS: sin claves fijas
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    if: vars.ECR_REPOSITORY_URL != ''
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Smoke test previo (la producción actual está sana)
+        if: vars.FIRST_DEPLOY != 'true'
+        uses: grafana/run-k6-action@v1
+        env:
+          BASE_URL: ${{ vars.API_URL }}
+          DURATION: 20s
+          VUS: 5
+        with:
+          path: tests/k6/smoke.js
+
+      - name: Login en ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Imagen anterior (para rollback)
+        id: previous
+        run: |
+          PREV=$(aws ecr describe-images --repository-name legrandhotel-api --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]' --output text || echo none)
+          echo "tag=$PREV" >> "$GITHUB_OUTPUT"
+
+      - name: Build y push de la API
+        run: |
+          IMAGE=${{ vars.ECR_REPOSITORY_URL }}
+          docker build -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" api
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"
+
+      - name: Publicar archivos de despliegue
+        run: |
+          aws s3 cp infra/docker/docker-compose.prod.yml s3://${{ vars.BACKUP_BUCKET }}/deploy/docker-compose.prod.yml
+          aws s3 cp infra/docker/nginx/default.conf s3://${{ vars.BACKUP_BUCKET }}/deploy/nginx.conf
+          aws s3 cp infra/cloudwatch/amazon-cloudwatch-agent.json s3://${{ vars.BACKUP_BUCKET }}/deploy/amazon-cloudwatch-agent.json
+          aws s3 cp infra/scripts/backup-mysql-to-s3.sh s3://${{ vars.BACKUP_BUCKET }}/deploy/backup-mysql-to-s3.sh
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build del frontend (ofuscado) y subida a S3
+        working-directory: web
+        env:
+          VITE_API_URL: ${{ vars.API_URL }}
+        run: |
+          npm ci
+          npm run build
+          aws s3 sync dist "s3://${{ vars.WEB_BUCKET }}" --delete --cache-control "public,max-age=31536000,immutable" --exclude index.html
+          aws s3 cp dist/index.html "s3://${{ vars.WEB_BUCKET }}/index.html" --cache-control "no-cache"
+
+      - name: Despliegue gradual (instance refresh)
+        run: |
+          ID=$(aws autoscaling start-instance-refresh --auto-scaling-group-name "${{ vars.ASG_NAME }}" \
+            --preferences '{"MinHealthyPercentage":100,"MaxHealthyPercentage":200,"InstanceWarmup":90,"AutoRollback":true}' \
+            --query InstanceRefreshId --output text)
+          echo "Instance refresh $ID"
+          for i in $(seq 1 60); do
+            STATUS=$(aws autoscaling describe-instance-refreshes --auto-scaling-group-name "${{ vars.ASG_NAME }}" --instance-refresh-ids "$ID" --query 'InstanceRefreshes[0].Status' --output text)
+            echo "Estado: $STATUS"
+            case "$STATUS" in
+              Successful) exit 0 ;;
+              Failed|Cancelled|RollbackSuccessful|RollbackFailed) exit 1 ;;
+            esac
+            sleep 20
+          done
+          exit 1
+
+      - name: Smoke test posterior (20 VU, 1 minuto)
+        id: smoke
+        uses: grafana/run-k6-action@v1
+        env:
+          BASE_URL: ${{ vars.API_URL }}
+        with:
+          path: tests/k6/smoke.js
+
+      - name: Rollback a la imagen anterior
+        if: failure() && steps.previous.outputs.tag != 'none'
+        run: |
+          IMAGE=${{ vars.ECR_REPOSITORY_URL }}
+          docker pull "$IMAGE:${{ steps.previous.outputs.tag }}"
+          docker tag "$IMAGE:${{ steps.previous.outputs.tag }}" "$IMAGE:latest"
+          docker push "$IMAGE:latest"
+          aws autoscaling start-instance-refresh --auto-scaling-group-name "${{ vars.ASG_NAME }}" \
+            --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":90}'
+          echo "::error::El smoke test falló: se revirtió a ${{ steps.previous.outputs.tag }}. Registra la caída en docs/incidentes.md"
+
+      - name: Invalidar caché de CloudFront
+        if: success()
+        run: aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" --paths "/index.html" "/"
+
+      - name: Aviso al equipo
+        if: always() && vars.DISCORD_WEBHOOK_URL != ''
+        run: |
+          curl -sS -H "Content-Type: application/json" -X POST "${{ vars.DISCORD_WEBHOOK_URL }}" \
+            -d "{\"content\":\"LeGrandHotel deploy ${{ job.status }} · ${{ github.sha }} · ${{ github.event.head_commit.message }}\"}"

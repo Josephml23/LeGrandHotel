@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-plain
+coverage
+*.local
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
