@@ -18,3 +18,4 @@ infra/terraform/.terraform.lock.hcl
 node_modules/
 .DS_Store
 Thumbs.db
+.playwright-mcp/

@@ -1,0 +1,270 @@
+{
+    "metrics": {
+        "http_req_duration{expected_response:true}": {
+            "min": 126.4907,
+            "med": 287.69155,
+            "p(90)": 455.10859000000016,
+            "p(95)": 528.056115,
+            "p(99)": 636.4528519999997,
+            "max": 1803.9178,
+            "avg": 300.10854199999983
+        },
+        "http_req_tls_handshaking": {
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0,
+            "max": 0,
+            "avg": 0
+        },
+        "reserva_creada_ms": {
+            "p(99)": 464.806931,
+            "max": 464.9218,
+            "avg": 293.24809999999997,
+            "min": 143.4354,
+            "med": 293.6855,
+            "p(90)": 439.97304,
+            "p(95)": 464.347455
+        },
+        "http_reqs": {
+            "count": 350,
+            "rate": 4.398572079732449
+        },
+        "iterations": {
+            "count": 121,
+            "rate": 1.5206492047075035
+        },
+        "http_req_duration": {
+            "p(99)": 636.4528519999997,
+            "max": 1803.9178,
+            "avg": 300.10854199999983,
+            "min": 126.4907,
+            "med": 287.69155,
+            "p(90)": 455.10859000000016,
+            "p(95)": 528.056115,
+            "thresholds": {
+                "p(95)<500": true
+            }
+        },
+        "http_req_receiving": {
+            "min": 0.5039,
+            "med": 2.0562500000000004,
+            "p(90)": 2.75869,
+            "p(95)": 2.9419150000000003,
+            "p(99)": 3.6246649999999994,
+            "max": 5.8864,
+            "avg": 2.0551019999999984
+        },
+        "http_req_waiting": {
+            "min": 124.3901,
+            "med": 285.54745,
+            "p(90)": 453.6524500000001,
+            "p(95)": 525.762915,
+            "p(99)": 634.2149759999996,
+            "max": 1801.6656,
+            "avg": 298.02849857142866
+        },
+        "checks": {
+            "passes": 263,
+            "fails": 0,
+            "value": 1
+        },
+        "http_req_blocked": {
+            "p(99)": 2.114024999999999,
+            "max": 2.6575,
+            "avg": 0.5908042857142862,
+            "min": 0,
+            "med": 0.50905,
+            "p(90)": 1.1206800000000001,
+            "p(95)": 1.3578050000000002
+        },
+        "vus": {
+            "value": 1,
+            "min": 0,
+            "max": 5
+        },
+        "data_sent": {
+            "count": 83377,
+            "rate": 1047.8278408338638
+        },
+        "iteration_duration": {
+            "p(90)": 2707.229,
+            "p(95)": 2818.9222,
+            "p(99)": 3051.50684,
+            "max": 3122.5761,
+            "avg": 2227.3599297520673,
+            "min": 1462.1485,
+            "med": 2228.1631
+        },
+        "http_req_failed": {
+            "fails": 350,
+            "passes": 0,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "vus_max": {
+            "value": 5,
+            "min": 5,
+            "max": 5
+        },
+        "data_received": {
+            "count": 883926,
+            "rate": 11108.606354713098
+        },
+        "http_req_connecting": {
+            "med": 0.50785,
+            "p(90)": 0.9940100000000008,
+            "p(95)": 1.2823250000000002,
+            "p(99)": 1.9889959999999987,
+            "max": 2.6575,
+            "avg": 0.5454122857142862,
+            "min": 0
+        },
+        "group_duration": {
+            "min": 297.3149,
+            "med": 631.7197,
+            "p(90)": 1166.5796,
+            "p(95)": 1264.2212,
+            "p(99)": 1338.64006,
+            "max": 1363.3089,
+            "avg": 714.7961049586778
+        },
+        "http_req_sending": {
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0.5709529999999997,
+            "max": 0.7289,
+            "avg": 0.024941428571428566,
+            "min": 0
+        },
+        "http_req_duration{tipo:lectura}": {
+            "min": 126.4907,
+            "med": 269.16505,
+            "p(90)": 460.25524,
+            "p(95)": 531.2614649999995,
+            "p(99)": 633.3572360000003,
+            "max": 737.6162,
+            "avg": 277.36250620155045,
+            "thresholds": {
+                "p(95)<800": false
+            }
+        }
+    },
+    "setup_data": {
+        "tokens": [
+            "2|CnZyfKJdWENizJ7fvYqsWDPrqlU0LNLwuynCYlrWb1d9e878",
+            "3|6g8fUgx9uD1FhCBbTNhHEYvyWM3JPW7ys41fSfOA38ba1693",
+            "4|d16mkhP5zWoFco9GbsloBcfODAOKiDXdbWkzlW1T5e004848",
+            "5|snnnsMplZNYtaNccqxKeZ1dc6xXFmwMgZklZ0A7k466761df",
+            "6|02fWi4ngtRNuZZ9itbjlPXT8jUHDq1r8ccaujbA2cf146f0e",
+            "7|gNw9iZwxHnO06zpSpfpXIuVGoeFrCCUPJUacVuzp2baa162b",
+            "8|33WFPJkJ6fNCjqI91JiKeFWqfaiQs0EgB2dJ8L878aaccbfc",
+            "9|4GepLPt893k4O3XrC2IgsI9K4xEcApGZNdxIix7Dfa575b71",
+            "10|0cZUJnmtUVCvPnldn94OZ7FjgXKhnhkOignBj4768f42335a",
+            "11|9iSjvaTZSVd2IQ20wdSwrMRcwaiQQw7qgt2lMKQw42731038",
+            "12|DgIdjbXsph9Oln4L1xp7EfarTXWqNg72Dur5r5nN722b42b7",
+            "13|IAyHOziRVz6CsGq30x6Tw77T3T3hWMBfIqeyr5sk4a216796",
+            "14|nSwmzQAHDAEo97bUdiY4F6xyrCQXgblFGwGv2nwF704bac84",
+            "15|2DBXQwFkcooeuY3UMnKJUcOJO44R5fUaDN7cjOph506d96de",
+            "16|bzvk6usyjHUb0RjU843oZuHMeaPm3kDORkAgOctk113f6753",
+            "17|5MlQOYBVd2N2maiDJXvneTPQtEmJwwEweijW3wOzddd24800",
+            "18|oHd04twsCXyri41A9ugb9xtufpzsFzoGeFpXoDdA7c3aa9bf",
+            "19|DP9QS0u4T9o1HuJQCd3dMG7s5guS4VIGpxQGpTTSdae68e6f",
+            "20|pl8sTAfHqfGaIOg80szSf6wFTtgAcGJrHt8IzeHjed662220",
+            "21|E8c8QO6tbsjB8OEZyjhCxZiwEw3Fsq0rX9maBB7q6e2247df",
+            "22|dBOMaSupxfaBR2mNGJLMpAADwYy4NLTMq8UYO8nB01058262",
+            "23|JTh85AmmdGiEls6fpp28ZLzF2lBsKT1u9x3r3toVaa31cf0a",
+            "24|eB1bFmEIoZn92WzJjbg2uQ393pSFVz4tOkBWbGzw435a37bb",
+            "25|D0Jys1QXosbtpuXUekQS1hRozeWHJ4TQ667eAWbCc48187bf",
+            "26|Jx9WPXgCNlE63zSFyE1BwkaeVat4bGw6EPGMa4yEc0da3f6e",
+            "27|KQNdYxJ4h9uVRw9Z3KtivGpvB4Z4asEomrn5FICF2a577b05",
+            "28|iTCjdVPECc4AahZTatV7lLNs7FNcLaTs0dPJ95bn0051c2a5",
+            "29|nzFVbu8to8CYFo5zXR1DcV5H647IUs3Ulb0TO7l1bfd9efcc",
+            "30|72tMGB5y0KERN4yDDMya9CQRDsejAXFr9FQiWGzH1b6433f1",
+            "31|TkkeRptKaPrU8RLpxVWHCKdtdlI7XGJSKRHVKmuwea61ac68",
+            "32|CJsPu0R2MnePGBdMV59Ei5o2wYAIYg3vHKBHRZ7Ic1f891cb",
+            "33|ufhrMzOAGZBfTtSiNms4wfqAivSQU0SYDQlQjTzM110f75fc",
+            "34|4WyvrTmqjpoP8s58n0Ppf9WOoLotwyWa8a1kknJ760ed20b8",
+            "35|TPt3BSOztTo605K4Dc92BDj42fsVqcDVT6GtVmZr55a8e38f",
+            "36|TehhanKMuaMSYCGa7zjzSvN2uRx4c4xo3sBPGjHFb87982cc",
+            "37|48DcSQ6TaqNeWr0gW9eKkFKjN6iZZ0dnu5xdrvNv47ec5ebc",
+            "38|iK4huXvH2pKU47LL2vjvZhLzQ1rG2x2RWr1OAFDX1d7eb1bb",
+            "39|8ELfaxq37ifU6qcjBXrpkmo0DoPoLlb0Nx70fY9M4ce743de",
+            "40|7RkDRxf3KAt8ziEfnI1pZqRJRQedYpwxluPe58LS75fbe28e",
+            "41|vAHpCUOhrX7fzOceNdLlNYAtYLzOe7tlkkllUMkc8c32570d",
+            "42|hZ7b3Ir2PvfgKDdRxWqyFYJ3obwbNaYUAQntQ9Cod9fe2c70",
+            "43|4B0iWs1iHSgPwUBOAW3cq2IOI2WVmLbAcCX2pLuB38d2842c",
+            "44|jawo7yaGmfiL1x20hmfPXpWTkXeyxJU7EoGXEVzH5419cb0d",
+            "45|3r0acypmLiTTXPiS21kp0Yl6VDBkFlLXiccZS6EFa22a5ba9",
+            "46|rKj0K7KUuwOfYoHd65DxdDeS3pSxRv57UMpgnIwB67a8e76d",
+            "47|SX00qAkqytnSK5679EdAhGYylDkVa7RKLO99c7iJ215ebd40",
+            "48|wNuAXRPbqYZ4aB8ZvIIMotmg69WfVaxhS68SDPpg17f8ccc0",
+            "49|AXuZma8HJFLrgmQOUBzLePFd9S1WtaA5fLVYyXBg58f38f11",
+            "50|VRXlUqqHvFyDxpW6O5GxIXpfmcKu3d9SKP7H7q3Xf357e034",
+            "51|AvT4Nkc15gzVhuRtXxEZ0ekqdOUpJUtHoSc8OpGY0325c0e1"
+        ]
+    },
+    "root_group": {
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "lecturas": {
+                "id": "58f39b6a385e26b9eebe05c9df666621",
+                "groups": {},
+                "checks": {
+                        "disponibles: 2xx": {
+                            "path": "::lecturas::disponibles: 2xx",
+                            "id": "7dfb620e772091d960a031e6f8204df5",
+                            "passes": 80,
+                            "fails": 0,
+                            "name": "disponibles: 2xx"
+                        },
+                        "mis reservas: 2xx": {
+                            "fails": 0,
+                            "name": "mis reservas: 2xx",
+                            "path": "::lecturas::mis reservas: 2xx",
+                            "id": "7e84abf0da21dec8b8f36130b0d0c1b3",
+                            "passes": 80
+                        },
+                        "tipos: 2xx": {
+                            "name": "tipos: 2xx",
+                            "path": "::lecturas::tipos: 2xx",
+                            "id": "df9e2c55a2e0d99e3a8e1ab842961304",
+                            "passes": 80,
+                            "fails": 0
+                        }
+                    },
+                "name": "lecturas",
+                "path": "::lecturas"
+            },
+            "crear reserva": {
+                "groups": {},
+                "checks": {},
+                "name": "crear reserva",
+                "path": "::crear reserva",
+                "id": "3db5e319f0f638e1c6da369e7004a683"
+            },
+            "login": {
+                "name": "login",
+                "path": "::login",
+                "id": "a7d10b3a6c9a385ee254f0dbc7f9c8c9",
+                "groups": {},
+                "checks": {
+                        "login: 2xx": {
+                            "name": "login: 2xx",
+                            "path": "::login::login: 2xx",
+                            "id": "f11eb4e1ae1d2e346d813a2458b62b12",
+                            "passes": 23,
+                            "fails": 0
+                        }
+                    }
+            }
+        },
+        "checks": {},
+        "name": "",
+        "path": ""
+    }
+}

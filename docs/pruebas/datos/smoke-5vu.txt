@@ -1,0 +1,43 @@
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate>0.99' rate=100.00%
+
+    http_req_duration
+    ✓ 'p(95)<800' p(95)=320.99ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 444     14.173426/s
+    checks_succeeded...: 100.00% 444 out of 444
+    checks_failed......: 0.00%   0 out of 444
+
+    ✓ health 200
+    ✓ BD ok
+    ✓ caché ok
+    ✓ sin token → 401 JSON
+
+    HTTP
+    http_req_duration..............: avg=194.45ms min=100.94ms med=202.98ms max=849.77ms p(90)=255.21ms p(95)=320.99ms
+      { expected_response:true }...: avg=194.45ms min=100.94ms med=202.98ms max=849.77ms p(90)=255.21ms p(95)=320.99ms
+    http_req_failed................: 0.00%  0 out of 222
+    http_reqs......................: 222    7.086713/s
+
+    EXECUTION
+    iteration_duration.............: avg=1.39s    min=1.2s     med=1.35s    max=2.38s    p(90)=1.39s    p(95)=1.64s   
+    iterations.....................: 111    3.543357/s
+    vus............................: 2      min=2        max=5
+    vus_max........................: 5      min=5        max=5
+
+    NETWORK
+    data_received..................: 140 kB 4.5 kB/s
+    data_sent......................: 25 kB  787 B/s
+
+
+

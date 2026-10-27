@@ -25,6 +25,15 @@ const VUS = Number(__ENV.VUS || 0)
 const USERS = Number(__ENV.USERS || 50)
 
 const profiles = {
+  // Un escalón de VUS constantes (para comparar varias corridas cortas: 5, 10, 25, 50 VU…).
+  escalon: {
+    stages: [
+      { duration: '10s', target: VUS || 10 },
+      { duration: __ENV.DURATION || '45s', target: VUS || 10 },
+      { duration: '5s', target: 0 },
+    ],
+    thresholds: { http_req_duration: ['p(95)<500'], http_req_failed: ['rate<0.01'] },
+  },
   'carga-25': {
     stages: [
       { duration: '1m', target: 50 },

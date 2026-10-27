@@ -27,6 +27,26 @@ Hay tres niveles: unitarias y de integración con Pest, datos masivos con factor
 - **Frontend** (`web/src/test`): rutas protegidas por rol (403 aunque se escriba la URL), redirección al login,
   404, "En construcción", sesión vencida, login y registro separados, errores 401 y 422 mostrados en el formulario.
 
+## Pruebas de carga locales (k6, 2026-10-27) — EXTRA de la entrega del 25%
+
+Equipo de desarrollo (Windows, PHP 8.2, servidor integrado de PHP de un solo proceso, SQLite, caché en archivo).
+Escenario `reservas.js PROFILE=escalon`: 70% lecturas, 20% login, 10% crear reserva; 10 s de subida, 45 s sostenidos.
+
+| Corrida | Peticiones | Pet./s | p50 | p95 | Errores | Reporte |
+| --- | --- | --- | --- | --- | --- | --- |
+| Smoke 5 VU (salud, BD, caché, 401) | 222 | 7.1 | 203 ms | 321 ms | 0% | `local-smoke-5vu.html` |
+| Escalón 5 VU | 350 | 4.4 | 288 ms | 528 ms | 0% | `local-escalon-5vu.html` |
+| Escalón 10 VU | 413 | 5.2 | 910 ms | 1 309 ms | 0% | `local-escalon-10vu.html` |
+| Escalón 25 VU | 438 | 5.2 | 3 361 ms | 3 952 ms | 0% | `local-escalon-25vu.html` |
+| Escalón 50 VU | 483 | 5.3 | 7 016 ms | 7 885 ms | 0% | `local-escalon-50vu.html` |
+
+**Cuello de botella:** el servidor integrado de PHP atiende una petición a la vez, así que se satura en ~5 pet./s y
+la latencia crece con la cola (todas las operaciones tienen el mismo p95). Sin errores: responde lento pero no se cae.
+**Corrección prevista (80%):** Nginx + PHP-FPM (20 procesos), OPcache, RDS y Redis; repetir las corridas en AWS.
+
+Gráficos (escala de grises): `docs/pruebas/graficos/` — se regeneran con `python docs/pruebas/graficos.py`.
+Datos crudos (resúmenes JSON y CSV por petición): `docs/pruebas/datos/`.
+
 ## Carga y estrés (k6)
 
 Los scripts están en `tests/k6/` (ver su README). Cada corrida genera un HTML con gráficos en esta carpeta:

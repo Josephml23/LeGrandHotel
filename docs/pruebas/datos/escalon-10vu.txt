@@ -1,0 +1,48 @@
+
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✗ 'p(95)<500' p(95)=1.3s
+
+      {tipo:lectura}
+      ✗ 'p(95)<800' p(95)=1.29s
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 320     4.036148/s
+    checks_succeeded...: 100.00% 320 out of 320
+    checks_failed......: 0.00%   0 out of 320
+
+    ✓ disponibles: 2xx
+    ✓ mis reservas: 2xx
+    ✓ tipos: 2xx
+    ✓ login: 2xx
+
+    CUSTOM
+    reserva_creada_ms..............: avg=960.49ms min=283.01ms med=910.19ms p(90)=1.23s p(95)=1.31s p(99)=1.39s max=1.41s
+
+    HTTP
+    http_req_duration..............: avg=847.76ms min=127.68ms med=910.19ms p(90)=1.2s  p(95)=1.3s  p(99)=1.53s max=1.59s
+      { expected_response:true }...: avg=847.76ms min=127.68ms med=910.19ms p(90)=1.2s  p(95)=1.3s  p(99)=1.53s max=1.59s
+      { tipo:lectura }.............: avg=903.75ms min=128.94ms med=943.78ms p(90)=1.2s  p(95)=1.29s p(99)=1.53s max=1.59s
+    http_req_failed................: 0.00%  0 out of 413
+    http_reqs......................: 413    5.209154/s
+
+    EXECUTION
+    iteration_duration.............: avg=3.76s    min=1.51s    med=3.99s    p(90)=4.79s p(95)=5.05s p(99)=5.47s max=5.82s
+    iterations.....................: 145    1.82888/s
+    vus............................: 3      min=0        max=10
+    vus_max........................: 10     min=10       max=10
+
+    NETWORK
+    data_received..................: 1.1 MB 14 kB/s
+    data_sent......................: 99 kB  1.2 kB/s
+
+
+
+time="2026-10-27T07:25:15-05:00" level=error msg="thresholds on metrics 'http_req_duration, http_req_duration{tipo:lectura}' have been crossed"
