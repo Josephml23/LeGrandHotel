@@ -93,5 +93,6 @@ export function useAuth(): AuthState {
 export function homeFor(user: AuthUser | null): string {
   if (!user) return '/login'
   if (user.roles.includes('client') && user.roles.length === 1) return '/mis-reservas'
+  if (user.roles.includes('developer') && user.roles.length === 1) return '/programador'
   return '/panel'
 }

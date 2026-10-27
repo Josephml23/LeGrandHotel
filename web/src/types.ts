@@ -1,10 +1,11 @@
-export type RoleName = 'admin' | 'receptionist' | 'storekeeper' | 'client'
+export type RoleName = 'admin' | 'receptionist' | 'storekeeper' | 'client' | 'developer'
 
 export const ROLE_LABELS: Record<RoleName, string> = {
   admin: 'Administrador',
   receptionist: 'Recepcionista',
   storekeeper: 'Almacenero',
   client: 'Cliente',
+  developer: 'Programador',
 }
 
 export interface AuthUser {

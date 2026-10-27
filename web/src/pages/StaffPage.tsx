@@ -77,7 +77,7 @@ function StaffForm({ value, onClose }: { value: Staff | 'new' | null; onClose: (
         <Field label={current ? 'Nueva contraseña (opcional)' : 'Contraseña'} type="password" autoComplete="new-password" value={form.password} onChange={set('password')}
           error={err('password')} hint="Mínimo 8 caracteres, con letras y números." />
         <SelectField label="Rol" value={form.role} onChange={set('role')} error={err('role')}
-          options={[{ value: 'receptionist', label: 'Recepcionista' }, { value: 'storekeeper', label: 'Almacenero' }, { value: 'admin', label: 'Administrador' }]} />
+          options={[{ value: 'receptionist', label: 'Recepcionista' }, { value: 'storekeeper', label: 'Almacenero' }, { value: 'developer', label: 'Programador' }, { value: 'admin', label: 'Administrador' }]} />
         <Field label="Cargo" required value={form.position} onChange={set('position')} error={err('position')} />
         <SelectField label="Turno" value={form.shift} onChange={set('shift')} options={Object.entries(SHIFT_LABEL).map(([value, label]) => ({ value, label }))} />
         <Field label="Fecha de ingreso" type="date" required value={form.hired_at} onChange={set('hired_at')} error={err('hired_at')} />

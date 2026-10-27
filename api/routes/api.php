@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\DeveloperController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\GoogleAuthController;
 use App\Http\Controllers\Api\HealthController;
@@ -95,5 +96,13 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('reports/occupancy', [ReportController::class, 'occupancy']);
         Route::get('reports/income', [ReportController::class, 'income']);
         Route::get('audit-logs', [AuditLogController::class, 'index']);
+    });
+
+    // Vista del programador: diagnóstico (salud, rutas, peticiones, errores). Sin secretos.
+    Route::middleware('role:developer,admin')->prefix('dev')->group(function () {
+        Route::get('overview', [DeveloperController::class, 'overview']);
+        Route::get('routes', [DeveloperController::class, 'routes']);
+        Route::get('requests', [DeveloperController::class, 'requests']);
+        Route::get('errors', [DeveloperController::class, 'errors']);
     });
 });

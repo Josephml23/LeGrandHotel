@@ -62,3 +62,17 @@ describe('rutas protegidas', () => {
     expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
   })
 })
+
+describe('vista del programador', () => {
+  it('el programador entra a su vista y no a recepción', async () => {
+    loginAs(['developer'])
+    renderApp(<App />, '/programador')
+    expect(await screen.findByRole('heading', { name: 'Vista del programador' })).toBeInTheDocument()
+  })
+
+  it('un recepcionista no puede abrir la vista del programador', async () => {
+    loginAs(['receptionist'])
+    renderApp(<App />, '/programador')
+    expect(await screen.findByRole('heading', { name: 'No tienes acceso a esta sección' })).toBeInTheDocument()
+  })
+})

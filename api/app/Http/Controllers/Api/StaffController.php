@@ -70,7 +70,7 @@ class StaffController extends Controller
             $staff->user->update(array_intersect_key($data, array_flip(['name', 'email', 'password'])));
 
             if (isset($data['role'])) {
-                $workRoles = Role::whereIn('name', [Role::ADMIN, Role::RECEPTIONIST, Role::STOREKEEPER])->pluck('id');
+                $workRoles = Role::whereIn('name', [Role::ADMIN, Role::RECEPTIONIST, Role::STOREKEEPER, Role::DEVELOPER])->pluck('id');
                 $staff->user->roles()->detach($workRoles);
                 $staff->user->assignRole($data['role']);
             }

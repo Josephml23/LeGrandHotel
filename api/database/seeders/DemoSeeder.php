@@ -22,6 +22,7 @@ class DemoSeeder extends Seeder
         ['Administrador Demo', 'admin@legrandhotel.test', Role::ADMIN, 'Gerente'],
         ['Recepción Demo', 'recepcion@legrandhotel.test', Role::RECEPTIONIST, 'Recepcionista'],
         ['Almacén Demo', 'almacen@legrandhotel.test', Role::STOREKEEPER, 'Almacenero'],
+        ['Programador Demo', 'dev@legrandhotel.test', Role::DEVELOPER, 'Programador'],
     ];
 
     public function run(): void

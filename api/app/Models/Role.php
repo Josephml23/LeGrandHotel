@@ -15,12 +15,15 @@ class Role extends Model
 
     public const CLIENT = 'client';
 
+    public const DEVELOPER = 'developer';
+
     /** Nombre visible de cada rol. */
     public const LABELS = [
         self::ADMIN => 'Administrador',
         self::RECEPTIONIST => 'Recepcionista',
         self::STOREKEEPER => 'Almacenero',
         self::CLIENT => 'Cliente',
+        self::DEVELOPER => 'Programador',
     ];
 
     protected $fillable = ['name', 'label'];

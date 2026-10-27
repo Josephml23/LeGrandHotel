@@ -38,6 +38,10 @@ const NAV: { group: string; items: NavItem[] }[] = [
     ],
   },
   {
+    group: 'Programador',
+    items: [{ to: '/programador', label: 'Vista del programador', roles: ['developer', 'admin'] }],
+  },
+  {
     group: 'Mi cuenta',
     items: [
       { to: '/mis-reservas', label: 'Mis reservas', roles: ['client'] },

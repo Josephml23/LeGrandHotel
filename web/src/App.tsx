@@ -19,6 +19,7 @@ import { StaffPage } from './pages/StaffPage'
 import { UsersPage } from './pages/UsersPage'
 import { ReportsPage } from './pages/ReportsPage'
 import { AuditPage } from './pages/AuditPage'
+import { DeveloperPage } from './pages/DeveloperPage'
 import { MyReservationsPage } from './pages/client/MyReservationsPage'
 import { ProfilePage } from './pages/client/ProfilePage'
 import {
@@ -72,6 +73,9 @@ export function App() {
               <Route path="/reportes" element={<ReportsPage />} />
               <Route path="/auditoria" element={<AuditPage />} />
               <Route path="/facturacion" element={<UnderConstructionPage module="Facturación electrónica" />} />
+            </Route>
+            <Route element={<ProtectedRoute roles={['developer', 'admin']} />}>
+              <Route path="/programador" element={<DeveloperPage />} />
             </Route>
             <Route element={<ProtectedRoute roles={['client']} />}>
               <Route path="/mis-reservas" element={<MyReservationsPage />} />
