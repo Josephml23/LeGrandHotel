@@ -23,12 +23,13 @@ CLASSES = {
              ["+ hasRole(roles): bool", "+ assignRole(name): void", "+ isAdmin(): bool"]),
     "Client": (1, 0, "«guest»", ["+ id: int", "+ document_type: string", "+ document_number: string {unique}",
                                     "+ full_name: string", "+ phone: string [0..1]", "+ nationality: string [0..1]"], []),
-    "RoomType": (2, 0, None, ["+ id: int", "+ name: string {unique}", "+ capacity: int", "+ price_per_night: decimal"], []),
+    "RoomType": (2, 0, None, ["+ id: int", "+ name: string {unique}", "+ amenities: json [0..1]", "+ capacity: int",
+                              "+ price_per_night: decimal"], []),
     "Reservation": (3, 0, None, ["+ id: int", "+ check_in: date", "+ check_out: date", "+ guests: int",
                                  "+ status: string", "+ total: decimal"], ["+ overlapping(from, to): Query"]),
     "ParkingSpot": (4, 0, None, ["+ id: int", "+ code: string {unique}", "+ status: string"], []),
     "Role": (0, 1, None, ["+ id: int", "+ name: string {unique}", "+ label: string"],
-             ["ADMIN, RECEPTIONIST,", "STOREKEEPER, DEVELOPER"]),
+             ["ADMIN, RECEPTIONIST,", "STOREKEEPER, DEVELOPER,", "CLIENT"]),
     "Staff": (1, 1, None, ["+ id: int", "+ position: string", "+ shift: string", "+ hired_at: date"], []),
     "Room": (2, 1, None, ["+ id: int", "+ number: string {unique}", "+ floor: int", "+ status: string"],
              ["+ availableBetween(from, to): Query"]),
@@ -123,13 +124,17 @@ def main():
     gap23 = COL_X[3] - 0.85
 
     assoc(ax, [bottom("User"), top("Role")], "0..*", "1..*", "has", 0)
+    # Cuenta de Google del huésped (rol client) enlazada con su ficha (clients.user_id).
+    link_y = c["User"]["top"] + 0.6
+    assoc(ax, [top("User"), (top("User")[0], link_y), (c["Client"]["x"] + 1.2, link_y), (c["Client"]["x"] + 1.2, c["Client"]["top"])],
+          "0..1", "0..1", "guest account", 1)
     assoc(ax, [right("User", 0.6), (gap01, c["User"]["mid"] + 0.6), (gap01, c["Staff"]["mid"]), left("Staff")], "1", "0..1", "staff record", 1)
     # User → AuditLog e InventoryMovement bajan por el margen izquierdo (la fila 3 de la columna 1 está libre).
     assoc(ax, [left("User", 0.5), (0.45, c["User"]["mid"] + 0.5), (0.45, c["AuditLog"]["mid"]), left("AuditLog")], "0..1", "0..*", "performs", 2)
     low = min(v["bottom"] for v in c.values()) - 0.9
     assoc(ax, [left("User", -0.5), (0.05, c["User"]["mid"] - 0.5), (0.05, low), (bottom("InventoryMovement")[0], low), bottom("InventoryMovement")],
           "0..1", "0..*", "records", 2)
-    over = c["Client"]["top"] + 0.7
+    over = c["Client"]["top"] + 0.95
     assoc(ax, [top("Client"), (top("Client")[0], over), (top("Reservation")[0], over), top("Reservation")], "1", "0..*", "books", 1)
     assoc(ax, [bottom("RoomType"), top("Room")], "1", "0..*", "classifies", 0)
     assoc(ax, [right("Room"), (gap23, c["Room"]["mid"]), (gap23, c["Reservation"]["mid"] - 0.5), left("Reservation", -0.5)], "1", "0..*", "is booked in", 1)

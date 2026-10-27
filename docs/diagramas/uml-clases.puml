@@ -10,7 +10,7 @@ skinparam classAttributeIconSize 0
 skinparam defaultFontName Arial
 hide circle
 
-title LeGrandHotel — Class diagram (internal hotel system)
+title LeGrandHotel — Class diagram (staff and guest accounts)
 
 class User {
   + id: int
@@ -31,7 +31,7 @@ class Role {
   + label: string
   --
   {static} ADMIN, RECEPTIONIST,
-  {static} STOREKEEPER, DEVELOPER
+  {static} STOREKEEPER, DEVELOPER, CLIENT
 }
 
 class Staff {
@@ -53,6 +53,7 @@ class Client <<guest>> {
 class RoomType {
   + id: int
   + name: string {unique}
+  + amenities: json [0..1]
   + capacity: int
   + price_per_night: decimal
 }
@@ -124,6 +125,7 @@ class AuditLog {
 
 User "0..*" -- "1..*" Role : has >
 User "1" -- "0..1" Staff : staff record >
+User "0..1" -- "0..1" Client : guest account >
 User "0..1" -- "0..*" AuditLog : performs >
 User "0..1" -- "0..*" InventoryMovement : records >
 Client "1" -- "0..*" Reservation : books >
