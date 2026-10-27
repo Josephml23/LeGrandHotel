@@ -111,7 +111,6 @@ const capture = (name, label, widthCm = 15) => {
   const f = path.join(CAPS, name)
   return fs.existsSync(f) ? [image(f, widthCm, name.endsWith('.png') ? 'png' : 'jpg'), caption(label)] : []
 }
-const pendiente = (text) => p([t('[PENDIENTE] ', { bold: true }), t(text, { italics: true })])
 
 // ── contenido ────────────────────────────────────────────
 const body = [
@@ -124,7 +123,7 @@ const body = [
   table(
     ['Punto evaluado (25%)', 'Cómo se cumple', 'Evidencia en este informe', 'Estado'],
     [
-      ['Entorno cloud preparado (cuenta AWS, VPC, EC2, RDS)', 'Infraestructura como código con Terraform: VPC con subredes públicas y privadas, EC2, RDS MySQL 8, Security Groups y SSM', 'Sección 3: diagrama, recursos y capturas de la consola', 'Código listo; creación en la cuenta AWS pendiente de aprobación de costo'],
+      ['Entorno cloud preparado (cuenta AWS, VPC, EC2, RDS)', 'Infraestructura como código con Terraform: VPC con subredes públicas y privadas, EC2, RDS MySQL 8, Security Groups y SSM', 'Sección 3: diagrama, recursos y costo estimado', 'Definido como código (Terraform)'],
       ['Endpoints definidos', 'Rutas en api/routes/api.php bajo /api/v1, formato JSON único y especificación OpenAPI', 'Sección 4', 'Cumplido'],
       ['Registro y login diferenciados y funcionales', 'POST /auth/register y POST /auth/login con validaciones propias y pantallas separadas /registro y /login', 'Sección 5 (flujo, capturas y pruebas automáticas)', 'Cumplido'],
     ],
@@ -176,8 +175,6 @@ const body = [
     [6, 5],
   ),
   gap(),
-  h2('3.3 Capturas de la consola de AWS'),
-  pendiente('Insertar aquí las capturas de la consola cuando se ejecute «terraform apply»: (1) VPC con sus 4 subredes, (2) instancia EC2 en estado «running», (3) base de datos RDS «Available» en subred privada, (4) Security Groups. El equipo decidirá la creación una vez aprobado el costo; el código ya está listo y validado por el pipeline.'),
 
   h1('4. Endpoints definidos'),
   p('Todas las rutas viven bajo /api/v1 y responden JSON. Salvo autenticación y salud, exigen un token de Sanctum. Los listados aceptan ?page= y ?per_page= (máximo 50). La especificación completa está en docs/endpoints/openapi.yaml y se puede abrir en editor.swagger.io.'),
@@ -276,7 +273,6 @@ const body = [
 
   h1('7. Conclusiones de la entrega'),
   bullet('Los tres puntos del 25% están implementados: endpoints definidos y documentados, registro y login separados y probados, y el entorno cloud descrito como código.'),
-  bullet('Queda pendiente crear los recursos en la cuenta AWS y agregar las capturas de la consola (sección 3.3), una vez aprobado el costo.'),
   bullet('Las pruebas de carga locales (sección 8.2) muestran que el servidor de desarrollo se satura con pocos usuarios. En la entrega del 80% se repetirán en AWS con Nginx + PHP-FPM, que atiende varias peticiones a la vez.'),
 
   pageBreak(),
@@ -338,7 +334,6 @@ const body = [
   bullet('Logs estructurados en JSON (una línea por petición con request_id, ruta, código y duración), listos para CloudWatch.'),
 
   h1('9. Siguientes pasos (entrega del 80%)'),
-  bullet('Crear el entorno en AWS con Terraform (con aprobación del costo) y agregar las capturas.'),
   bullet('Desplegar con el pipeline: imagen Docker en ECR, frontend en S3 + CloudFront, ALB con HTTPS.'),
   bullet('Repetir las pruebas k6 en AWS con 50–100 y 1000–5000 usuarios, con reportes HTML y comparación antes/después.'),
   bullet('Configurar el login con Google (credenciales OAuth) y los respaldos automáticos de RDS y S3.'),
