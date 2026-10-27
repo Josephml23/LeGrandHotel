@@ -131,6 +131,13 @@ const capture = (name, label, widthCm = 15) => {
 }
 
 // ── contenido ────────────────────────────────────────────
+const mobileScreens = [
+  p([t('Bocetos de la aplicación móvil', { bold: true, size: 26 })], { keepNext: true }),
+  p('Pantallas principales en escala de grises. Usan los mismos datos y reglas que la web; la barra inferior cambia según el rol del usuario.'),
+  image(path.join(ROOT, 'docs/movil/pantallas.png'), 24.5),
+  caption('Figura 13. Bocetos: login, inicio y reserva del cliente; «Hoy» y tablero de habitaciones de recepción.'),
+]
+
 const erPage = [
   h1('8. EXTRAS (adicionales a lo evaluado en el 25%)'),
   p([t('Todo lo de esta sección es EXTRA: no forma parte de lo evaluado en el 25% y se presenta como avance adicional.', { bold: true })]),
@@ -161,7 +168,7 @@ const body = [
   p([t('Repositorio: ', { bold: true }), t('https://github.com/Josephml23/LeGrandHotel')]),
 
   h1('2. Descripción del proyecto'),
-  p('LeGrandHotel es un sistema web de gestión de hospedaje. Cubre habitaciones y tipos, reservas y estadías (check-in y check-out), cochera, clientes, personal e inventario. Lo usan cinco tipos de usuario: Administrador, Recepcionista, Almacenero, Cliente y Programador.'),
+  p('LeGrandHotel es un sistema web de gestión de hospedaje. Cubre habitaciones y tipos, reservas y estadías (check-in y check-out), cochera, clientes, personal e inventario. Lo usan cinco tipos de usuario: Administrador, Recepcionista, Almacenero, Cliente y Programador. Además de la página web se diseñó una aplicación móvil para Android e iOS que usará la misma API (sección 8.7).'),
   h2('2.1 Tecnologías'),
   table(
     ['Capa', 'Tecnología'],
@@ -506,10 +513,72 @@ const bodyAfter = [
   bullet('CI/CD en GitHub Actions: estilo (Pint), análisis (PHPStan), pruebas (Pest y Vitest), auditoría de dependencias y Semgrep en cada cambio. Auditoría actual: 0 vulnerabilidades en composer y npm y 0 hallazgos en Semgrep.'),
   bullet('Logs estructurados en JSON (una línea por petición con request_id, ruta, código y duración), listos para CloudWatch.'),
 
+  h2('8.7 EXTRA: Diseño de la aplicación móvil (Android e iOS)'),
+  p('LeGrandHotel tendrá también una aplicación para teléfonos Android e iOS. En esta entrega se presenta su diseño: la tecnología, la arquitectura, las pantallas y el plan de construcción. El código de la app se desarrolla en las entregas del 80% y del 100%. La app no reemplaza a la web: cubre las tareas que conviene hacer en movimiento y usa la misma API, sin duplicar la lógica del negocio.'),
+  table(
+    ['Usuario', 'Para qué usará la app'],
+    [
+      ['Cliente', 'Registrarse o entrar (también con Google), buscar disponibilidad, reservar, ver y cancelar sus reservas, recibir avisos'],
+      ['Recepcionista', 'Ver llegadas y salidas del día, hacer check-in y check-out desde el lobby, cambiar el estado de una habitación, registrar placas en la cochera'],
+      ['Almacenero', 'Registrar entradas y salidas de inventario en el almacén y ver los insumos bajo el mínimo'],
+      ['Administrador', 'Ver el panel resumido (ocupación, ingresos, alertas). La gestión completa sigue en la web'],
+    ],
+    [2.5, 9],
+  ),
+  gap(),
+  p([t('Tecnología elegida: ', { bold: true }), t('React Native con Expo y TypeScript. Con un solo código se generan las dos aplicaciones y se reutiliza lo que el equipo ya usa en la web: React, TypeScript, TanStack Query, Axios y los mismos tipos de datos.')]),
+  table(
+    ['Opción', 'A favor', 'En contra', 'Decisión'],
+    [
+      ['React Native + Expo', 'Un código para Android e iOS; mismo lenguaje y librerías que la web; compila iOS en la nube sin Mac (EAS Build)', 'Funciones nativas muy específicas requieren módulos propios', 'Elegida'],
+      ['Flutter', 'Buen rendimiento y diseño uniforme', 'Otro lenguaje (Dart): no se reutiliza nada de la web', 'Descartada'],
+      ['Nativo (Kotlin + Swift)', 'Acceso total al sistema', 'Dos aplicaciones distintas: el doble de trabajo para 4 personas', 'Descartada'],
+      ['Web instalable (PWA)', 'Sin código nuevo', 'Notificaciones y almacenamiento seguro limitados en iOS; no está en las tiendas', 'Complemento'],
+    ],
+    [2.6, 4, 3.6, 1.6],
+  ),
+  gap(),
+  image(path.join(ROOT, 'docs/movil/arquitectura.png'), 16),
+  caption('Figura 12. Arquitectura de la aplicación móvil: misma API y notificaciones por FCM (Android) y APNs (iOS).'),
+  table(
+    ['Necesidad', 'En la app', 'Equivalente en la web'],
+    [
+      ['Navegación', 'Expo Router (barra de pestañas por rol)', 'React Router'],
+      ['Llamadas a la API y caché', 'TanStack Query + Axios con el mismo interceptor', 'Igual'],
+      ['Guardar la sesión', 'expo-secure-store: Keychain (iOS) y Keystore (Android)', 'sessionStorage'],
+      ['Login con Google', 'expo-auth-session y enlace legrandhotel://auth/callback', 'Socialite con redirección'],
+      ['Notificaciones', 'expo-notifications → FCM / APNs', '—'],
+      ['Desbloqueo', 'Huella o Face ID (expo-local-authentication)', '—'],
+      ['Pruebas', 'Jest + Testing Library; Maestro para flujos completos', 'Vitest; Playwright'],
+    ],
+    [2.6, 5.4, 3.4],
+  ),
+  gap(),
+  p([t('Cambios que necesitará la API (pocos, porque la app usa los mismos endpoints): ', { bold: true })]),
+  bullet('Registrar el token de notificaciones de cada teléfono (POST /devices) y enviar avisos en cola: reserva confirmada, recordatorio de check-in e insumo bajo el mínimo.'),
+  bullet('Login con Google que vuelva a la app (enlace profundo) además de a la web.'),
+  bullet('Cabecera X-App-Version para pedir que se actualice la app si cambia la API (respuesta 426).'),
+  bullet('Nada más: el login ya acepta un nombre de dispositivo para que cada teléfono tenga su propio token; CORS no aplica a apps nativas; roles y límites de intentos son los mismos.'),
+  p([t('Seguridad: ', { bold: true }), t('el token se guarda en el almacenamiento seguro del sistema y nunca en texto plano. Se renueva solo antes de vencer, con el mismo POST /auth/refresh de la web. El personal puede activar el desbloqueo con huella o rostro. La app solo usa HTTPS y no contiene secretos: todo secreto queda en el servidor.')]),
+  table(
+    ['Entrega', 'Alcance de la app'],
+    [
+      ['25% (esta)', 'Diseño: tecnología, arquitectura, pantallas por rol y bocetos'],
+      ['80%', 'Proyecto Expo en mobile/; login y registro; flujo del cliente (reservar, mis reservas); recepción «Hoy» con check-in y check-out; notificaciones; versión de prueba para Android'],
+      ['100%', 'Inventario, cochera y panel del administrador; versión de prueba para iOS en TestFlight; pruebas de flujos completos con Maestro; publicación de prueba en Google Play y App Store'],
+    ],
+    [2.2, 9.3],
+  ),
+  gap(),
+  p([t('Publicación: ', { bold: true }), t('las versiones de prueba se distribuyen con Google Play (prueba interna) y Apple TestFlight. Para publicar se necesitan la cuenta de Google Play Console (pago único de USD 25) y la del Apple Developer Program (USD 99 al año). El diseño completo está en docs/movil/diseno-app-movil.md.')]),
+]
+
+const bodyEnd = [
   h1('9. Siguientes pasos (entrega del 80%)'),
   bullet('Desplegar con el pipeline: imagen Docker en ECR, frontend en S3 + CloudFront, ALB con HTTPS.'),
   bullet('Repetir las pruebas k6 en AWS con 50–100 y 1000–5000 usuarios, con reportes HTML y comparación antes/después.'),
   bullet('Configurar el login con Google (credenciales OAuth) y los respaldos automáticos de RDS y S3.'),
+  bullet('Aplicación móvil: crear el proyecto Expo, construir el login y el flujo del cliente y la recepción, activar las notificaciones y generar la primera versión de prueba para Android.'),
 ]
 
 const MARGIN = Math.round(2.5 * CM)
@@ -543,6 +612,8 @@ const doc = new Document({
     section([...caratula, ...body]),
     section(erPage, true),
     section(bodyAfter),
+    section(mobileScreens, true),
+    section(bodyEnd),
   ],
 })
 

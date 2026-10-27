@@ -15,6 +15,7 @@ Leyenda: ✅ hecho y probado en código · ☁️ código listo, falta crear el 
 | EXTRA: VPC con subredes privadas | ☁️ | `infra/terraform/network.tf` |
 | EXTRA: diagrama de BD | ✅ | `docs/diagramas/legrandhotel.dbml` |
 | EXTRA: cifrar el código | ✅ | build ofuscado (`web/vite.config.ts`), comparación en `docs/seguridad.md` |
+| EXTRA: diseño de la app móvil (Android e iOS) | ✅ | `docs/movil/diseno-app-movil.md`, bocetos y arquitectura en `docs/movil/`; se construye en el 80% y 100% |
 
 ## Entrega 80% (semana 11)
 
