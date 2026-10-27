@@ -78,4 +78,16 @@ describe('recepción', function () {
 
         expect($this->postJson("/api/v1/stays/{$stayId}/check-out"))->toBeApiError(409, 'ALREADY_CHECKED_OUT');
     });
+
+    it('no hace check-in en una habitación que todavía tiene un huésped dentro', function () {
+        // Dos reservas de la misma habitación con fechas que no se cruzan: el primero aún no hizo check-out.
+        $first = Reservation::factory()->for($this->room)->for($this->client)->create($this->dates);
+        $next = Reservation::factory()->for($this->room)->for(Client::factory())->create([
+            'check_in' => now()->addDays(13)->toDateString(), 'check_out' => now()->addDays(15)->toDateString(),
+        ]);
+
+        $this->postJson("/api/v1/reservations/{$first->id}/check-in")->assertCreated();
+
+        expect($this->postJson("/api/v1/reservations/{$next->id}/check-in"))->toBeApiError(409, 'ROOM_OCCUPIED');
+    });
 });

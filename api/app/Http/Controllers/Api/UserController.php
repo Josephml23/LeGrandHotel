@@ -64,6 +64,11 @@ class UserController extends Controller
     {
         $roles = $request->validated('roles');
 
+        // Las cuentas de cliente se crean con Google y no pasan a ser personal.
+        if ($user->hasRole(Role::CLIENT)) {
+            throw ApiException::conflict('CLIENT_ROLES_LOCKED', 'Una cuenta de cliente no puede recibir roles del personal.');
+        }
+
         if ($user->is($request->user()) && ! in_array(Role::ADMIN, $roles, true)) {
             throw ApiException::conflict('CANNOT_REMOVE_OWN_ADMIN', 'No puedes quitarte tu propio rol de administrador.');
         }

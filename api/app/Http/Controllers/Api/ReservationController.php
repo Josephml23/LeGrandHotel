@@ -104,6 +104,16 @@ class ReservationController extends Controller
                 throw ApiException::conflict('INVALID_RESERVATION_STATUS', "No se puede hacer check-in de una reserva en estado {$reservation->status}.");
             }
 
+            // Una habitación no puede tener dos huéspedes dentro a la vez: primero va el check-out del anterior.
+            $occupied = Stay::query()
+                ->whereNull('checked_out_at')
+                ->whereHas('reservation', fn ($q) => $q->where('room_id', $reservation->room_id))
+                ->lockForUpdate()
+                ->exists();
+            if ($occupied) {
+                throw ApiException::conflict('ROOM_OCCUPIED', 'La habitación todavía tiene un huésped dentro. Registra primero su check-out.');
+            }
+
             $stay = Stay::create(['reservation_id' => $reservation->id, 'checked_in_at' => now()]);
             $reservation->update(['status' => Reservation::CHECKED_IN]);
             $reservation->room()->update(['status' => Room::OCCUPIED]);

@@ -4,8 +4,9 @@ import { send } from '../lib/api'
 import { remove, useAction, useServerList } from '../lib/hooks'
 import { useAuth } from '../auth/AuthContext'
 import { DataTable, Field, FormError, Modal, Pagination, Pill, SearchInput, TitleRow, fieldError, type Column } from '../components/ui'
-import { ROLE_LABELS, type RoleName, type UserRow } from '../types'
+import { ROLE_LABELS, STAFF_ROLES, type RoleName, type UserRow } from '../types'
 
+/** Pestañas del listado: el personal y los clientes (que entran con Google). */
 const ALL_ROLES = Object.keys(ROLE_LABELS) as RoleName[]
 
 export function UsersPage() {
@@ -53,6 +54,8 @@ export function UsersPage() {
 
 function UserForm({ value, onClose }: { value: UserRow | 'new' | null; onClose: () => void }) {
   const current = value && value !== 'new' ? value : null
+  // Una cuenta de cliente entra con Google: no tiene contraseña y sus roles no se editan aquí.
+  const isClient = !!current?.roles.some((r) => r.name === 'client')
   const [form, setForm] = useState(() => ({
     name: current?.name ?? '',
     email: current?.email ?? '',
@@ -63,9 +66,9 @@ function UserForm({ value, onClose }: { value: UserRow | 'new' | null; onClose: 
   const save = useAction(async () => {
     if (!current) return send('post', '/users', form)
     const body: Record<string, string> = { name: form.name, email: form.email }
-    if (form.password) body.password = form.password
-    await send('put', `/users/${current.id}`, body)
-    return send('put', `/users/${current.id}/roles`, { roles: form.roles })
+    if (form.password && !isClient) body.password = form.password
+    const updated = await send('put', `/users/${current.id}`, body)
+    return isClient ? updated : send('put', `/users/${current.id}/roles`, { roles: form.roles })
   }, { invalidate: ['users', 'staff'], success: 'Usuario guardado.' })
 
   const submit = (e: FormEvent) => {
@@ -77,24 +80,28 @@ function UserForm({ value, onClose }: { value: UserRow | 'new' | null; onClose: 
 
   return (
     <Modal open={value !== null} title={current ? current.name : 'Nuevo usuario'} onClose={() => { save.reset(); onClose() }}
-      footer={<><button className="btn" onClick={onClose}>Cancelar</button><button className="btn btn-primary" form="user-form" disabled={save.isPending || form.roles.length === 0}>Guardar</button></>}>
+      footer={<><button className="btn" onClick={onClose}>Cancelar</button><button className="btn btn-primary" form="user-form" disabled={save.isPending || (!isClient && form.roles.length === 0)}>Guardar</button></>}>
       <FormError error={save.error} />
       <form id="user-form" className="form-grid" onSubmit={submit}>
         <Field className="full" label="Nombre" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} error={fieldError(save.error, 'name')} />
         <Field label="Correo" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} error={fieldError(save.error, 'email')} />
-        <Field label={current ? 'Nueva contraseña (opcional)' : 'Contraseña'} type="password" autoComplete="new-password" value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })} error={fieldError(save.error, 'password')} hint="Mínimo 8 caracteres, con letras y números." />
-        <fieldset className="full field" style={{ border: 0, padding: 0, margin: 0 }}>
+        {isClient ? (
+          <p className="full muted small" style={{ margin: 0 }}>Cuenta de cliente: entra con Google, no tiene contraseña y sus roles no se cambian desde aquí.</p>
+        ) : (
+          <Field label={current ? 'Nueva contraseña (opcional)' : 'Contraseña'} type="password" autoComplete="new-password" value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })} error={fieldError(save.error, 'password')} hint="Mínimo 8 caracteres, con letras y números." />
+        )}
+        {!isClient && <fieldset className="full field" style={{ border: 0, padding: 0, margin: 0 }}>
           <legend style={{ fontWeight: 500, marginBottom: 6 }}>Roles</legend>
           <div className="actions">
-            {ALL_ROLES.map((r) => (
+            {STAFF_ROLES.map((r) => (
               <label key={r} className="btn btn-sm" style={{ background: form.roles.includes(r) ? 'var(--active)' : undefined }}>
                 <input type="checkbox" checked={form.roles.includes(r)} onChange={() => toggle(r)} /> {ROLE_LABELS[r]}
               </label>
             ))}
           </div>
           {fieldError(save.error, 'roles') && <span className="error">{fieldError(save.error, 'roles')}</span>}
-        </fieldset>
+        </fieldset>}
       </form>
     </Modal>
   )

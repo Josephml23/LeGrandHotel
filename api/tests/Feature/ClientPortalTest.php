@@ -187,6 +187,14 @@ describe('separación entre clientes y personal', function () {
         'registrar personal' => ['POST', '/api/v1/auth/register'],
     ]);
 
+    it('una cuenta de cliente no recibe roles del personal', function () {
+        $guest = User::factory()->withRole(Role::CLIENT)->create();
+        actingAsRole(Role::ADMIN);
+
+        expect($this->putJson("/api/v1/users/{$guest->id}/roles", ['roles' => [Role::ADMIN]]))
+            ->toBeApiError(409, 'CLIENT_ROLES_LOCKED');
+    });
+
     it('el personal no usa el portal del cliente', function () {
         actingAsRole(Role::RECEPTIONIST);
 

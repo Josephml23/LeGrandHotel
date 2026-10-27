@@ -19,9 +19,12 @@ const NAV: { group: string; items: NavItem[] }[] = [
     ],
   },
   {
+    group: 'Inicio',
+    items: [{ to: '/panel', label: 'Panel', roles: ['admin', 'receptionist', 'storekeeper'] }],
+  },
+  {
     group: 'Recepción',
     items: [
-      { to: '/panel', label: 'Panel', roles: ['admin', 'receptionist', 'storekeeper'] },
       { to: '/reservas', label: 'Reservas', roles: ['admin', 'receptionist'] },
       { to: '/estadias', label: 'Estadías', roles: ['admin', 'receptionist'] },
       { to: '/habitaciones', label: 'Habitaciones', roles: ['admin', 'receptionist'] },
