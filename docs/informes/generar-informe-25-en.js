@@ -65,6 +65,17 @@ function image(file, widthCm, type = 'png') {
   return center([new ImageRun({ type, data, transformation: { width: pxW, height: Math.round(pxW * h / w) } })], { spacing: { after: 60 }, keepNext: true })
 }
 
+// Imagen vectorial (SVG) con PNG de respaldo para lectores que no muestran SVG; se ve nítida a cualquier zoom.
+function vectorImage(svgFile, pngFile, widthCm) {
+  const png = fs.readFileSync(pngFile)
+  const pxW = Math.round(widthCm * 37.8)
+  const pxH = Math.round(pxW * png.readUInt32BE(20) / png.readUInt32BE(16))
+  return center([new ImageRun({
+    type: 'svg', data: fs.readFileSync(svgFile), fallback: { type: 'png', data: png },
+    transformation: { width: pxW, height: pxH },
+  })], { spacing: { after: 60 }, keepNext: true })
+}
+
 const border = { style: BorderStyle.SINGLE, size: 4, color: '000000' }
 const borders = { top: border, bottom: border, left: border, right: border }
 
@@ -141,12 +152,7 @@ const mobileScreens = [
 ]
 
 const erPage = [
-  h1('8. EXTRAS (beyond what is graded at 25%)'),
-  p([t('Everything in this section is EXTRA: it is not part of what is graded at 25% and is presented as additional progress.', { bold: true })]),
-
-  h2('8.1 EXTRA: Database diagram (UML)'),
-  p('UML class diagram of the 13 entities (Laravel models on MySQL 8) with attributes, methods and multiplicities. The role_user join table is the many-to-many association between User and Role; AuditLog and InventoryMovement store which user performed each action. Indexes required by the plan: rooms(status), reservations(check_in, check_out), reservations(client_id), unique clients(document_number) and inventory_items(name). Editable sources: docs/diagramas/uml-clases.puml (PlantUML) and docs/diagramas/legrandhotel.dbml (dbdiagram.io).'),
-  image(path.join(ROOT, 'docs/diagramas/uml-clases.png'), 16.5),
+  vectorImage(path.join(ROOT, 'docs/diagramas/uml-clases.svg'), path.join(ROOT, 'docs/diagramas/uml-clases.png'), 24.5),
   caption('Figure 5. LeGrandHotel UML class diagram.'),
 ]
 
@@ -445,6 +451,11 @@ const body = [
   bullet('The three 25% items are implemented: endpoints defined and documented, registration and login separated and tested, and the cloud environment described as code.'),
   bullet('The local load tests (section 8.2) show that the development server saturates with few users. In the 80% delivery they will be repeated on AWS with Nginx + PHP-FPM, which serves several requests at once.'),
 
+  h1('8. EXTRAS (beyond what is graded at 25%)'),
+  p([t('Everything in this section is EXTRA: it is not part of what is graded at 25% and is presented as additional progress.', { bold: true })]),
+
+  h2('8.1 EXTRA: Database diagram (UML)'),
+  p('UML class diagram of the 13 entities (Laravel models on MySQL 8) with attributes, methods and multiplicities. The role_user join table is the many-to-many association between User and Role; AuditLog and InventoryMovement store which user performed each action. Indexes required by the plan: rooms(status), reservations(check_in, check_out), reservations(client_id), unique clients(document_number) and inventory_items(name). Editable sources: docs/diagramas/uml-clases.puml (PlantUML) and docs/diagramas/legrandhotel.dbml (dbdiagram.io).'),
 ]
 
 const bodyAfter = [
@@ -589,7 +600,7 @@ const bodyEnd = [
 ]
 
 const MARGIN = Math.round(2.5 * CM)
-// Secciones: vertical (carátula a 7), horizontal (8 y 8.1, diagrama de BD), vertical (8.2 en adelante).
+// Secciones: vertical (carátula a 8.1), horizontal (diagrama UML de 8.1), vertical (8.2 en adelante).
 function section(children, landscape = false) {
   return {
     properties: { page: {

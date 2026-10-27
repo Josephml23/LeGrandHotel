@@ -13,8 +13,8 @@ from matplotlib.patches import Rectangle  # noqa: E402
 
 OUT = Path(__file__).resolve().parent
 INK, MID = "#111111", "#555555"
-W, LINE, HEAD = 4.7, 0.32, 0.7
-COL_X = [0.9 + i * 6.3 for i in range(5)]
+W, LINE, HEAD = 7.2, 0.42, 0.85
+COL_X = [0.9 + i * 9.1 for i in range(5)]
 
 # nombre: (columna, fila, estereotipo, atributos, métodos)
 CLASSES = {
@@ -64,22 +64,22 @@ def draw_class(ax, name, col, row, stereo, attrs, methods, tops):
     # compartimento del nombre
     ax.add_patch(Rectangle((x, top - HEAD), W, HEAD, fc="#e2e2e2", ec=INK, lw=1.3, zorder=2))
     if stereo:
-        ax.text(x + W / 2, top - 0.17, stereo, ha="center", va="center", fontsize=7.5, style="italic", zorder=3)
-        ax.text(x + W / 2, top - 0.48, name, ha="center", va="center", fontsize=10, fontweight="bold", zorder=3)
+        ax.text(x + W / 2, top - 0.2, stereo, ha="center", va="center", fontsize=9.5, style="italic", zorder=3)
+        ax.text(x + W / 2, top - 0.57, name, ha="center", va="center", fontsize=13, fontweight="bold", zorder=3)
     else:
-        ax.text(x + W / 2, top - HEAD / 2, name, ha="center", va="center", fontsize=10, fontweight="bold", zorder=3)
+        ax.text(x + W / 2, top - HEAD / 2, name, ha="center", va="center", fontsize=13, fontweight="bold", zorder=3)
     # atributos
     y = top - HEAD - 0.12
     for a in attrs:
         y -= LINE
-        ax.text(x + 0.12, y + LINE / 2, a, va="center", fontsize=8, zorder=3)
+        ax.text(x + 0.12, y + LINE / 2, a, va="center", fontsize=11, zorder=3)
     sep = y - 0.1
     ax.plot([x, x + W], [sep, sep], color=INK, lw=1.0, zorder=3)
     # métodos (o constantes en Role)
     y = sep - 0.1
     for m in methods:
         y -= LINE
-        ax.text(x + 0.12, y + LINE / 2, m, va="center", fontsize=8, zorder=3,
+        ax.text(x + 0.12, y + LINE / 2, m, va="center", fontsize=11, zorder=3,
                 style="italic" if name == "Role" else "normal")
     return {"x": x, "top": top, "bottom": top - h, "mid": top - h / 2}
 
@@ -92,17 +92,17 @@ def assoc(ax, pts, m1, m2, label=None, label_at=None):
         dx, dy = qx - px, qy - py
         tx = px + (0.38 if dx > 0 else -0.38 if dx < 0 else 0.3)
         ty = py + (0.28 if dy > 0 else -0.28 if dy < 0 else 0.22)
-        ax.text(tx, ty, text, fontsize=8.5, ha="center", va="center", zorder=4,
+        ax.text(tx, ty, text, fontsize=11, ha="center", va="center", zorder=4,
                 bbox=dict(fc="white", ec="none", pad=0.4))
     if label:
         (ax_, ay), (bx, by) = pts[label_at], pts[label_at + 1]
-        ax.text((ax_ + bx) / 2, (ay + by) / 2, label, fontsize=8, style="italic", ha="center", va="center",
+        ax.text((ax_ + bx) / 2, (ay + by) / 2, label, fontsize=10.5, style="italic", ha="center", va="center",
                 zorder=4, bbox=dict(fc="white", ec="none", pad=0.6))
 
 
 def main():
     tops = layout()
-    fig, ax = plt.subplots(figsize=(19.5, 11))
+    fig, ax = plt.subplots(figsize=(25, 13.5))
     ax.set_xlim(-0.3, COL_X[4] + W + 0.4)
     ax.axis("off")
     c = {n: draw_class(ax, n, *v, tops) for n, v in CLASSES.items()}
@@ -140,11 +140,13 @@ def main():
 
     note_x, note_y = COL_X[4], c["ParkingAssignment"]["bottom"] - 1.2
     ax.text(note_x, note_y, "UML notation:\n+ public   - private\n[0..1] optional   {unique} constraint\n1, 0..1, 0..* multiplicity\nRole is linked to User\nthrough the role_user table.",
-            fontsize=8.5, va="top", linespacing=1.5)
+            fontsize=11, va="top", linespacing=1.5)
     ax.set_ylim(low - 0.8, over + 0.6)
     ax.text(0.05, low - 0.55, "LeGrandHotel class diagram (models in api/app/Models). Editable source: docs/diagramas/uml-clases.puml (PlantUML).",
-            fontsize=8.5, color=MID)
-    fig.savefig(OUT / "uml-clases.png", dpi=200, bbox_inches="tight")
+            fontsize=11, color=MID)
+    fig.savefig(OUT / "uml-clases.png", dpi=400, bbox_inches="tight")
+    # SVG vectorial para el informe: Word y el PDF lo muestran nítido a cualquier zoom.
+    fig.savefig(OUT / "uml-clases.svg", bbox_inches="tight")
     plt.close(fig)
     print("UML generado en", OUT / "uml-clases.png")
 
