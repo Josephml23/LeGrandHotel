@@ -13,8 +13,6 @@ class Role extends Model
 
     public const STOREKEEPER = 'storekeeper';
 
-    public const CLIENT = 'client';
-
     public const DEVELOPER = 'developer';
 
     /** Nombre visible de cada rol. */
@@ -22,9 +20,11 @@ class Role extends Model
         self::ADMIN => 'Administrador',
         self::RECEPTIONIST => 'Recepcionista',
         self::STOREKEEPER => 'Almacenero',
-        self::CLIENT => 'Cliente',
         self::DEVELOPER => 'Programador',
     ];
+
+    /** Todos los roles son del personal del hotel: el sistema no tiene usuarios externos. */
+    public const INTERNAL = [self::ADMIN, self::RECEPTIONIST, self::STOREKEEPER, self::DEVELOPER];
 
     protected $fillable = ['name', 'label'];
 

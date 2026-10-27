@@ -123,15 +123,6 @@ class ReportController extends Controller
             $data['low_stock_count'] = InventoryItem::whereColumn('stock', '<=', 'min_stock')->count();
         }
 
-        if ($user->hasRole(Role::CLIENT) && $user->client) {
-            $data['my_reservations'] = $user->client->reservations()
-                ->with('room.roomType:id,name')
-                ->whereIn('status', Reservation::BLOCKING)
-                ->orderBy('check_in')
-                ->limit(5)
-                ->get();
-        }
-
         return ApiResponse::success($data);
     }
 

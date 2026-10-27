@@ -2,6 +2,7 @@
 
 Monorepo: `api/` (Laravel 12, Pest), `web/` (React 18 + TS + Vite), `infra/` (Terraform, Docker), `tests/k6/`, `docs/`.
 El plan técnico y el estado de cada requisito están en `docs/entregas.md`. Escribe la UI y la documentación en español.
+Es un sistema **solo interno** del hotel: no hay rol Cliente ni registro público (los huéspedes son fichas en `clients`).
 
 ## Reglas del proyecto
 

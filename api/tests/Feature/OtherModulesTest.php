@@ -115,7 +115,7 @@ describe('personal y usuarios (admin)', function () {
     });
 
     it('CRUD de usuarios y cambio de roles', function () {
-        $id = $this->postJson('/api/v1/users', ['name' => 'Pepe', 'email' => 'pepe@hotel.test', 'password' => 'Clave1234', 'roles' => [Role::CLIENT]])
+        $id = $this->postJson('/api/v1/users', ['name' => 'Pepe', 'email' => 'pepe@hotel.test', 'password' => 'Clave1234', 'roles' => [Role::STOREKEEPER]])
             ->assertCreated()->json('data.id');
 
         $this->putJson("/api/v1/users/{$id}/roles", ['roles' => [Role::RECEPTIONIST, Role::STOREKEEPER]])

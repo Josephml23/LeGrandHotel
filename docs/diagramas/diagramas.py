@@ -103,7 +103,7 @@ ROW_TOP = [13.4, 9.6, 6.5]
 
 TABLES = {
     "users": (0, 0, ["id", "name", "email (único)", "password (bcrypt)", "google_id", "email_verified_at"]),
-    "clients": (1, 0, ["id", "user_id → users", "document_number (único)", "full_name", "phone", "nationality"]),
+    "clients": (1, 0, ["id", "document_type", "document_number (único)", "full_name", "phone", "nationality"]),
     "room_types": (2, 0, ["id", "name (único)", "capacity", "price_per_night"]),
     "reservations": (3, 0, ["id", "client_id → clients", "room_id → rooms", "check_in, check_out (índice)", "status", "total"]),
     "parking_spots": (4, 0, ["id", "code (único)", "status"]),
@@ -165,10 +165,9 @@ def base_de_datos():
     # Usuarios y roles (N:M mediante role_user).
     rel(ax, [bottom("users"), top("role_user")], "1", "N")
     rel(ax, [top("roles"), bottom("role_user")], "1", "N")
-    # Usuario ↔ cliente / personal (1:1).
-    rel(ax, [right("users", 0.3), left("clients", 0.3)], "1", "1")
+    # Usuario ↔ personal (1:1). Los clientes (huéspedes) no son usuarios.
     gap01 = COL_X[1] - 0.6
-    rel(ax, [right("users", -0.6), (gap01, t["users"]["mid"] - 0.6), (gap01, t["staff"]["mid"]), left("staff")], "1", "1")
+    rel(ax, [right("users"), (gap01, t["users"]["mid"]), (gap01, t["staff"]["mid"]), left("staff")], "1", "1")
     # Habitaciones.
     rel(ax, [bottom("room_types"), top("rooms")], "1", "N")
     gap23 = COL_X[3] - 0.65
@@ -184,7 +183,7 @@ def base_de_datos():
     rel(ax, [right("inventory_items"), left("inventory_movements")], "1", "N")
 
     ax.text(COL_X[4], 6.3, "Cardinalidad: 1 junto a la tabla padre,\nN junto a la tabla hija.", fontsize=9, va="top")
-    ax.text(COL_X[4], 5.4, "audit_logs e inventory_movements\nreferencian a users (→ users).", fontsize=9, va="top", color=MID)
+    ax.text(COL_X[4], 5.4, "clients son huéspedes, no usuarios.\naudit_logs e inventory_movements\nreferencian a users (→ users).", fontsize=9, va="top", color=MID)
     ax.text(0.3, 2.8, "13 tablas del dominio + tokens de Sanctum. Fuente editable: docs/diagramas/legrandhotel.dbml (dbdiagram.io).",
             fontsize=9, color=MID)
     fig.savefig(OUT / "base-de-datos.png", dpi=200, bbox_inches="tight")

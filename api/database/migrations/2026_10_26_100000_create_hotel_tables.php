@@ -26,7 +26,6 @@ return new class extends Migration
 
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->unique()->constrained()->nullOnDelete();
             $table->string('document_type', 20);
             $table->string('document_number', 20)->unique();
             $table->string('full_name');

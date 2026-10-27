@@ -81,13 +81,13 @@ export function ReservationsPage() {
           </>
         )} />
       <Pagination meta={list.meta} onPage={list.setPage} noun="reservas" />
-      <NewReservation open={creating} onClose={() => { setCreating(false); if (params.get('nueva')) setParams({}, { replace: true }) }} staff />
+      <NewReservation open={creating} onClose={() => { setCreating(false); if (params.get('nueva')) setParams({}, { replace: true }) }} />
     </>
   )
 }
 
-/** Formulario de reserva compartido por recepción (elige huésped) y por el cliente (reserva a su nombre). */
-export function NewReservation({ open, onClose, staff }: { open: boolean; onClose: () => void; staff: boolean }) {
+/** Formulario de reserva de recepción: elige el huésped (ficha de cliente) y una habitación libre. */
+export function NewReservation({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [form, setForm] = useState({ client_id: '', check_in: todayISO(), check_out: addDaysISO(todayISO(), 1), guests: '1', room_id: '', notes: '' })
   const [clientSearch, setClientSearch] = useState('')
   const debouncedClient = useDebounced(clientSearch)
@@ -101,7 +101,7 @@ export function NewReservation({ open, onClose, staff }: { open: boolean; onClos
   const clients = useQuery({
     queryKey: ['clients', 'picker', debouncedClient],
     queryFn: () => getList<Client>('/clients', { search: debouncedClient, per_page: 10 }),
-    enabled: open && staff,
+    enabled: open,
   })
 
   const room = available.data?.data.find((r) => String(r.id) === form.room_id)
@@ -109,7 +109,7 @@ export function NewReservation({ open, onClose, staff }: { open: boolean; onClos
 
   const save = useAction(
     () => send<Reservation>('post', '/reservations', {
-      ...(staff ? { client_id: Number(form.client_id) } : {}),
+      client_id: Number(form.client_id),
       room_id: Number(form.room_id),
       check_in: form.check_in,
       check_out: form.check_out,
@@ -141,13 +141,11 @@ export function NewReservation({ open, onClose, staff }: { open: boolean; onClos
       <FormError error={save.error} />
       {conflict && <p className="muted">Otra persona reservó esa habitación en esas fechas. La lista de disponibles ya se actualizó: elige otra.</p>}
       <form id="reservation-form" className="form-grid" onSubmit={submit}>
-        {staff && (
-          <>
+        <>
             <Field className="full" label="Buscar huésped" type="search" value={clientSearch} onChange={(e) => setClientSearch(e.target.value)} hint="Nombre o número de documento." />
             <SelectField className="full" label="Huésped" required value={form.client_id} onChange={(e) => setForm({ ...form, client_id: e.target.value })} error={fieldError(save.error, 'client_id')}
               options={[{ value: '', label: clients.isLoading ? 'Cargando…' : 'Selecciona un huésped' }, ...(clients.data?.data ?? []).map((c) => ({ value: c.id, label: `${c.full_name} · ${c.document_type} ${c.document_number}` }))]} />
-          </>
-        )}
+        </>
         <Field label="Entrada" type="date" min={todayISO()} required value={form.check_in} onChange={(e) => setForm({ ...form, check_in: e.target.value, room_id: '' })} error={fieldError(save.error, 'check_in')} />
         <Field label="Salida" type="date" min={addDaysISO(form.check_in, 1)} required value={form.check_out} onChange={(e) => setForm({ ...form, check_out: e.target.value, room_id: '' })} error={fieldError(save.error, 'check_out')} />
         <Field label="Huéspedes" type="number" min={1} max={8} value={form.guests} onChange={(e) => setForm({ ...form, guests: e.target.value, room_id: '' })} error={fieldError(save.error, 'guests')} />

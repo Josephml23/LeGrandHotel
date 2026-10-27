@@ -7,12 +7,13 @@ Cada requisito de seguridad tiene una implementación concreta y una prueba que 
 | Cifrado de contraseñas | bcrypt (12 rondas) con el cast `hashed` del modelo `User` | `AuthTest` verifica `$2y$…`; captura de la tabla `users` |
 | Variables de entorno | `.env` en `.gitignore`; `.env.example` sin secretos; en AWS, SSM Parameter Store | el repositorio no contiene claves |
 | Rate limits | `AppServiceProvider`: login 5/min por IP+correo, registro 3/min por IP, API 60/min por usuario | `AuthTest`, `ApiBehaviourTest`, `tests/k6/rate-limit.js` (429 + `Retry-After`) |
-| Registro y login diferenciados | Rutas, FormRequests y pantallas separadas; el registro crea rol Cliente | `AuthTest`, `forms.test.tsx` |
+| Registro y login diferenciados | Rutas, FormRequests y pantallas separadas. El registro es **interno**: solo el Administrador crea cuentas del personal (`POST /auth/register` con `role:admin`) | `AuthTest`, `forms.test.tsx` |
+| Solo personal del hotel | Sin registro público; el login rechaza cuentas sin rol interno (403 `ACCOUNT_WITHOUT_ACCESS`); Google solo entra con cuentas ya registradas | `AuthTest` |
 | Autenticación | Sanctum, tokens Bearer | sin token → 401 |
-| Autorización y múltiples usuarios | Roles (Administrador, Recepcionista, Almacenero, Cliente) + middleware `role:` + `ReservationPolicy` | `AuthorizationTest`: recepcionista → `/staff` = 403 |
+| Autorización y múltiples usuarios | Roles (Administrador, Recepcionista, Almacenero, Programador) + middleware `role:` + `ReservationPolicy` | `AuthorizationTest`: recepcionista → `/staff` = 403 |
 | Tokens expirados | `SANCTUM_EXPIRATION=60`; `/auth/refresh` emite uno nuevo y revoca el anterior; `sanctum:prune-expired` diario | token vencido → 401 → el frontend muestra "Sesión expirada" |
 | Rutas protegidas contra acceso manual | Backend: middleware en todas las rutas (el rol se valida **antes** de buscar el modelo, así no se filtra si un id existe). Frontend: `ProtectedRoute` por rol | URL escrita a mano → pantalla 403 (`routes.test.tsx`) |
-| Ingreso con cuenta de correo | Socialite (Google OAuth, stateless) + verificación de correo (`MustVerifyEmail`, enlace firmado). El cliente debe verificar antes de reservar | `AuthTest` (enlace firmado / sin firma → 403) |
+| Ingreso con cuenta de correo | Socialite (Google OAuth, stateless; nunca crea cuentas) + verificación de correo (`MustVerifyEmail`, enlace firmado) al registrar una cuenta del personal | `AuthTest` (enlace firmado / sin firma → 403) |
 | CORS | `config/cors.php`: `allowed_origins` solo `FRONTEND_URL` | `curl -H "Origin: https://otro.com"` no recibe `Access-Control-Allow-Origin` |
 | Validación de entrada | FormRequest en cada endpoint de escritura; Eloquent con bindings evita inyección SQL; búsquedas `LIKE` escapadas | 422 en pruebas |
 | Cabeceras de seguridad | `SecurityHeaders`: `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, CSP, HSTS en producción; HTTPS obligatorio en el ALB | `ApiBehaviourTest` |

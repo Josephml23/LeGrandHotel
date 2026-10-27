@@ -41,19 +41,17 @@ class GoogleAuthController extends Controller
             return redirect()->away("{$frontend}/login?error=google");
         }
 
-        $user = DB::transaction(function () use ($googleUser) {
-            $user = User::where('google_id', $googleUser->getId())
-                ->orWhere('email', $googleUser->getEmail())
-                ->first();
+        // Solo entra quien ya tiene una cuenta del personal: Google nunca crea cuentas nuevas.
+        $user = User::where('google_id', $googleUser->getId())
+            ->orWhere('email', $googleUser->getEmail())
+            ->first();
 
-            if (! $user) {
-                $user = User::create([
-                    'name' => $googleUser->getName() ?: $googleUser->getEmail(),
-                    'email' => $googleUser->getEmail(),
-                    'google_id' => $googleUser->getId(),
-                ]);
-                $user->assignRole(Role::CLIENT);
-            } elseif (! $user->google_id) {
+        if (! $user || ! $user->hasRole(...Role::INTERNAL)) {
+            return redirect()->away("{$frontend}/login?error=google_sin_cuenta");
+        }
+
+        $user = DB::transaction(function () use ($googleUser, $user) {
+            if (! $user->google_id) {
                 $user->forceFill(['google_id' => $googleUser->getId()])->save();
             }
 

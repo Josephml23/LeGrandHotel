@@ -61,49 +61,24 @@ def pantallas():
     ax.set_ylim(-0.75, H + 0.15)
     ax.axis("off")
 
-    # 1. Login
-    x0, y = phone(ax, xs[0], "Iniciar sesión", ["Entrar", "Registro"], 0)
+    # 1. Login (solo personal)
+    x0, y = phone(ax, xs[0], "Iniciar sesión", ["Entrar"], 0)
     rbox(ax, x0, y - 0.55, 0.45, 0.45, fc=INK, r=0.08)
     txt(ax, x0 + 0.225, y - 0.33, "L", 11, "bold", "white", ha="center")
     txt(ax, x0 + 0.6, y - 0.33, "LeGrandHotel", 9, "bold")
-    field(ax, x0, y - 0.95, "Correo", "ana@correo.pe")
+    field(ax, x0, y - 0.95, "Correo", "rosa@legrandhotel.pe")
     field(ax, x0, y - 1.65, "Contraseña", "••••••••")
     button(ax, x0, y - 2.55, "Ingresar")
     txt(ax, x0 + (W - 0.4) / 2, y - 2.8, "o", 6.5, color=MID, ha="center")
     button(ax, x0, y - 3.3, "Continuar con Google", primary=False)
     txt(ax, x0, y - 3.7, "Usar huella / Face ID", 6.5, color=MID)
-    txt(ax, x0, y - 4.05, "¿No tienes cuenta? Crear cuenta", 6.5, color=MID)
+    txt(ax, x0, y - 4.05, "Solo personal del hotel.", 6.5, color=MID)
+    txt(ax, x0, y - 4.3, "Cuentas: las crea el admin.", 6.5, color=MID)
 
-    # 2. Inicio del cliente
-    x0, y = phone(ax, xs[1], "Hola, Ana", ["Inicio", "Reservar", "Mis res.", "Perfil"], 0)
-    txt(ax, x0, y - 0.15, "Tu próxima estadía", 7, color=MID)
-    rbox(ax, x0, y - 1.65, W - 0.4, 1.35, fc=FILL, r=0.08, lw=1)
-    txt(ax, x0 + 0.12, y - 0.55, "Suite · Hab. 405", 8.5, "bold")
-    txt(ax, x0 + 0.12, y - 0.85, "12 nov → 15 nov · 3 noches", 6.8)
-    txt(ax, x0 + 0.12, y - 1.12, "Total S/ 1 350.00", 6.8)
-    rbox(ax, x0 + 0.12, y - 1.54, 1.15, 0.28, fc="white", r=0.1, lw=0.8)
-    txt(ax, x0 + 0.695, y - 1.4, "Confirmada", 6, "bold", ha="center")
-    button(ax, x0, y - 2.2, "Reservar habitación")
-    txt(ax, x0, y - 2.55, "Notificaciones", 7, color=MID)
-    for i, line in enumerate(["Reserva confirmada · hace 2 h", "Check-in desde las 14:00"]):
-        ax.plot([x0, x0 + W - 0.4], [y - 2.72 - i * 0.45, y - 2.72 - i * 0.45], color=LIGHT, lw=0.7)
-        txt(ax, x0, y - 2.95 - i * 0.45, line, 6.5)
+    recep = ["Hoy", "Reservar", "Habit.", "Cochera"]
 
-    # 3. Reservar
-    x0, y = phone(ax, xs[2], "Reservar", ["Inicio", "Reservar", "Mis res.", "Perfil"], 1)
-    field(ax, x0, y - 0.1, "Entrada", "12/11/2026", w=(W - 0.5) / 2)
-    field(ax, x0 + (W - 0.3) / 2, y - 0.1, "Salida", "15/11/2026", w=(W - 0.5) / 2)
-    field(ax, x0, y - 0.8, "Huéspedes", "2")
-    txt(ax, x0, y - 1.45, "8 habitaciones disponibles", 6.8, color=MID)
-    for i, (name, price) in enumerate([("Doble · 203", "S/ 180 / noche"), ("Matrimonial · 301", "S/ 220 / noche"), ("Suite · 405", "S/ 450 / noche")]):
-        yy = y - 1.75 - i * 0.72
-        rbox(ax, x0, yy - 0.58, W - 0.4, 0.58, fc=FILL if i == 2 else "white", r=0.06, lw=1.2 if i == 2 else 0.8)
-        txt(ax, x0 + 0.12, yy - 0.2, name, 7.2, "bold")
-        txt(ax, x0 + 0.12, yy - 0.42, price, 6.3, color=MID)
-    button(ax, x0, y - 4.2, "Confirmar · S/ 1 350.00")
-
-    # 4. Recepción — Hoy
-    x0, y = phone(ax, xs[3], "Hoy en recepción", ["Hoy", "Habit.", "Cochera", "Perfil"], 0)
+    # 2. Recepción — Hoy
+    x0, y = phone(ax, xs[1], "Hoy en recepción", recep, 0)
     for i, (k, v) in enumerate([("Llegan", "9"), ("Salen", "4"), ("Libres", "12")]):
         cx = x0 + i * ((W - 0.4) / 3)
         rbox(ax, cx, y - 0.75, (W - 0.4) / 3 - 0.08, 0.6, r=0.06, lw=0.8)
@@ -118,8 +93,21 @@ def pantallas():
         rbox(ax, x0 + W - 1.2, yy - 0.2, 0.8, 0.3, r=0.05, lw=0.9)
         txt(ax, x0 + W - 0.8, yy - 0.05, "Check-in", 6, "bold", ha="center")
 
-    # 5. Habitaciones (rack)
-    x0, y = phone(ax, xs[4], "Habitaciones", ["Hoy", "Habit.", "Cochera", "Perfil"], 1)
+    # 3. Recepción — Nueva reserva (huésped que llega sin reserva o llama por teléfono)
+    x0, y = phone(ax, xs[2], "Nueva reserva", recep, 1)
+    field(ax, x0, y - 0.1, "Huésped (nombre o DNI)", "Luis Pérez · DNI 40404040")
+    field(ax, x0, y - 0.8, "Entrada", "12/11/2026", w=(W - 0.5) / 2)
+    field(ax, x0 + (W - 0.3) / 2, y - 0.8, "Salida", "15/11/2026", w=(W - 0.5) / 2)
+    txt(ax, x0, y - 1.45, "8 habitaciones disponibles", 6.8, color=MID)
+    for i, (name, price) in enumerate([("Doble · 203", "S/ 180 / noche"), ("Matrimonial · 301", "S/ 220 / noche"), ("Suite · 405", "S/ 450 / noche")]):
+        yy = y - 1.75 - i * 0.72
+        rbox(ax, x0, yy - 0.58, W - 0.4, 0.58, fc=FILL if i == 2 else "white", r=0.06, lw=1.2 if i == 2 else 0.8)
+        txt(ax, x0 + 0.12, yy - 0.2, name, 7.2, "bold")
+        txt(ax, x0 + 0.12, yy - 0.42, price, 6.3, color=MID)
+    button(ax, x0, y - 4.2, "Registrar · S/ 1 350.00")
+
+    # 4. Recepción — Habitaciones (rack)
+    x0, y = phone(ax, xs[3], "Habitaciones", recep, 2)
     states = [["L", "O", "O", "Li"], ["O", "L", "M", "L"], ["Li", "O", "L", "O"], ["L", "L", "O", "L"]]
     style = {"L": ("white", "Libre"), "O": (INK, "Ocupada"), "Li": (LIGHT, "Limpieza"), "M": (FILL, "Mant.")}
     for r_, row in enumerate(states):
@@ -127,8 +115,7 @@ def pantallas():
         for c_, st in enumerate(row):
             cx = x0 + c_ * 0.66
             cy = y - 0.75 - r_ * 0.78
-            fc = style[st][0]
-            rbox(ax, cx, cy, 0.58, 0.44, fc=fc, r=0.05, lw=0.8, ls="--" if st == "M" else "-")
+            rbox(ax, cx, cy, 0.58, 0.44, fc=style[st][0], r=0.05, lw=0.8, ls="--" if st == "M" else "-")
             txt(ax, cx + 0.29, cy + 0.22, f"{4 - r_}0{c_ + 1}", 6.5, "bold", "white" if st == "O" else INK, ha="center")
     for i, key in enumerate(["L", "O", "Li", "M"]):
         cx = x0 + (i % 2) * 1.3
@@ -136,7 +123,26 @@ def pantallas():
         rbox(ax, cx, cy - 0.08, 0.18, 0.16, fc=style[key][0], r=0.02, lw=0.7, ls="--" if key == "M" else "-")
         txt(ax, cx + 0.26, cy, style[key][1], 6)
 
-    labels = ["1. Login (todos)", "2. Inicio del cliente", "3. Reservar (cliente)", "4. Hoy (recepción)", "5. Habitaciones (recepción)"]
+    # 5. Almacén — Inventario
+    x0, y = phone(ax, xs[4], "Inventario", ["Insumos", "Alertas", "Perfil"], 0)
+    field(ax, x0, y - 0.1, "Buscar insumo", "toalla")
+    for i, (name, stock, alert) in enumerate([("Toallas", "120 de mín. 40", False), ("Jabón de tocador", "30 de mín. 50", True),
+                                               ("Shampoo", "15 de mín. 40", True), ("Sábanas 1.5 plazas", "60 de mín. 20", False)]):
+        yy = y - 0.8 - i * 0.58
+        ax.plot([x0, x0 + W - 0.4], [yy + 0.2, yy + 0.2], color=LIGHT, lw=0.7)
+        txt(ax, x0, yy, name, 7, "bold")
+        txt(ax, x0, yy - 0.22, stock, 6, color=MID)
+        if alert:
+            rbox(ax, x0 + W - 1.2, yy - 0.2, 0.8, 0.3, fc=LIGHT, r=0.1, lw=0.8)
+            txt(ax, x0 + W - 0.8, yy - 0.05, "Reponer", 6, "bold", ha="center")
+    txt(ax, x0, y - 3.25, "Movimiento", 7, "bold")
+    rbox(ax, x0, y - 3.68, (W - 0.5) / 2, 0.3, fc=INK, r=0.05)
+    txt(ax, x0 + (W - 0.5) / 4, y - 3.53, "Salida", 6.5, "bold", "white", ha="center")
+    rbox(ax, x0 + (W - 0.3) / 2, y - 3.68, (W - 0.5) / 2, 0.3, r=0.05, lw=0.8)
+    txt(ax, x0 + (W - 0.3) / 2 + (W - 0.5) / 4, y - 3.53, "Entrada", 6.5, "bold", ha="center")
+    button(ax, x0, y - 4.2, "Registrar movimiento")
+
+    labels = ["1. Login (personal)", "2. Hoy (recepción)", "3. Nueva reserva (recepción)", "4. Habitaciones (recepción)", "5. Inventario (almacén)"]
     for x, label in zip(xs, labels):
         txt(ax, x + W / 2, -0.4, label, 9, "bold", ha="center")
     fig.savefig(OUT / "pantallas.png", dpi=200, bbox_inches="tight")

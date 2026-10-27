@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Client;
 use App\Models\InventoryItem;
 use App\Models\ParkingSpot;
 use App\Models\Role;
@@ -42,20 +41,6 @@ class DemoSeeder extends Seeder
                 'hired_at' => now()->subYear()->toDateString(),
             ]);
         }
-
-        $guest = User::updateOrCreate(['email' => 'cliente@legrandhotel.test'], [
-            'name' => 'Cliente Demo',
-            'password' => $password,
-            'email_verified_at' => now(),
-        ]);
-        $guest->assignRole(Role::CLIENT);
-        Client::firstOrCreate(['user_id' => $guest->id], [
-            'document_type' => 'DNI',
-            'document_number' => '70000001',
-            'full_name' => 'Cliente Demo',
-            'phone' => '987654321',
-            'nationality' => 'Perú',
-        ]);
 
         $types = collect([
             ['Simple', 'Cama de 1.5 plazas, ideal para viajes de trabajo.', 1, 120],

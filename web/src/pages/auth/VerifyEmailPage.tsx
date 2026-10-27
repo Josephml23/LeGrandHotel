@@ -24,21 +24,21 @@ export function VerifyEmailPage() {
 
   if (status === 'verified') {
     return (
-      <AuthLayout heading="Correo verificado" lede="Ya puedes reservar habitaciones desde tu cuenta.">
+      <AuthLayout heading="Correo verificado" lede="Tu cuenta del personal está lista.">
         <h1>¡Listo! Tu correo está verificado</h1>
-        <Link className="btn btn-primary" to={user ? homeFor(user) : '/login'}>{user ? 'Ir a mis reservas' : 'Iniciar sesión'}</Link>
+        <Link className="btn btn-primary" to={user ? homeFor(user) : '/login'}>{user ? 'Ir al inicio' : 'Iniciar sesión'}</Link>
       </AuthLayout>
     )
   }
 
   return (
-    <AuthLayout heading="Un paso más" lede="Verificamos tu correo para proteger tus reservas.">
+    <AuthLayout heading="Un paso más" lede="Verificamos tu correo para proteger tu cuenta.">
       <div>
         <h1>Revisa tu correo</h1>
         <p className="muted">
           {status === 'invalid'
             ? 'El enlace no es válido o ya venció. Pide uno nuevo.'
-            : `Te enviamos un enlace de verificación${user ? ` a ${user.email}` : ''}. Ábrelo para activar las reservas.`}
+            : `Te enviamos un enlace de verificación${user ? ` a ${user.email}` : ''}. Ábrelo para confirmar tu cuenta.`}
         </p>
       </div>
       <FormError error={resend.error} />

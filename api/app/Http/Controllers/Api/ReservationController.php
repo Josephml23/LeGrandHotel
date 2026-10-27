@@ -6,7 +6,6 @@ use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ReservationRequest;
 use App\Models\Reservation;
-use App\Models\Role;
 use App\Models\Room;
 use App\Models\Stay;
 use App\Services\ReservationService;
@@ -30,12 +29,8 @@ class ReservationController extends Controller
             'check_in' => ['nullable', 'date_format:Y-m-d'],
         ]);
 
-        $user = $request->user();
-        $onlyOwn = ! $user->hasRole(Role::ADMIN, Role::RECEPTIONIST);
-
         $reservations = Reservation::query()
             ->with(['client:id,full_name,document_number', 'room:id,number,room_type_id', 'room.roomType:id,name', 'stay'])
-            ->when($onlyOwn, fn ($q) => $q->where('client_id', $user->client->id ?? 0))
             ->when($request->query('status'), fn ($q, $v) => $q->where('status', $v))
             ->when($request->query('client_id'), fn ($q, $v) => $q->where('client_id', $v))
             ->when($request->query('room_id'), fn ($q, $v) => $q->where('room_id', $v))
@@ -55,14 +50,8 @@ class ReservationController extends Controller
     public function store(ReservationRequest $request): JsonResponse
     {
         $this->authorize('create', Reservation::class);
-        $data = $request->validated();
 
-        if (! isset($data['client_id'])) {
-            $data['client_id'] = $request->user()->client->id
-                ?? throw new ApiException('CLIENT_PROFILE_NOT_FOUND', 'Completa tu perfil de huésped antes de reservar.', 422);
-        }
-
-        return ApiResponse::created($this->service->save($data));
+        return ApiResponse::created($this->service->save($request->validated()));
     }
 
     public function show(Reservation $reservation): JsonResponse

@@ -79,31 +79,3 @@ describe('recepción', function () {
         expect($this->postJson("/api/v1/stays/{$stayId}/check-out"))->toBeApiError(409, 'ALREADY_CHECKED_OUT');
     });
 });
-
-describe('cliente', function () {
-    it('solo ve sus reservas y reserva a su nombre', function () {
-        $user = actingAsRole(Role::CLIENT);
-        Reservation::factory()->for($this->room)->for($this->client)->create($this->dates); // de otro cliente
-
-        $this->postJson('/api/v1/reservations', ['room_id' => $this->room->id, 'check_in' => now()->addDays(20)->toDateString(), 'check_out' => now()->addDays(21)->toDateString()])
-            ->assertCreated()
-            ->assertJsonPath('data.client_id', $user->client->id);
-
-        $this->getJson('/api/v1/reservations')->assertOk()->assertJsonPath('meta.total', 1);
-    });
-
-    it('no puede ver ni elegir reservas de otros', function () {
-        actingAsRole(Role::CLIENT);
-        $other = Reservation::factory()->for($this->room)->for($this->client)->create($this->dates);
-
-        expect($this->getJson("/api/v1/reservations/{$other->id}"))->toBeApiError(403);
-        $this->postJson('/api/v1/reservations', ['client_id' => $this->client->id, 'room_id' => $this->room->id, ...$this->dates])
-            ->assertStatus(422);
-    });
-
-    it('debe verificar su correo antes de reservar', function () {
-        actingAsRole(Role::CLIENT, ['email_verified_at' => null]);
-
-        expect($this->postJson('/api/v1/reservations', ['room_id' => $this->room->id, ...$this->dates]))->toBeApiError(403);
-    });
-});

@@ -152,7 +152,7 @@ table.data .row-actions { text-align: right; white-space: nowrap; }
 .kpi { padding: 16px 20px; }
 .kpi + .kpi { border-left: 1px solid var(--border); }
 .kpi-label { color: var(--muted); }
-.kpi-value { display: block; font-size: var(--fs-kpi); font-weight: 400; line-height: 1.25; margin: 2px 0; }
+.kpi-value { display: block; font-size: clamp(18px, 1.55vw, var(--fs-kpi)); font-weight: 400; line-height: 1.25; margin: 2px 0; white-space: nowrap; }
 .kpi-caption { font-size: var(--fs-small); color: var(--muted); }
 .list-rows { list-style: none; margin: 0; padding: 0; }
 .list-rows li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 45px; border-top: 1px solid var(--rule); }

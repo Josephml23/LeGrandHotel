@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { send } from '../lib/api'
 import { remove, useAction, useServerList } from '../lib/hooks'
 import { useAuth } from '../auth/AuthContext'
@@ -23,7 +24,7 @@ export function UsersPage() {
   return (
     <>
       <TitleRow title="Usuarios y roles" lede="Al cambiar los roles de alguien se cierran sus sesiones abiertas.">
-        <button className="btn btn-primary" onClick={() => setEditing('new')}>Nuevo usuario</button>
+        <Link className="btn btn-primary" to="/registro">Registrar usuario</Link>
       </TitleRow>
       <div className="tabs" role="tablist" aria-label="Filtrar por rol">
         {(['', ...ALL_ROLES] as const).map((r) => (

@@ -8,7 +8,8 @@
 | `reservas.js` `PROFILE=carga-80 VUS=1000/3000/5000` | carga a 1000, 3000 y 5000 VU | 80% |
 | `reservas.js` `PROFILE=estres / pico / resistencia` | punto de quiebre, picos y 30 min | 100% |
 
-Escenario: 70% lecturas (habitaciones disponibles, mis reservas, tipos), 20% login y 10% crear reserva.
+Escenario (recepción): 70% lecturas (habitaciones disponibles, reservas, tipos), 20% login y 10% crear reserva.
+Los usuarios virtuales son recepcionistas de prueba (`LoadTestUsersSeeder`) y reservan a nombre de huéspedes de `MassiveDataSeeder`.
 Los `thresholds` hacen que la corrida falle sola si no se cumple la meta.
 
 ## Cómo correrlas

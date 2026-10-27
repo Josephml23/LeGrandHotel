@@ -22,7 +22,7 @@ export function ProtectedRoute({ roles }: { roles?: RoleName[] }) {
   return <Outlet />
 }
 
-/** Login y registro: si ya hay sesión, no tiene sentido mostrarlos. */
+/** Login: si ya hay sesión, no tiene sentido mostrarlo. */
 export function GuestRoute() {
   const { user } = useAuth()
   return user ? <Navigate to="/" replace /> : <Outlet />

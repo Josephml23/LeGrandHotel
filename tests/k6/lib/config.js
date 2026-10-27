@@ -14,7 +14,7 @@ export function auth(token) {
   return { headers: { ...JSON_HEADERS, Authorization: `Bearer ${token}` } }
 }
 
-/** Inicia sesión con los N clientes de carga (LoadTestUsersSeeder) y devuelve sus tokens. */
+/** Inicia sesión con los N recepcionistas de carga (LoadTestUsersSeeder) y devuelve sus tokens. */
 export function createUsers(count) {
   const tokens = []
   for (let i = 0; i < count; i++) {

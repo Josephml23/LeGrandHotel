@@ -50,7 +50,7 @@ class UserController extends Controller
 
     public function show(User $user): JsonResponse
     {
-        return ApiResponse::success($user->load('roles', 'client', 'staff'));
+        return ApiResponse::success($user->load('roles', 'staff'));
     }
 
     public function update(UserRequest $request, User $user): JsonResponse

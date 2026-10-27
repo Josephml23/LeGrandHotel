@@ -12,7 +12,7 @@ export function loginAs(roles: RoleName[] | null, verified = true) {
   sessionStore.write({
     token: 'test-token',
     expires_at: new Date(Date.now() + 3_600_000).toISOString(),
-    user: { id: 1, name: 'Ana Prueba', email: 'ana@test.pe', email_verified: verified, roles, client_id: roles.includes('client') ? 1 : null },
+    user: { id: 1, name: 'Ana Prueba', email: 'ana@test.pe', email_verified: verified, roles },
   })
 }
 

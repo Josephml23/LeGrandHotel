@@ -1,7 +1,7 @@
 # LeGrandHotel
 
-Sistema web de gestión de hospedaje: habitaciones y tipos, reservas y estadías, cochera, clientes,
-personal e inventario. API en **Laravel 12** y frontend en **React 18 + TypeScript**, preparado para
+Sistema web **interno** de gestión de hospedaje para el personal del hotel: habitaciones y tipos, reservas y
+estadías, cochera, fichas de huéspedes, personal e inventario. No tiene registro público: las cuentas las crea el Administrador. API en **Laravel 12** y frontend en **React 18 + TypeScript**, preparado para
 desplegarse en **AWS**.
 
 Curso: Desarrollo de Soluciones en la Nube — TECSUP.
@@ -49,7 +49,7 @@ npm run dev
 ```
 
 Cuentas de demostración (`DemoSeeder`, contraseña `DEMO_PASSWORD` del `.env`, solo desarrollo):
-`admin@`, `recepcion@`, `almacen@` y `cliente@legrandhotel.test`.
+`admin@`, `recepcion@`, `almacen@` y `dev@legrandhotel.test`.
 
 ## Calidad
 

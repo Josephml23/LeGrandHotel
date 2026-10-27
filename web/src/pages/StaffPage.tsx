@@ -48,7 +48,7 @@ function StaffForm({ value, onClose }: { value: Staff | 'new' | null; onClose: (
     name: current.user.name,
     email: current.user.email,
     password: '',
-    role: current.user.roles.find((r) => r.name !== 'client')?.name ?? 'receptionist',
+    role: current.user.roles[0]?.name ?? 'receptionist',
     position: current.position,
     shift: current.shift,
     hired_at: current.hired_at.slice(0, 10),

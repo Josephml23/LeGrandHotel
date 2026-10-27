@@ -21,14 +21,14 @@ use Illuminate\Support\Facades\Route;
 
 /*
 | Todas las rutas viven bajo /api/v1 (bootstrap/app.php) y responden JSON.
-| Roles: admin, receptionist, storekeeper, client.
+| Sistema interno del hotel. Roles: admin, receptionist, storekeeper, developer.
+| No hay registro público: el Administrador registra las cuentas del personal.
 */
 
 // ── Público ─────────────────────────────────────────────
 Route::get('health', HealthController::class)->name('health');
 
 Route::prefix('auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register'])->middleware('throttle:register');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::get('google/redirect', [GoogleAuthController::class, 'redirect']);
     Route::get('google/callback', [GoogleAuthController::class, 'callback']);
@@ -44,13 +44,15 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::post('logout', [AuthController::class, 'logout']);
         Route::post('refresh', [AuthController::class, 'refresh']);
+        // Registro interno: solo el Administrador crea cuentas (3 por minuto).
+        Route::post('register', [AuthController::class, 'register'])->middleware(['role:admin', 'throttle:register']);
     });
     Route::post('email/verification-notification', [EmailVerificationController::class, 'send'])->middleware('throttle:6,1');
 
     Route::get('dashboard', [ReportController::class, 'dashboard']);
 
     // Tipos de habitación: Recepción lee, Admin escribe.
-    Route::middleware('role:admin,receptionist,client')->group(function () {
+    Route::middleware('role:admin,receptionist')->group(function () {
         Route::get('room-types', [RoomTypeController::class, 'index']);
         Route::get('room-types/{room_type}', [RoomTypeController::class, 'show']);
         Route::get('rooms/available', [RoomController::class, 'available']);
@@ -61,15 +63,9 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::delete('room-types/{room_type}', [RoomTypeController::class, 'destroy']);
     });
 
-    // Reservas: el Cliente solo accede a las suyas (ReservationPolicy).
-    Route::middleware('role:admin,receptionist,client')->group(function () {
-        Route::apiResource('reservations', ReservationController::class);
-        Route::get('me/client', [ClientController::class, 'me']);
-        Route::put('me/client', [ClientController::class, 'updateMe']);
-    });
-
-    // Operación de recepción.
+    // Operación de recepción: reservas, estadías, huéspedes y cochera.
     Route::middleware('role:admin,receptionist')->group(function () {
+        Route::apiResource('reservations', ReservationController::class);
         Route::patch('rooms/{room}/status', [RoomController::class, 'updateStatus']);
         Route::apiResource('rooms', RoomController::class);
         Route::apiResource('clients', ClientController::class);

@@ -29,7 +29,7 @@ it('solo programador y administrador entran a la vista del programador', functio
     'programador' => [Role::DEVELOPER, 200],
     'administrador' => [Role::ADMIN, 200],
     'recepcionista' => [Role::RECEPTIONIST, 403],
-    'cliente' => [Role::CLIENT, 403],
+    'almacenero' => [Role::STOREKEEPER, 403],
 ]);
 
 it('muestra versión, drivers y conteos sin exponer secretos', function () {

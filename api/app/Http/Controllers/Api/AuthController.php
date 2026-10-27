@@ -6,7 +6,6 @@ use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
-use App\Models\Client;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\ApiResponse;
@@ -18,7 +17,10 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    /** Registro público: siempre crea una cuenta con rol Cliente y su ficha de huésped. */
+    /**
+     * Registro interno: el Administrador crea la cuenta de una persona del hotel con su rol.
+     * No inicia sesión por ella; la persona recibe el correo de verificación y entra con su contraseña.
+     */
     public function register(RegisterRequest $request): JsonResponse
     {
         $data = $request->validated();
@@ -29,23 +31,14 @@ class AuthController extends Controller
                 'email' => $data['email'],
                 'password' => $data['password'],
             ]);
-            $user->assignRole(Role::CLIENT);
-
-            Client::create([
-                'user_id' => $user->id,
-                'full_name' => $data['name'],
-                'document_type' => $data['document_type'],
-                'document_number' => $data['document_number'],
-                'phone' => $data['phone'] ?? null,
-                'nationality' => $data['nationality'] ?? null,
-            ]);
+            $user->assignRole($data['role']);
 
             return $user;
         });
 
         event(new Registered($user));
 
-        return ApiResponse::created($this->tokenPayload($user, 'web'));
+        return ApiResponse::created(self::userPayloadFor($user));
     }
 
     public function login(LoginRequest $request): JsonResponse
@@ -54,6 +47,11 @@ class AuthController extends Controller
 
         if (! $user || ! $user->password || ! Hash::check($request->string('password'), $user->password)) {
             throw new ApiException('INVALID_CREDENTIALS', 'Correo o contraseña incorrectos.', 401);
+        }
+
+        // Solo el personal del hotel entra: una cuenta sin rol interno no recibe token.
+        if (! $user->hasRole(...Role::INTERNAL)) {
+            throw new ApiException('ACCOUNT_WITHOUT_ACCESS', 'Esta cuenta no tiene acceso al sistema del hotel.', 403);
         }
 
         return ApiResponse::success($this->tokenPayload($user, $request->input('device_name', 'web')));
@@ -102,7 +100,7 @@ class AuthController extends Controller
 
     public static function userPayloadFor(User $user): array
     {
-        $user->loadMissing('roles', 'client');
+        $user->loadMissing('roles');
 
         return [
             'id' => $user->id,
@@ -110,7 +108,6 @@ class AuthController extends Controller
             'email' => $user->email,
             'email_verified' => $user->hasVerifiedEmail(),
             'roles' => $user->roles->pluck('name')->values(),
-            'client_id' => $user->client?->id,
         ];
     }
 

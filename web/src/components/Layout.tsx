@@ -31,6 +31,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     group: 'Administración',
     items: [
       { to: '/personal', label: 'Personal', roles: ['admin'] },
+      { to: '/registro', label: 'Registrar usuario', roles: ['admin'] },
       { to: '/usuarios', label: 'Usuarios y roles', roles: ['admin'] },
       { to: '/reportes', label: 'Reportes', roles: ['admin'] },
       { to: '/auditoria', label: 'Auditoría', roles: ['admin'] },
@@ -40,14 +41,6 @@ const NAV: { group: string; items: NavItem[] }[] = [
   {
     group: 'Programador',
     items: [{ to: '/programador', label: 'Vista del programador', roles: ['developer', 'admin'] }],
-  },
-  {
-    group: 'Mi cuenta',
-    items: [
-      { to: '/mis-reservas', label: 'Mis reservas', roles: ['client'] },
-      { to: '/reservar', label: 'Reservar', roles: ['client'] },
-      { to: '/mi-perfil', label: 'Mi perfil', roles: ['client'] },
-    ],
   },
 ]
 
@@ -102,18 +95,8 @@ export function Layout() {
       </nav>
 
       <main className="sheet">
-        {!user.email_verified && hasRole('client') && <VerifyBanner />}
         <Outlet />
       </main>
-    </div>
-  )
-}
-
-function VerifyBanner() {
-  return (
-    <div className="banner" role="status">
-      <span>Verifica tu correo para poder reservar. Te enviamos un enlace al registrarte.</span>
-      <NavLink className="btn btn-sm" to="/verificar-correo">Reenviar enlace</NavLink>
     </div>
   )
 }

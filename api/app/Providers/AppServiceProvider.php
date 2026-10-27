@@ -31,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
             ->by(Str::lower((string) $request->input('email')).'|'.$request->ip()));
 
         RateLimiter::for('register', fn (Request $request) => Limit::perMinute(config('hotel.rate_limits.register'))
-            ->by($request->ip()));
+            ->by($request->user()?->id ?: $request->ip()));
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(config('hotel.rate_limits.api'))
             ->by($request->user()?->id ?: $request->ip()));

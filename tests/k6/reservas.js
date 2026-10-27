@@ -1,5 +1,5 @@
 /*
- * Escenario principal de LeGrandHotel: 70% lecturas, 20% login y 10% crear reserva.
+ * Escenario principal de LeGrandHotel (recepción): 70% lecturas, 20% login y 10% crear reserva.
  *
  * Perfiles (variable PROFILE):
  *   carga-25    50 → 100 usuarios virtuales (entrega 25%)       p95 < 500 ms, 0% errores
@@ -97,10 +97,14 @@ const reservaCreada = new Trend('reserva_creada_ms', true)
 export function setup() {
   const health = http.get(`${BASE_URL}/health`)
   if (health.status !== 200) throw new Error(`La API no está sana antes de la prueba: ${health.status}`)
-  return { tokens: createUsers(USERS) }
+  const tokens = createUsers(USERS)
+  // Fichas de huéspedes a cuyo nombre recepción registra las reservas de la prueba.
+  const clients = http.get(`${BASE_URL}/clients?per_page=50`, auth(tokens[0])).json('data') || []
+  if (clients.length === 0) throw new Error('No hay clientes: corre MassiveDataSeeder antes de la prueba.')
+  return { tokens, clientIds: clients.map((c) => c.id) }
 }
 
-export default function ({ tokens }) {
+export default function ({ tokens, clientIds }) {
   const token = tokens[(__VU - 1) % tokens.length]
   const dice = Math.random()
 
@@ -109,7 +113,7 @@ export default function ({ tokens }) {
       const from = isoDate(30 + (__ITER % 60))
       const to = isoDate(31 + (__ITER % 60) + 2)
       ok(http.get(`${BASE_URL}/rooms/available?from=${from}&to=${to}&per_page=15`, { ...auth(token), tags: { tipo: 'lectura', name: 'rooms/available' } }), 'disponibles')
-      ok(http.get(`${BASE_URL}/reservations?per_page=15`, { ...auth(token), tags: { tipo: 'lectura', name: 'reservations' } }), 'mis reservas')
+      ok(http.get(`${BASE_URL}/reservations?per_page=15`, { ...auth(token), tags: { tipo: 'lectura', name: 'reservations' } }), 'reservas')
       ok(http.get(`${BASE_URL}/room-types`, { ...auth(token), tags: { tipo: 'lectura', name: 'room-types' } }), 'tipos')
     })
   } else if (dice < 0.9) {
@@ -126,7 +130,7 @@ export default function ({ tokens }) {
       const list = rooms.json('data') || []
       if (list.length === 0) return
       const room = list[Math.floor(Math.random() * list.length)]
-      const res = http.post(`${BASE_URL}/reservations`, JSON.stringify({ room_id: room.id, check_in: from, check_out: to }), {
+      const res = http.post(`${BASE_URL}/reservations`, JSON.stringify({ client_id: clientIds[Math.floor(Math.random() * clientIds.length)], room_id: room.id, check_in: from, check_out: to }), {
         ...auth(token),
         tags: { tipo: 'escritura', name: 'reservations:create' },
         // 409 = otro usuario virtual tomó la habitación primero: comportamiento correcto, no error.

@@ -18,10 +18,11 @@ it('niega con 403 las rutas de otros roles', function (string $role, string $met
     'recepcionista → inventario' => [Role::RECEPTIONIST, 'GET', '/api/v1/inventory-items'],
     'almacenero → habitaciones' => [Role::STOREKEEPER, 'GET', '/api/v1/rooms'],
     'almacenero → reservas' => [Role::STOREKEEPER, 'GET', '/api/v1/reservations'],
-    'cliente → clientes' => [Role::CLIENT, 'GET', '/api/v1/clients'],
-    'cliente → cochera' => [Role::CLIENT, 'GET', '/api/v1/parking-spots'],
-    'cliente → check-in' => [Role::CLIENT, 'POST', '/api/v1/reservations/1/check-in'],
-    'cliente → auditoría' => [Role::CLIENT, 'GET', '/api/v1/audit-logs'],
+    'almacenero → clientes' => [Role::STOREKEEPER, 'GET', '/api/v1/clients'],
+    'almacenero → cochera' => [Role::STOREKEEPER, 'GET', '/api/v1/parking-spots'],
+    'almacenero → check-in' => [Role::STOREKEEPER, 'POST', '/api/v1/reservations/1/check-in'],
+    'programador → reservas' => [Role::DEVELOPER, 'GET', '/api/v1/reservations'],
+    'recepcionista → registrar usuario' => [Role::RECEPTIONIST, 'POST', '/api/v1/auth/register'],
 ]);
 
 it('permite a cada rol sus módulos', function (string $role, string $uri) {
@@ -34,7 +35,7 @@ it('permite a cada rol sus módulos', function (string $role, string $uri) {
     'recepcionista → habitaciones' => [Role::RECEPTIONIST, '/api/v1/rooms'],
     'recepcionista → tipos (lectura)' => [Role::RECEPTIONIST, '/api/v1/room-types'],
     'almacenero → inventario' => [Role::STOREKEEPER, '/api/v1/inventory-items'],
-    'cliente → sus reservas' => [Role::CLIENT, '/api/v1/reservations'],
-    'cliente → disponibles' => [Role::CLIENT, '/api/v1/rooms/available?from=2030-01-01&to=2030-01-03'],
+    'recepcionista → reservas' => [Role::RECEPTIONIST, '/api/v1/reservations'],
+    'recepcionista → disponibles' => [Role::RECEPTIONIST, '/api/v1/rooms/available?from=2030-01-01&to=2030-01-03'],
     'todos → panel' => [Role::STOREKEEPER, '/api/v1/dashboard'],
 ]);

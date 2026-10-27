@@ -25,9 +25,9 @@ describe('rutas protegidas', () => {
     expect(await screen.findByRole('heading', { name: 'No tienes acceso a esta sección' })).toBeInTheDocument()
   })
 
-  it('un cliente no entra al inventario', async () => {
-    loginAs(['client'])
-    renderApp(<App />, '/inventario')
+  it('un almacenero no entra a reservas', async () => {
+    loginAs(['storekeeper'])
+    renderApp(<App />, '/reservas')
     expect(await screen.findByText('No tienes acceso a esta sección')).toBeInTheDocument()
   })
 

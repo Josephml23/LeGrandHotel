@@ -9,7 +9,7 @@ class ClientRequest extends ApiFormRequest
 {
     public function rules(): array
     {
-        $clientId = $this->routeId('client') ?? $this->user()?->client?->id;
+        $clientId = $this->routeId('client');
 
         return [
             'full_name' => [$this->required(), 'string', 'max:120'],

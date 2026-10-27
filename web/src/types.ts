@@ -1,10 +1,10 @@
-export type RoleName = 'admin' | 'receptionist' | 'storekeeper' | 'client' | 'developer'
+/** Solo roles del personal: el sistema es interno del hotel. */
+export type RoleName = 'admin' | 'receptionist' | 'storekeeper' | 'developer'
 
 export const ROLE_LABELS: Record<RoleName, string> = {
   admin: 'Administrador',
   receptionist: 'Recepcionista',
   storekeeper: 'Almacenero',
-  client: 'Cliente',
   developer: 'Programador',
 }
 
@@ -14,7 +14,6 @@ export interface AuthUser {
   email: string
   email_verified: boolean
   roles: RoleName[]
-  client_id: number | null
 }
 
 export interface Session {

@@ -4,13 +4,14 @@ Estado: **diseño** (no hay código de la app todavía). Se presenta como EXTRA 
 
 ## 1. Objetivo
 
-Llevar al teléfono las tareas que se hacen lejos de un escritorio, usando **la misma API** (`/api/v1`)
-que la página web. La app no reemplaza a la web: cubre lo que conviene hacer en movimiento.
+Llevar al teléfono del **personal del hotel** las tareas que se hacen lejos de un escritorio, usando **la misma API**
+(`/api/v1`) que la página web. Igual que la web, es una herramienta **interna**: no tiene registro público y ningún
+huésped ni persona externa puede entrar; las cuentas las crea el Administrador. La app no reemplaza a la web: cubre
+lo que conviene hacer en movimiento.
 
 | Usuario | Para qué usa la app |
 | --- | --- |
-| Cliente | Registrarse o entrar (también con Google), buscar disponibilidad, reservar, ver y cancelar sus reservas, ver su perfil |
-| Recepcionista | Ver las llegadas y salidas del día, hacer check-in y check-out desde el lobby, cambiar el estado de una habitación, registrar la placa en la cochera |
+| Recepcionista | Ver las llegadas y salidas del día, hacer check-in y check-out desde el lobby, registrar la reserva de un huésped que llega o llama, cambiar el estado de una habitación, registrar la placa en la cochera |
 | Almacenero | Registrar entradas y salidas de inventario en el almacén y ver los insumos bajo el mínimo |
 | Administrador | Ver el panel (ocupación, ingresos del mes, alertas). La gestión completa (personal, usuarios, reportes) sigue en la web |
 | Programador | Sin app: usa la vista web `/programador` |
@@ -31,7 +32,7 @@ Librerías previstas (las mismas ideas de la web):
 | Navegación por pantallas | Expo Router (rutas por archivos) | React Router |
 | Llamadas a la API y caché | TanStack Query + Axios | Igual |
 | Guardar el token de forma segura | `expo-secure-store` (Keychain en iOS, Keystore en Android) | `sessionStorage` |
-| Login con Google | `expo-auth-session` + enlace profundo `legrandhotel://auth/callback` | Socialite con redirección |
+| Login con Google (solo cuentas del personal ya registradas) | `expo-auth-session` + enlace profundo `legrandhotel://auth/callback` | Socialite con redirección |
 | Notificaciones | `expo-notifications` (FCM en Android, APNs en iOS) | — |
 | Desbloqueo con huella o rostro | `expo-local-authentication` | — |
 | Lector de placas / QR (fase 2) | `expo-camera` | — |
@@ -63,7 +64,7 @@ App (Android / iOS)                         Servidor (el mismo de la web)
 | Cambio | Para qué | Entrega |
 | --- | --- | --- |
 | `POST /devices` y `DELETE /devices/{token}` (tabla `push_tokens`) | Registrar el token de notificaciones del teléfono | 80% |
-| Notificaciones en cola: reserva confirmada, recordatorio de check-in, insumo bajo el mínimo | Avisos al teléfono | 80% |
+| Notificaciones en cola: llegadas del día, habitación lista tras la limpieza, insumo bajo el mínimo | Avisos al teléfono del personal | 80% |
 | Google OAuth con redirección a `legrandhotel://auth/callback` además de la web | Login con Google en la app | 80% |
 | Cabecera `X-App-Version` y respuesta 426 si la versión es obsoleta | Obligar a actualizar si cambia la API | 100% |
 | Nada más: CORS no aplica a apps nativas; los rate limits y roles son los mismos | — | — |
@@ -72,10 +73,8 @@ App (Android / iOS)                         Servidor (el mismo de la web)
 
 | Pantalla | Rol | Datos (endpoint) |
 | --- | --- | --- |
-| Bienvenida, Login, Registro, Verificar correo | Todos | `/auth/login`, `/auth/register`, `/email/verification-notification` |
-| Inicio del cliente: próxima reserva y botón "Reservar" | Cliente | `/dashboard` |
-| Reservar: fechas → habitaciones disponibles → confirmar | Cliente | `/rooms/available`, `POST /reservations` |
-| Mis reservas (detalle y cancelar) | Cliente | `/reservations`, `PUT /reservations/{id}` |
+| Login (solo personal; sin registro) | Todos | `/auth/login` |
+| Nueva reserva: huésped → fechas → habitación disponible | Recepción | `/clients`, `/rooms/available`, `POST /reservations` |
 | Hoy en recepción: llegadas y salidas con check-in / check-out | Recepción | `/reservations?check_in=hoy`, `/reservations/{id}/check-in`, `/stays/{id}/check-out` |
 | Habitaciones por piso (el "rack") con cambio de estado | Recepción | `/rooms`, `PATCH /rooms/{id}/status` |
 | Cochera: registrar placa y salida | Recepción | `/parking-assignments` |
@@ -83,8 +82,8 @@ App (Android / iOS)                         Servidor (el mismo de la web)
 | Panel resumido | Admin | `/dashboard`, `/reports/occupancy` |
 | Pantallas de error: sin conexión, sesión expirada, 403, 429, 500, 503 | Todos | Interceptor |
 
-Navegación: barra inferior con 3–4 pestañas según el rol (el cliente ve Inicio, Reservar, Mis reservas, Perfil;
-recepción ve Hoy, Habitaciones, Cochera, Perfil).
+Navegación: barra inferior con 3–4 pestañas según el rol (recepción ve Hoy, Reservar, Habitaciones, Cochera;
+almacén ve Insumos, Alertas, Perfil). El registro de cuentas del personal se hace solo en la web, en el panel del Administrador.
 
 Diseño visual: los mismos tokens de la web (tinta `#131416`, acento `#1b6c80`, IBM Plex Sans), botones de al menos 44 × 44 pt,
 textos que respetan el tamaño de letra del sistema y modo oscuro. Bocetos en `docs/movil/pantallas.png`.
@@ -116,5 +115,5 @@ Para el curso basta la distribución de prueba.
 | Entrega | Alcance de la app |
 | --- | --- |
 | 25% | Diseño (este documento), pantallas y arquitectura |
-| 80% | Proyecto Expo en `mobile/`, login y registro, flujo del cliente (reservar, mis reservas), recepción "Hoy" con check-in/out, notificaciones; build de prueba Android |
+| 80% | Proyecto Expo en `mobile/`, login, recepción ("Hoy" con check-in/out, nueva reserva, habitaciones), notificaciones; build de prueba Android |
 | 100% | Inventario, cochera, panel admin, build iOS en TestFlight, pruebas E2E con Maestro, publicación de prueba en ambas tiendas |

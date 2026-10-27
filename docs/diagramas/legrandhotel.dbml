@@ -21,7 +21,7 @@ Table users {
 
 Table roles {
   id bigint [pk, increment]
-  name varchar [unique, note: 'admin, receptionist, storekeeper, client']
+  name varchar [unique, note: 'admin, receptionist, storekeeper, developer']
   label varchar
 }
 
@@ -31,9 +31,9 @@ Table role_user {
   indexes { (user_id, role_id) [pk] }
 }
 
+// Huéspedes: fichas que registra recepción; no son usuarios del sistema.
 Table clients {
   id bigint [pk, increment]
-  user_id bigint [null, unique, ref: - users.id]
   document_type varchar
   document_number varchar [unique]
   full_name varchar

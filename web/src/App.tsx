@@ -20,8 +20,6 @@ import { UsersPage } from './pages/UsersPage'
 import { ReportsPage } from './pages/ReportsPage'
 import { AuditPage } from './pages/AuditPage'
 import { DeveloperPage } from './pages/DeveloperPage'
-import { MyReservationsPage } from './pages/client/MyReservationsPage'
-import { ProfilePage } from './pages/client/ProfilePage'
 import {
   ForbiddenPage,
   NotFoundPage,
@@ -45,7 +43,6 @@ export function App() {
 
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/registro" element={<RegisterPage />} />
         </Route>
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/verificar-correo" element={<VerifyEmailPage />} />
@@ -68,6 +65,7 @@ export function App() {
               <Route path="/inventario" element={<InventoryPage />} />
             </Route>
             <Route element={<ProtectedRoute roles={['admin']} />}>
+              <Route path="/registro" element={<RegisterPage />} />
               <Route path="/personal" element={<StaffPage />} />
               <Route path="/usuarios" element={<UsersPage />} />
               <Route path="/reportes" element={<ReportsPage />} />
@@ -76,11 +74,6 @@ export function App() {
             </Route>
             <Route element={<ProtectedRoute roles={['developer', 'admin']} />}>
               <Route path="/programador" element={<DeveloperPage />} />
-            </Route>
-            <Route element={<ProtectedRoute roles={['client']} />}>
-              <Route path="/mis-reservas" element={<MyReservationsPage />} />
-              <Route path="/reservar" element={<MyReservationsPage startBooking />} />
-              <Route path="/mi-perfil" element={<ProfilePage />} />
             </Route>
             <Route path="/403" element={<ForbiddenPage />} />
           </Route>

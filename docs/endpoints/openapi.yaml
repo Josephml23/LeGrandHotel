@@ -5,7 +5,7 @@ info:
   description: |
     API de gestión de hospedaje: habitaciones, reservas y estadías, cochera, clientes, personal e inventario.
     Formato único de respuesta: `{ success, data, meta }` o `{ success: false, error: { code, message, details } }`.
-    Roles: admin, receptionist, storekeeper, client. Tokens Bearer de Sanctum con vencimiento de 60 minutos.
+    Sistema interno del hotel. Roles: admin, receptionist, storekeeper, developer. Sin registro público. Tokens Bearer de Sanctum con vencimiento de 60 minutos.
 servers:
   - url: http://localhost:8000/api/v1
     description: Local
@@ -39,26 +39,24 @@ paths:
   /auth/register:
     post:
       tags: [Auth]
-      security: []
-      summary: Registro de huésped (rol Cliente). Rate limit 3/min.
+      summary: Registro interno de una cuenta del personal. Solo Administrador. Rate limit 3/min.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [name, email, password, password_confirmation, document_type, document_number]
+              required: [name, email, password, password_confirmation, role]
               properties:
                 name: { type: string }
                 email: { type: string, format: email }
                 password: { type: string, minLength: 8 }
                 password_confirmation: { type: string }
-                document_type: { type: string, enum: [DNI, PASAPORTE, CE] }
-                document_number: { type: string }
-                phone: { type: string }
-                nationality: { type: string }
+                role: { type: string, enum: [admin, receptionist, storekeeper, developer] }
       responses:
-        '201': { $ref: '#/components/responses/Session' }
+        '201': { description: Cuenta creada (no inicia sesión por la persona; se envía correo de verificación) }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/Validation' }
         '429': { $ref: '#/components/responses/TooMany' }
 
@@ -80,6 +78,7 @@ paths:
       responses:
         '200': { $ref: '#/components/responses/Session' }
         '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { description: Cuenta sin rol del hotel (ACCOUNT_WITHOUT_ACCESS) }
         '429': { $ref: '#/components/responses/TooMany' }
 
   /auth/me:
@@ -143,7 +142,7 @@ paths:
   /room-types:
     get:
       tags: [Habitaciones]
-      summary: Lista paginada (Admin, Recepción, Cliente)
+      summary: Lista paginada (Admin, Recepción)
       parameters: [{ $ref: '#/components/parameters/page' }, { $ref: '#/components/parameters/per_page' }, { $ref: '#/components/parameters/search' }]
       responses:
         '200': { $ref: '#/components/responses/Page' }
@@ -233,14 +232,11 @@ paths:
     get: { tags: [Clientes], summary: Detalle, responses: { '200': { description: OK } } }
     put: { tags: [Clientes], summary: Editar, responses: { '200': { description: OK } } }
     delete: { tags: [Clientes], summary: Eliminar (409 si tiene reservas), responses: { '204': { description: Eliminado }, '409': { $ref: '#/components/responses/Conflict' } } }
-  /me/client:
-    get: { tags: [Clientes], summary: Perfil de huésped propio (Cliente), responses: { '200': { description: OK } } }
-    put: { tags: [Clientes], summary: Crear o editar el perfil propio, responses: { '200': { description: OK } } }
 
   /reservations:
     get:
       tags: [Reservas]
-      summary: Lista (el Cliente solo ve las suyas). Filtros status, from, to, check_in, client_id, room_id, search.
+      summary: Lista de reservas (Admin, Recepción). Filtros status, from, to, check_in, client_id, room_id, search.
       responses: { '200': { $ref: '#/components/responses/Page' } }
     post:
       tags: [Reservas]
@@ -250,9 +246,9 @@ paths:
           application/json:
             schema:
               type: object
-              required: [room_id, check_in, check_out]
+              required: [client_id, room_id, check_in, check_out]
               properties:
-                client_id: { type: integer, description: Solo personal; el Cliente reserva a su nombre }
+                client_id: { type: integer, description: Ficha del huésped }
                 room_id: { type: integer }
                 check_in: { type: string, format: date }
                 check_out: { type: string, format: date }
@@ -396,7 +392,7 @@ components:
       description: Token Bearer con vencimiento y usuario
       content:
         application/json:
-          example: { success: true, data: { token: '1|abc…', token_type: Bearer, expires_at: '2026-10-26T18:00:00-05:00', user: { id: 1, name: Ana, roles: [client] } } }
+          example: { success: true, data: { token: '1|abc…', token_type: Bearer, expires_at: '2026-10-26T18:00:00-05:00', user: { id: 1, name: Ana, roles: [receptionist] } } }
     Page:
       description: Página de resultados
       content:

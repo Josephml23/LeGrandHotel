@@ -1,7 +1,8 @@
 # Endpoints de la API
 
-Todas las rutas viven bajo `/api/v1`, responden JSON y, salvo autenticación y salud, exigen token
-Bearer de Sanctum. Los listados aceptan `?page=` y `?per_page=` (máximo 50) y filtros por query string.
+Todas las rutas viven bajo `/api/v1`, responden JSON y, salvo login y salud, exigen token
+Bearer de Sanctum. El sistema es **solo para el personal del hotel**: no hay registro público y los huéspedes
+son fichas de cliente que registra recepción, no usuarios. Los listados aceptan `?page=` y `?per_page=` (máximo 50) y filtros por query string.
 La especificación completa está en [`openapi.yaml`](openapi.yaml) (ábrela en https://editor.swagger.io)
 y el código en `api/routes/api.php` (`php artisan route:list --path=api`).
 
@@ -17,20 +18,19 @@ y el código en `api/routes/api.php` (`php artisan route:list --path=api`).
 | Módulo | Método y ruta | Roles | Entrega |
 | --- | --- | --- | --- |
 | Salud | `GET /health` (app, BD, caché) | Público | 25% |
-| Auth | `POST /auth/register` (3/min) | Público | 25% |
+| Auth | `POST /auth/register` (registro interno del personal, 3/min) | Admin | 25% |
 | Auth | `POST /auth/login` (5/min por IP+correo) | Público | 25% |
 | Auth | `POST /auth/logout` · `GET /auth/me` | Autenticado | 25% |
 | Auth | `POST /auth/refresh` (token nuevo, revoca el anterior) | Autenticado | 80% |
 | Auth | `GET /auth/google/redirect` · `GET /auth/google/callback` | Público | 80% |
 | Auth | `POST /email/verification-notification` · `GET /email/verify/{id}/{hash}` (firmado) | Autenticado / enlace firmado | 80% |
 | Panel | `GET /dashboard` (resumen según rol) | Autenticado | 80% |
-| Tipos de habitación | `GET /room-types` · `GET /room-types/{id}` | Admin, Recepción, Cliente | 25% |
+| Tipos de habitación | `GET /room-types` · `GET /room-types/{id}` | Admin, Recepción | 25% |
 | Tipos de habitación | `POST` · `PUT` · `DELETE /room-types/{id}` | Admin | 25% |
 | Habitaciones | `GET, POST /rooms` · `GET, PUT, DELETE /rooms/{id}` · `PATCH /rooms/{id}/status` | Admin, Recepción | 25% |
-| Habitaciones | `GET /rooms/available?from=&to=&guests=` | Admin, Recepción, Cliente | 80% |
+| Habitaciones | `GET /rooms/available?from=&to=&guests=` | Admin, Recepción | 80% |
 | Clientes | CRUD `/clients` | Admin, Recepción | 80% |
-| Clientes | `GET, PUT /me/client` (perfil propio) | Cliente | 80% |
-| Reservas | CRUD `/reservations` (409 si se cruzan fechas) | Admin, Recepción, Cliente (solo las suyas) | 80% |
+| Reservas | CRUD `/reservations` (409 si se cruzan fechas) | Admin, Recepción | 80% |
 | Estadías | `POST /reservations/{id}/check-in` · `GET /stays` · `POST /stays/{id}/check-out` | Admin, Recepción | 80% |
 | Cochera | CRUD `/parking-spots` · CRUD `/parking-assignments` | Admin, Recepción | 80% |
 | Personal | CRUD `/staff` | Admin | 80% |
@@ -46,6 +46,7 @@ y el código en `api/routes/api.php` (`php artisan route:list --path=api`).
 | 200 / 201 / 204 | Lectura, creación, eliminación correctas | — |
 | 400 | JSON mal formado | `BAD_REQUEST` |
 | 401 | Sin token, token expirado o credenciales incorrectas | `UNAUTHENTICATED`, `INVALID_CREDENTIALS` |
+| 403 | Cuenta sin rol del hotel (no recibe token) | `ACCOUNT_WITHOUT_ACCESS` |
 | 403 | Rol sin permiso (aunque la ruta se pida a mano) | `FORBIDDEN` |
 | 404 | Recurso o ruta inexistente | `ROOM_NOT_FOUND`, `ROUTE_NOT_FOUND` |
 | 405 | Método no permitido | `METHOD_NOT_ALLOWED` |

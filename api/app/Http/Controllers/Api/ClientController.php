@@ -54,26 +54,4 @@ class ClientController extends Controller
 
         return ApiResponse::noContent();
     }
-
-    /** Perfil propio del cliente autenticado. */
-    public function me(Request $request): JsonResponse
-    {
-        $client = $request->user()->client ?? throw new ApiException('CLIENT_PROFILE_NOT_FOUND', 'Completa tu perfil de huésped.', 404);
-
-        return ApiResponse::success($client);
-    }
-
-    public function updateMe(ClientRequest $request): JsonResponse
-    {
-        $user = $request->user();
-        $client = $user->client;
-
-        if ($client) {
-            $client->update($request->validated());
-        } else {
-            $client = Client::create([...$request->validated(), 'user_id' => $user->id]);
-        }
-
-        return ApiResponse::success($client);
-    }
 }

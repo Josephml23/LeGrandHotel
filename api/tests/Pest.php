@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\Client;
-use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,11 +17,6 @@ pest()->extend(TestCase::class)
 function actingAsRole(string $role, array $attributes = []): User
 {
     $user = User::factory()->withRole($role)->create($attributes);
-
-    if ($role === Role::CLIENT) {
-        $user->client()->create(Client::factory()->raw(['full_name' => $user->name]));
-    }
-
     Sanctum::actingAs($user->fresh());
 
     return $user->fresh();

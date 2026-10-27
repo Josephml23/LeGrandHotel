@@ -11,7 +11,7 @@ Leyenda: ✅ hecho y probado en código · ☁️ código listo, falta crear el 
 | --- | --- | --- |
 | Entorno cloud preparado (cuenta AWS, VPC, EC2, RDS) | ☁️ | `infra/terraform` (network, compute, data); faltan capturas de la consola |
 | Endpoints definidos | ✅ | `api/routes/api.php`, `docs/endpoints/README.md`, `docs/endpoints/openapi.yaml` |
-| Registro y login diferenciados y funcionales | ✅ | `/auth/register`, `/auth/login`, pantallas `/registro` y `/login`; `AuthTest`, `forms.test.tsx` |
+| Registro y login diferenciados y funcionales | ✅ | `/auth/register` (registro interno, solo Administrador) y `/auth/login`; pantallas `/registro` (panel del admin) y `/login`; `AuthTest`, `forms.test.tsx` |
 | EXTRA: VPC con subredes privadas | ☁️ | `infra/terraform/network.tf` |
 | EXTRA: diagrama de BD | ✅ | `docs/diagramas/legrandhotel.dbml` |
 | EXTRA: cifrar el código | ✅ | build ofuscado (`web/vite.config.ts`), comparación en `docs/seguridad.md` |
@@ -32,7 +32,7 @@ Leyenda: ✅ hecho y probado en código · ☁️ código listo, falta crear el 
 | Pruebas con 50–100 usuarios (k6) | ☁️ | `tests/k6/reservas.js PROFILE=carga-25`; falta el HTML de la corrida en AWS |
 | CRUD completo en todos los módulos | ✅ | clientes, reservas, estadías, cochera, personal, inventario, usuarios |
 | Paginación rápida + índices | ✅ | `per_page` ≤ 50, índices del plan; listado de 5000 reservas < 500 ms en `MassiveDataTest` |
-| Múltiples tipos de usuario | ✅ | Administrador, Recepcionista, Almacenero, Cliente |
+| Múltiples tipos de usuario | ✅ | Administrador, Recepcionista, Almacenero, Programador (sistema solo interno; los huéspedes son fichas, no usuarios) |
 | Proyecto en el servidor y pruebas revisadas | ☁️ | pipeline `deploy.yml` listo |
 | CORS solo para el frontend | ✅ | `config/cors.php` + prueba |
 | Smoke test antes de cada despliegue | ✅ | `tests/k6/smoke.js` en `deploy.yml` |
