@@ -1,0 +1,137 @@
+@startuml LeGrandHotel
+' Diagrama de clases UML del dominio de LeGrandHotel (modelos de Laravel en api/app/Models).
+' Ábrelo en https://www.plantuml.com/plantuml o con la extensión PlantUML de VS Code.
+' role_user es la tabla intermedia de la asociación muchos a muchos User — Role.
+
+!pragma layout smetana
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+hide circle
+
+title LeGrandHotel — Diagrama de clases (sistema interno del hotel)
+
+class User {
+  + id: int
+  + name: string
+  + email: string {único}
+  - password: string {bcrypt}
+  + google_id: string [0..1]
+  + email_verified_at: datetime [0..1]
+  --
+  + hasRole(roles: string...): bool
+  + assignRole(name: string): void
+  + isAdmin(): bool
+}
+
+class Role {
+  + id: int
+  + name: string {único}
+  + label: string
+  --
+  {static} ADMIN, RECEPTIONIST,
+  {static} STOREKEEPER, DEVELOPER
+}
+
+class Staff {
+  + id: int
+  + position: string
+  + shift: string
+  + hired_at: date
+}
+
+class Client <<huésped>> {
+  + id: int
+  + document_type: string
+  + document_number: string {único}
+  + full_name: string
+  + phone: string [0..1]
+  + nationality: string [0..1]
+}
+
+class RoomType {
+  + id: int
+  + name: string {único}
+  + capacity: int
+  + price_per_night: decimal
+}
+
+class Room {
+  + id: int
+  + number: string {único}
+  + floor: int
+  + status: string
+  --
+  + availableBetween(from, to): Query
+}
+
+class Reservation {
+  + id: int
+  + check_in: date
+  + check_out: date
+  + guests: int
+  + status: string
+  + total: decimal
+  --
+  + overlapping(from, to): Query
+}
+
+class Stay {
+  + id: int
+  + checked_in_at: datetime
+  + checked_out_at: datetime [0..1]
+}
+
+class ParkingSpot {
+  + id: int
+  + code: string {único}
+  + status: string
+}
+
+class ParkingAssignment {
+  + id: int
+  + plate: string
+  + entered_at: datetime
+  + left_at: datetime [0..1]
+}
+
+class InventoryItem {
+  + id: int
+  + name: string
+  + unit: string
+  + stock: int
+  + min_stock: int
+  --
+  + isBelowMinimum(): bool
+}
+
+class InventoryMovement {
+  + id: int
+  + type: string {in | out}
+  + quantity: int
+  + reason: string [0..1]
+}
+
+class AuditLog {
+  + id: int
+  + action: string {created | updated | deleted}
+  + entity: string
+  + entity_id: int
+  + changes: json [0..1]
+  + created_at: datetime
+}
+
+User "0..*" -- "1..*" Role : tiene >
+User "1" -- "0..1" Staff : ficha de personal >
+User "0..1" -- "0..*" AuditLog : realiza >
+User "0..1" -- "0..*" InventoryMovement : registra >
+Client "1" -- "0..*" Reservation : reserva >
+RoomType "1" -- "0..*" Room : clasifica >
+Room "1" -- "0..*" Reservation : se reserva en >
+Reservation "1" -- "0..1" Stay : genera >
+Stay "0..1" -- "0..*" ParkingAssignment : usa >
+ParkingSpot "1" -- "0..*" ParkingAssignment : ocupa >
+InventoryItem "1" -- "0..*" InventoryMovement : mueve >
+
+@enduml
