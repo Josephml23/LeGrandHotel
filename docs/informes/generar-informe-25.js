@@ -135,21 +135,17 @@ const mobileScreens = [
   p([t('Bocetos de la aplicación móvil', { bold: true, size: 26 })], { keepNext: true }),
   p('Pantallas principales en escala de grises. Usan los mismos datos y reglas que la web; la barra inferior cambia según el rol del usuario.'),
   image(path.join(ROOT, 'docs/movil/pantallas.png'), 24.5),
-  caption('Figura 14. Bocetos: login del personal; «Hoy», nueva reserva y habitaciones de recepción; inventario del almacén.'),
+  caption('Figura 13. Bocetos: login del personal; «Hoy», nueva reserva y habitaciones de recepción; inventario del almacén.'),
 ]
 
 const erPage = [
   h1('8. EXTRAS (adicionales a lo evaluado en el 25%)'),
   p([t('Todo lo de esta sección es EXTRA: no forma parte de lo evaluado en el 25% y se presenta como avance adicional.', { bold: true })]),
 
-  h2('8.1 EXTRA: Diagrama de base de datos'),
-  p('13 tablas del dominio en MySQL 8 con los índices que pide el plan: rooms(status), reservations(check_in, check_out), reservations(client_id), clients(document_number) único e inventory_items(name). La versión editable está en DBML (docs/diagramas/legrandhotel.dbml) y se abre en dbdiagram.io.'),
-  image(path.join(ROOT, 'docs/diagramas/base-de-datos.png'), 21),
-  caption('Figura 5. Modelo entidad-relación de LeGrandHotel.'),
-  p([t('Diagrama de clases UML', { bold: true, size: 26 })], { keepNext: true, pageBreakBefore: true }),
-  p('Las mismas entidades vistas como clases del sistema (modelos de Laravel), con sus atributos, sus métodos principales y la multiplicidad de cada asociación. En UML, la tabla intermedia role_user es la asociación muchos a muchos entre User y Role; AuditLog e InventoryMovement guardan qué usuario hizo cada acción. La fuente editable está en docs/diagramas/uml-clases.puml (PlantUML).'),
-  image(path.join(ROOT, 'docs/diagramas/uml-clases.png'), 23),
-  caption('Figura 6. Diagrama de clases UML de LeGrandHotel.'),
+  h2('8.1 EXTRA: Diagrama de base de datos (UML)'),
+  p('Diagrama de clases UML de las 13 entidades (modelos de Laravel sobre MySQL 8) con atributos, métodos y multiplicidades. La tabla intermedia role_user es la asociación muchos a muchos entre User y Role; AuditLog e InventoryMovement guardan qué usuario hizo cada acción. Índices que pide el plan: rooms(status), reservations(check_in, check_out), reservations(client_id), clients(document_number) único e inventory_items(name). Fuentes editables: docs/diagramas/uml-clases.puml (PlantUML) y docs/diagramas/legrandhotel.dbml (dbdiagram.io).'),
+  image(path.join(ROOT, 'docs/diagramas/uml-clases.png'), 16.5),
+  caption('Figura 5. Diagrama de clases UML de LeGrandHotel.'),
 ]
 
 const body = [
@@ -465,15 +461,15 @@ const bodyAfter = [
   table(['VU', 'Peticiones', 'Pet./s', 'p50', 'p95', 'Máx.', 'Errores', 'p95 < 500 ms'], runRows, [1, 1.6, 1.3, 1.4, 1.4, 1.4, 1.3, 1.8]),
   gap(),
   image(path.join(ROOT, 'docs/pruebas/graficos/01-latencia-por-carga.png'), 15),
-  caption('Figura 7. Tiempo de respuesta (p50, p90, p95) según la cantidad de usuarios virtuales.'),
+  caption('Figura 6. Tiempo de respuesta (p50, p90, p95) según la cantidad de usuarios virtuales.'),
   image(path.join(ROOT, 'docs/pruebas/graficos/02-peticiones-por-segundo.png'), 15),
-  caption('Figura 8. Peticiones atendidas por segundo en cada corrida.'),
+  caption('Figura 7. Peticiones atendidas por segundo en cada corrida.'),
   image(path.join(ROOT, 'docs/pruebas/graficos/03-tasa-de-errores.png'), 15),
-  caption('Figura 9. Porcentaje de peticiones fallidas en cada corrida.'),
+  caption('Figura 8. Porcentaje de peticiones fallidas en cada corrida.'),
   image(path.join(ROOT, 'docs/pruebas/graficos/04-p95-por-operacion.png'), 15),
-  caption('Figura 10. p95 por tipo de operación (lecturas, login, crear reserva).'),
+  caption('Figura 9. p95 por tipo de operación (lecturas, login, crear reserva).'),
   image(path.join(ROOT, 'docs/pruebas/graficos/05-evolucion-' + last.vus + 'vu.png'), 15),
-  caption(`Figura 11. Evolución de la latencia segundo a segundo en la corrida de ${last.vus} usuarios.`),
+  caption(`Figura 10. Evolución de la latencia segundo a segundo en la corrida de ${last.vus} usuarios.`),
   ...snippet('tests/k6/reservas.js (extracto)', [
     'escalon: {',
     '  stages: [',
@@ -513,7 +509,7 @@ const bodyAfter = [
 
   h2('8.5 EXTRA: Vista del programador'),
   p('El rol Programador tiene una pantalla de diagnóstico (/programador) que muestra, sin entrar al servidor: estado de la aplicación, la base de datos y la caché; versión y configuración (vida del token, rate limits, CORS); latencias p50/p95/p99 calculadas del log JSON; rutas más lentas; últimas peticiones; errores buscables por código de incidente, el mismo que ve el usuario en la pantalla 500; y la lista de todas las rutas de la API con su rol de acceso. No muestra contraseñas ni claves, y una prueba automática lo verifica.'),
-  ...capture('programador.png', 'Figura 12. Vista del programador.'),
+  ...capture('programador.png', 'Figura 11. Vista del programador.'),
 
   h2('8.6 EXTRA: Seguridad y calidad adelantadas'),
   bullet('Rate limits: login 5/min, registro 3/min y API 60/min, con respuesta 429 y Retry-After (punto del 80%).'),
@@ -547,7 +543,7 @@ const bodyAfter = [
   ),
   gap(),
   image(path.join(ROOT, 'docs/movil/arquitectura.png'), 16),
-  caption('Figura 13. Arquitectura de la aplicación móvil: misma API y notificaciones por FCM (Android) y APNs (iOS).'),
+  caption('Figura 12. Arquitectura de la aplicación móvil: misma API y notificaciones por FCM (Android) y APNs (iOS).'),
   table(
     ['Necesidad', 'En la app', 'Equivalente en la web'],
     [

@@ -1,7 +1,7 @@
 @startuml LeGrandHotel
-' Diagrama de clases UML del dominio de LeGrandHotel (modelos de Laravel en api/app/Models).
-' Ábrelo en https://www.plantuml.com/plantuml o con la extensión PlantUML de VS Code.
-' role_user es la tabla intermedia de la asociación muchos a muchos User — Role.
+' UML class diagram of the LeGrandHotel domain (Laravel models in api/app/Models).
+' Open it at https://www.plantuml.com/plantuml or with the PlantUML extension for VS Code.
+' role_user is the join table of the many-to-many association User — Role.
 
 !pragma layout smetana
 skinparam monochrome true
@@ -10,12 +10,12 @@ skinparam classAttributeIconSize 0
 skinparam defaultFontName Arial
 hide circle
 
-title LeGrandHotel — Diagrama de clases (sistema interno del hotel)
+title LeGrandHotel — Class diagram (internal hotel system)
 
 class User {
   + id: int
   + name: string
-  + email: string {único}
+  + email: string {unique}
   - password: string {bcrypt}
   + google_id: string [0..1]
   + email_verified_at: datetime [0..1]
@@ -27,7 +27,7 @@ class User {
 
 class Role {
   + id: int
-  + name: string {único}
+  + name: string {unique}
   + label: string
   --
   {static} ADMIN, RECEPTIONIST,
@@ -41,10 +41,10 @@ class Staff {
   + hired_at: date
 }
 
-class Client <<huésped>> {
+class Client <<guest>> {
   + id: int
   + document_type: string
-  + document_number: string {único}
+  + document_number: string {unique}
   + full_name: string
   + phone: string [0..1]
   + nationality: string [0..1]
@@ -52,14 +52,14 @@ class Client <<huésped>> {
 
 class RoomType {
   + id: int
-  + name: string {único}
+  + name: string {unique}
   + capacity: int
   + price_per_night: decimal
 }
 
 class Room {
   + id: int
-  + number: string {único}
+  + number: string {unique}
   + floor: int
   + status: string
   --
@@ -85,7 +85,7 @@ class Stay {
 
 class ParkingSpot {
   + id: int
-  + code: string {único}
+  + code: string {unique}
   + status: string
 }
 
@@ -122,16 +122,16 @@ class AuditLog {
   + created_at: datetime
 }
 
-User "0..*" -- "1..*" Role : tiene >
-User "1" -- "0..1" Staff : ficha de personal >
-User "0..1" -- "0..*" AuditLog : realiza >
-User "0..1" -- "0..*" InventoryMovement : registra >
-Client "1" -- "0..*" Reservation : reserva >
-RoomType "1" -- "0..*" Room : clasifica >
-Room "1" -- "0..*" Reservation : se reserva en >
-Reservation "1" -- "0..1" Stay : genera >
-Stay "0..1" -- "0..*" ParkingAssignment : usa >
-ParkingSpot "1" -- "0..*" ParkingAssignment : ocupa >
-InventoryItem "1" -- "0..*" InventoryMovement : mueve >
+User "0..*" -- "1..*" Role : has >
+User "1" -- "0..1" Staff : staff record >
+User "0..1" -- "0..*" AuditLog : performs >
+User "0..1" -- "0..*" InventoryMovement : records >
+Client "1" -- "0..*" Reservation : books >
+RoomType "1" -- "0..*" Room : classifies >
+Room "1" -- "0..*" Reservation : is booked in >
+Reservation "1" -- "0..1" Stay : creates >
+Stay "0..1" -- "0..*" ParkingAssignment : uses >
+ParkingSpot "1" -- "0..*" ParkingAssignment : occupies >
+InventoryItem "1" -- "0..*" InventoryMovement : moves >
 
 @enduml

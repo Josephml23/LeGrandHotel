@@ -18,19 +18,19 @@ COL_X = [0.9 + i * 6.3 for i in range(5)]
 
 # nombre: (columna, fila, estereotipo, atributos, métodos)
 CLASSES = {
-    "User": (0, 0, None, ["+ id: int", "+ name: string", "+ email: string {único}", "- password: string {bcrypt}",
+    "User": (0, 0, None, ["+ id: int", "+ name: string", "+ email: string {unique}", "- password: string {bcrypt}",
                           "+ google_id: string [0..1]", "+ email_verified_at: datetime [0..1]"],
              ["+ hasRole(roles): bool", "+ assignRole(name): void", "+ isAdmin(): bool"]),
-    "Client": (1, 0, "«huésped»", ["+ id: int", "+ document_type: string", "+ document_number: string {único}",
+    "Client": (1, 0, "«guest»", ["+ id: int", "+ document_type: string", "+ document_number: string {unique}",
                                     "+ full_name: string", "+ phone: string [0..1]", "+ nationality: string [0..1]"], []),
-    "RoomType": (2, 0, None, ["+ id: int", "+ name: string {único}", "+ capacity: int", "+ price_per_night: decimal"], []),
+    "RoomType": (2, 0, None, ["+ id: int", "+ name: string {unique}", "+ capacity: int", "+ price_per_night: decimal"], []),
     "Reservation": (3, 0, None, ["+ id: int", "+ check_in: date", "+ check_out: date", "+ guests: int",
                                  "+ status: string", "+ total: decimal"], ["+ overlapping(from, to): Query"]),
-    "ParkingSpot": (4, 0, None, ["+ id: int", "+ code: string {único}", "+ status: string"], []),
-    "Role": (0, 1, None, ["+ id: int", "+ name: string {único}", "+ label: string"],
+    "ParkingSpot": (4, 0, None, ["+ id: int", "+ code: string {unique}", "+ status: string"], []),
+    "Role": (0, 1, None, ["+ id: int", "+ name: string {unique}", "+ label: string"],
              ["ADMIN, RECEPTIONIST,", "STOREKEEPER, DEVELOPER"]),
     "Staff": (1, 1, None, ["+ id: int", "+ position: string", "+ shift: string", "+ hired_at: date"], []),
-    "Room": (2, 1, None, ["+ id: int", "+ number: string {único}", "+ floor: int", "+ status: string"],
+    "Room": (2, 1, None, ["+ id: int", "+ number: string {unique}", "+ floor: int", "+ status: string"],
              ["+ availableBetween(from, to): Query"]),
     "Stay": (3, 1, None, ["+ id: int", "+ checked_in_at: datetime", "+ checked_out_at: datetime [0..1]"], []),
     "ParkingAssignment": (4, 1, None, ["+ id: int", "+ plate: string", "+ entered_at: datetime", "+ left_at: datetime [0..1]"], []),
@@ -122,27 +122,27 @@ def main():
     gap01 = COL_X[1] - 0.85
     gap23 = COL_X[3] - 0.85
 
-    assoc(ax, [bottom("User"), top("Role")], "0..*", "1..*", "tiene", 0)
-    assoc(ax, [right("User", 0.6), (gap01, c["User"]["mid"] + 0.6), (gap01, c["Staff"]["mid"]), left("Staff")], "1", "0..1", "ficha", 1)
+    assoc(ax, [bottom("User"), top("Role")], "0..*", "1..*", "has", 0)
+    assoc(ax, [right("User", 0.6), (gap01, c["User"]["mid"] + 0.6), (gap01, c["Staff"]["mid"]), left("Staff")], "1", "0..1", "staff record", 1)
     # User → AuditLog e InventoryMovement bajan por el margen izquierdo (la fila 3 de la columna 1 está libre).
-    assoc(ax, [left("User", 0.5), (0.45, c["User"]["mid"] + 0.5), (0.45, c["AuditLog"]["mid"]), left("AuditLog")], "0..1", "0..*", "realiza", 2)
+    assoc(ax, [left("User", 0.5), (0.45, c["User"]["mid"] + 0.5), (0.45, c["AuditLog"]["mid"]), left("AuditLog")], "0..1", "0..*", "performs", 2)
     low = min(v["bottom"] for v in c.values()) - 0.9
     assoc(ax, [left("User", -0.5), (0.05, c["User"]["mid"] - 0.5), (0.05, low), (bottom("InventoryMovement")[0], low), bottom("InventoryMovement")],
-          "0..1", "0..*", "registra", 2)
+          "0..1", "0..*", "records", 2)
     over = c["Client"]["top"] + 0.7
-    assoc(ax, [top("Client"), (top("Client")[0], over), (top("Reservation")[0], over), top("Reservation")], "1", "0..*", "reserva", 1)
-    assoc(ax, [bottom("RoomType"), top("Room")], "1", "0..*", "clasifica", 0)
-    assoc(ax, [right("Room"), (gap23, c["Room"]["mid"]), (gap23, c["Reservation"]["mid"] - 0.5), left("Reservation", -0.5)], "1", "0..*", "se reserva en", 1)
-    assoc(ax, [bottom("Reservation"), top("Stay")], "1", "0..1", "genera", 0)
-    assoc(ax, [right("Stay"), (c["ParkingAssignment"]["x"], c["Stay"]["mid"])], "0..1", "0..*", "usa", 0)
-    assoc(ax, [bottom("ParkingSpot"), top("ParkingAssignment")], "1", "0..*", "ocupa", 0)
-    assoc(ax, [right("InventoryItem"), (c["InventoryMovement"]["x"], c["InventoryItem"]["mid"])], "1", "0..*", "mueve", 0)
+    assoc(ax, [top("Client"), (top("Client")[0], over), (top("Reservation")[0], over), top("Reservation")], "1", "0..*", "books", 1)
+    assoc(ax, [bottom("RoomType"), top("Room")], "1", "0..*", "classifies", 0)
+    assoc(ax, [right("Room"), (gap23, c["Room"]["mid"]), (gap23, c["Reservation"]["mid"] - 0.5), left("Reservation", -0.5)], "1", "0..*", "is booked in", 1)
+    assoc(ax, [bottom("Reservation"), top("Stay")], "1", "0..1", "creates", 0)
+    assoc(ax, [right("Stay"), (c["ParkingAssignment"]["x"], c["Stay"]["mid"])], "0..1", "0..*", "uses", 0)
+    assoc(ax, [bottom("ParkingSpot"), top("ParkingAssignment")], "1", "0..*", "occupies", 0)
+    assoc(ax, [right("InventoryItem"), (c["InventoryMovement"]["x"], c["InventoryItem"]["mid"])], "1", "0..*", "moves", 0)
 
     note_x, note_y = COL_X[4], c["ParkingAssignment"]["bottom"] - 1.2
-    ax.text(note_x, note_y, "Notación UML:\n+ público   - privado\n[0..1] opcional   {único} restricción\n1, 0..1, 0..* multiplicidad\nRole se relaciona con User\nmediante la tabla role_user.",
+    ax.text(note_x, note_y, "UML notation:\n+ public   - private\n[0..1] optional   {unique} constraint\n1, 0..1, 0..* multiplicity\nRole is linked to User\nthrough the role_user table.",
             fontsize=8.5, va="top", linespacing=1.5)
     ax.set_ylim(low - 0.8, over + 0.6)
-    ax.text(0.05, low - 0.55, "Diagrama de clases de LeGrandHotel (modelos de api/app/Models). Fuente editable: docs/diagramas/uml-clases.puml (PlantUML).",
+    ax.text(0.05, low - 0.55, "LeGrandHotel class diagram (models in api/app/Models). Editable source: docs/diagramas/uml-clases.puml (PlantUML).",
             fontsize=8.5, color=MID)
     fig.savefig(OUT / "uml-clases.png", dpi=200, bbox_inches="tight")
     plt.close(fig)
