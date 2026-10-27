@@ -11,11 +11,12 @@ class RoomType extends Model
 {
     use Auditable, HasFactory;
 
-    protected $fillable = ['name', 'description', 'capacity', 'price_per_night'];
+    protected $fillable = ['name', 'description', 'amenities', 'capacity', 'price_per_night'];
 
     protected function casts(): array
     {
-        return ['capacity' => 'integer', 'price_per_night' => 'decimal:2'];
+        // amenities: servicios que el cliente ve al reservar (Wi-Fi, TV, jacuzzi…).
+        return ['capacity' => 'integer', 'price_per_night' => 'decimal:2', 'amenities' => 'array'];
     }
 
     /** @return HasMany<Room, $this> */

@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
     /**
-     * Registro interno: el Administrador crea la cuenta de una persona del hotel con su rol.
+     * Registro interno: el Administrador o el Programador crea la cuenta de una persona del hotel con su rol.
      * No inicia sesión por ella; la persona recibe el correo de verificación y entra con su contraseña.
      */
     public function register(RegisterRequest $request): JsonResponse
@@ -49,7 +49,7 @@ class AuthController extends Controller
             throw new ApiException('INVALID_CREDENTIALS', 'Correo o contraseña incorrectos.', 401);
         }
 
-        // Solo el personal del hotel entra: una cuenta sin rol interno no recibe token.
+        // Con contraseña solo entra el personal; los clientes entran con Google (no tienen contraseña).
         if (! $user->hasRole(...Role::INTERNAL)) {
             throw new ApiException('ACCOUNT_WITHOUT_ACCESS', 'Esta cuenta no tiene acceso al sistema del hotel.', 403);
         }
@@ -101,14 +101,25 @@ class AuthController extends Controller
     public static function userPayloadFor(User $user): array
     {
         $user->loadMissing('roles');
-
-        return [
+        $payload = [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'email_verified' => $user->hasVerifiedEmail(),
             'roles' => $user->roles->pluck('name')->values(),
         ];
+
+        // Un cliente sin ficha todavía debe completar su DNI y teléfono antes de reservar.
+        if ($user->hasRole(Role::CLIENT)) {
+            $client = $user->client;
+            $payload['client'] = $client ? [
+                'id' => $client->id,
+                'document_number' => $client->document_number,
+                'phone' => $client->phone,
+            ] : null;
+        }
+
+        return $payload;
     }
 
     private function userPayload(User $user): array

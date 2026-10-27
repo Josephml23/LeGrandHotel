@@ -148,6 +148,16 @@ table.data .row-actions { text-align: right; white-space: nowrap; }
 .overview { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: var(--gap); align-items: start; }
 .stack { display: flex; flex-direction: column; gap: var(--gap); }
 .card { border: 1px solid var(--border); border-radius: var(--radius-card); padding: 20px; background: var(--surface); }
+/* Portal del cliente: un tipo de habitación por tarjeta, con sus servicios y el total de la estadía. */
+.offers { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.offer { display: flex; flex-direction: column; gap: 12px; }
+.offer h3 { margin: 0; font-size: var(--fs-section); font-weight: 600; }
+.offer .price { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; border-top: 1px solid var(--rule); padding-top: 12px; margin-top: auto; }
+.offer .price strong { font-size: 20px; font-weight: 500; }
+.amenities { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.amenities li { font-size: var(--fs-small); border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; color: var(--muted); }
+.search-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 180px)); gap: 12px; align-items: end; margin-bottom: 20px; }
+@media (max-width: 640px) { .search-bar { grid-template-columns: 1fr 1fr; } }
 .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: var(--radius-card); }
 .kpi { padding: 16px 20px; }
 .kpi + .kpi { border-left: 1px solid var(--border); }

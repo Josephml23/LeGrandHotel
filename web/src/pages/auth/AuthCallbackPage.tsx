@@ -27,9 +27,9 @@ export function AuthCallbackPage() {
       return
     }
 
-    sessionStore.write({ token, expires_at: expires, user: {} as AuthUser })
+    // El token va directo en la cabecera: la sesión solo se guarda completa, con el usuario y sus roles.
     api
-      .get('/auth/me')
+      .get('/auth/me', { headers: { Authorization: `Bearer ${token}` } })
       .then(({ data }) => {
         const user = data.data as AuthUser
         setSession({ token, expires_at: expires, user })

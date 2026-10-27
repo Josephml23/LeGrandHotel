@@ -1,12 +1,16 @@
-/** Solo roles del personal: el sistema es interno del hotel. */
-export type RoleName = 'admin' | 'receptionist' | 'storekeeper' | 'developer'
+/** Personal del hotel (correo y contraseña) y clientes (solo Google). */
+export type RoleName = 'admin' | 'receptionist' | 'storekeeper' | 'developer' | 'client'
 
 export const ROLE_LABELS: Record<RoleName, string> = {
   admin: 'Administrador',
   receptionist: 'Recepcionista',
   storekeeper: 'Almacenero',
   developer: 'Programador',
+  client: 'Cliente',
 }
+
+/** Roles del personal: usan el panel interno. */
+export const STAFF_ROLES: RoleName[] = ['admin', 'receptionist', 'storekeeper', 'developer']
 
 export interface AuthUser {
   id: number
@@ -14,6 +18,8 @@ export interface AuthUser {
   email: string
   email_verified: boolean
   roles: RoleName[]
+  /** Solo en cuentas de cliente: null hasta que completa su DNI y teléfono. */
+  client?: { id: number; document_number: string; phone: string | null } | null
 }
 
 export interface Session {
@@ -47,9 +53,23 @@ export interface RoomType {
   id: number
   name: string
   description: string | null
+  amenities: string[] | null
   capacity: number
   price_per_night: string
   rooms_count?: number
+}
+
+/** Tipo de habitación tal como lo ve el cliente al reservar: con disponibilidad y total para sus fechas. */
+export interface RoomTypeOffer {
+  id: number
+  name: string
+  description: string | null
+  amenities: string[]
+  capacity: number
+  price_per_night: string
+  available_rooms: number
+  nights: number
+  total: string
 }
 
 export type RoomStatus = 'available' | 'occupied' | 'cleaning' | 'maintenance'
@@ -95,7 +115,7 @@ export interface Reservation {
   total: string
   notes: string | null
   client?: Pick<Client, 'id' | 'full_name' | 'document_number'>
-  room?: Pick<Room, 'id' | 'number' | 'room_type_id'> & { room_type?: Pick<RoomType, 'id' | 'name'> }
+  room?: Pick<Room, 'id' | 'number' | 'room_type_id'> & { room_type?: Pick<RoomType, 'id' | 'name'> & { amenities?: string[] | null } }
   stay?: Stay | null
 }
 

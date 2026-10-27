@@ -12,7 +12,8 @@ use Laravel\Socialite\Two\GoogleProvider;
 use Throwable;
 
 /**
- * Login con cuenta de Google (Socialite, modo stateless para la SPA).
+ * Registro e inicio de sesión de clientes con Google (Socialite, modo stateless para la SPA).
+ * Las cuentas del personal no pueden usar Google.
  */
 class GoogleAuthController extends Controller
 {
@@ -41,16 +42,26 @@ class GoogleAuthController extends Controller
             return redirect()->away("{$frontend}/login?error=google");
         }
 
-        // Solo entra quien ya tiene una cuenta del personal: Google nunca crea cuentas nuevas.
         $user = User::where('google_id', $googleUser->getId())
             ->orWhere('email', $googleUser->getEmail())
             ->first();
 
-        if (! $user || ! $user->hasRole(...Role::INTERNAL)) {
-            return redirect()->away("{$frontend}/login?error=google_sin_cuenta");
+        // Google es solo para clientes: el personal entra con su correo y contraseña.
+        if ($user && ! $user->hasRole(Role::CLIENT)) {
+            return redirect()->away("{$frontend}/login?error=google_personal");
         }
 
         $user = DB::transaction(function () use ($googleUser, $user) {
+            if (! $user) {
+                // Primera vez: se crea la cuenta de cliente. El DNI y el teléfono los completa en /completar-registro.
+                $user = User::create([
+                    'name' => $googleUser->getName() ?: $googleUser->getEmail(),
+                    'email' => $googleUser->getEmail(),
+                ]);
+                $user->forceFill(['google_id' => $googleUser->getId()])->save();
+                $user->assignRole(Role::CLIENT);
+            }
+
             if (! $user->google_id) {
                 $user->forceFill(['google_id' => $googleUser->getId()])->save();
             }

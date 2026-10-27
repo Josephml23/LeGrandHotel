@@ -37,7 +37,7 @@ describe('formularios de acceso', () => {
     await userEvent.type(screen.getByLabelText('Contraseña inicial'), 'Clave1234')
     await userEvent.type(screen.getByLabelText('Repite la contraseña'), 'Clave1234')
     await userEvent.selectOptions(screen.getByLabelText('Rol'), 'storekeeper')
-    await userEvent.click(screen.getByRole('button', { name: 'Registrar usuario' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Registrar cuenta' }))
 
     await waitFor(() => expect(sendMock).toHaveBeenCalledWith('post', '/auth/register', {
       name: 'Rosa Díaz', email: 'rosa@hotel.pe', password: 'Clave1234', password_confirmation: 'Clave1234', role: 'storekeeper',
@@ -69,7 +69,7 @@ describe('formularios de acceso', () => {
     loginAs(['admin'])
     renderApp(<App />, '/registro')
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Registrar usuario' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Registrar cuenta' }))
 
     const email = screen.getByLabelText('Correo')
     await waitFor(() => expect(email).toHaveAttribute('aria-invalid', 'true'))

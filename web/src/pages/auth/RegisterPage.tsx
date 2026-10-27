@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { send } from '../../lib/api'
+import { useAuth } from '../../auth/AuthContext'
 import { useToast } from '../../components/Toasts'
 import { Field, FormError, SelectField, TitleRow, fieldError } from '../../components/ui'
 import { ROLE_LABELS, type AuthUser, type RoleName } from '../../types'
@@ -9,10 +10,13 @@ import { ROLE_LABELS, type AuthUser, type RoleName } from '../../types'
 const EMPTY = { name: '', email: '', password: '', password_confirmation: '', role: 'receptionist' as RoleName }
 
 /**
- * Registro interno: solo el Administrador crea cuentas del personal del hotel.
- * Es una pantalla distinta del login y nadie de afuera puede registrarse.
+ * Registro de personal: el Administrador y el Programador crean cuentas de Recepción, Administración y Almacén;
+ * solo el Administrador crea Programadores. Los clientes no se registran aquí: entran con Google.
  */
 export function RegisterPage() {
+  const { hasRole } = useAuth()
+  const isAdmin = hasRole('admin')
+  const roles: RoleName[] = isAdmin ? ['receptionist', 'storekeeper', 'admin', 'developer'] : ['receptionist', 'storekeeper', 'admin']
   const toast = useToast()
   const [form, setForm] = useState(EMPTY)
   const set = (key: keyof typeof EMPTY) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value })
@@ -33,8 +37,8 @@ export function RegisterPage() {
 
   return (
     <>
-      <TitleRow title="Registrar usuario" lede="Crea la cuenta de una persona del hotel. Solo el administrador puede registrar cuentas; no existe registro público.">
-        <Link className="btn" to="/usuarios">Ver usuarios</Link>
+      <TitleRow title="Registrar personal" lede="Crea la cuenta de una persona del hotel con su rol. Los huéspedes no se registran aquí: crean su cuenta con Google.">
+        {isAdmin && <Link className="btn" to="/usuarios">Ver usuarios</Link>}
       </TitleRow>
       <form onSubmit={submit} className="form-grid" style={{ maxWidth: 640 }} noValidate>
         <div className="full"><FormError error={register.error} /></div>
@@ -45,10 +49,11 @@ export function RegisterPage() {
         <Field label="Repite la contraseña" type="password" autoComplete="new-password" required value={form.password_confirmation}
           onChange={set('password_confirmation')} />
         <SelectField className="full" label="Rol" value={form.role} onChange={set('role')} error={err('role')}
-          options={(['receptionist', 'storekeeper', 'developer', 'admin'] as RoleName[]).map((r) => ({ value: r, label: ROLE_LABELS[r] }))} />
+          options={roles.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
+          hint={isAdmin ? undefined : 'Las cuentas de Programador solo las crea el Administrador.'} />
         <div className="full">
           <button className="btn btn-primary" type="submit" disabled={register.isPending}>
-            {register.isPending ? 'Registrando…' : 'Registrar usuario'}
+            {register.isPending ? 'Registrando…' : 'Registrar cuenta'}
           </button>
         </div>
       </form>

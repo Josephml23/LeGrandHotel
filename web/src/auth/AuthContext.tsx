@@ -92,6 +92,7 @@ export function useAuth(): AuthState {
 /** Ruta de inicio según el rol principal del usuario. */
 export function homeFor(user: AuthUser | null): string {
   if (!user) return '/login'
+  if (user.roles.includes('client')) return user.client ? '/reservar' : '/completar-registro'
   if (user.roles.includes('developer') && user.roles.length === 1) return '/programador'
   return '/panel'
 }

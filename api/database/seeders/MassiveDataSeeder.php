@@ -31,9 +31,9 @@ class MassiveDataSeeder extends Seeder
         $faker = fake('es_PE');
 
         $types = RoomType::count() ? RoomType::all() : collect([
-            RoomType::create(['name' => 'Simple', 'capacity' => 1, 'price_per_night' => 120]),
-            RoomType::create(['name' => 'Doble', 'capacity' => 2, 'price_per_night' => 180]),
-            RoomType::create(['name' => 'Suite', 'capacity' => 4, 'price_per_night' => 450]),
+            RoomType::create(['name' => 'Simple', 'amenities' => ['Wi-Fi', 'TV', 'Baño privado'], 'capacity' => 1, 'price_per_night' => 120]),
+            RoomType::create(['name' => 'Doble', 'amenities' => ['Wi-Fi', 'TV', 'Baño privado', 'Aire acondicionado'], 'capacity' => 2, 'price_per_night' => 180]),
+            RoomType::create(['name' => 'Suite', 'amenities' => ['Wi-Fi', 'Smart TV', 'Jacuzzi', 'Minibar'], 'capacity' => 4, 'price_per_night' => 450]),
         ]);
 
         // Habitaciones 1000-1049 para no chocar con las de demostración.

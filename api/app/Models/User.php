@@ -61,6 +61,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(Staff::class);
     }
 
+    /**
+     * Ficha de huésped enlazada (solo cuentas de cliente, una vez que completan su DNI y teléfono).
+     *
+     * @return HasOne<Client, $this>
+     */
+    public function client(): HasOne
+    {
+        return $this->hasOne(Client::class);
+    }
+
     public function hasRole(string ...$roles): bool
     {
         $names = $this->relationLoaded('roles')

@@ -15,6 +15,7 @@ export function RoomTypesPage() {
 
   const columns: Column<RoomType>[] = [
     { key: 'name', header: 'Tipo', render: (t) => <span className="identity"><strong>{t.name}</strong><span>{t.description ?? '—'}</span></span> },
+    { key: 'amenities', header: 'Incluye', className: 'hide-sm', render: (t) => <span className="muted small">{t.amenities?.join(' · ') || '—'}</span> },
     { key: 'capacity', header: 'Capacidad', align: 'right', render: (t) => <span className="num">{t.capacity} pers.</span> },
     { key: 'price', header: 'Precio por noche', align: 'right', render: (t) => <span className="num">{formatMoney(t.price_per_night)}</span> },
     { key: 'rooms', header: 'Habitaciones', align: 'right', render: (t) => <span className="num">{t.rooms_count ?? 0}</span> },
@@ -50,11 +51,14 @@ function RoomTypeForm({ value, onClose }: { value: RoomType | 'new' | null; onCl
     description: current?.description ?? '',
     capacity: String(current?.capacity ?? 2),
     price_per_night: current?.price_per_night ?? '',
+    amenities: current?.amenities?.join(', ') ?? '',
   }))
 
   const save = useAction(
     () => {
-      const body = { ...form, capacity: Number(form.capacity), price_per_night: Number(form.price_per_night) }
+      // Servicios separados por comas → lista, que el cliente ve como etiquetas al reservar.
+      const amenities = form.amenities.split(',').map((a) => a.trim()).filter(Boolean)
+      const body = { ...form, amenities, capacity: Number(form.capacity), price_per_night: Number(form.price_per_night) }
       return current ? send('put', `/room-types/${current.id}`, body) : send('post', '/room-types', body)
     },
     { invalidate: ['room-types', 'rooms'], success: 'Tipo guardado.' },
@@ -74,6 +78,9 @@ function RoomTypeForm({ value, onClose }: { value: RoomType | 'new' | null; onCl
         <Field label="Capacidad (personas)" type="number" min={1} max={20} required value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} error={fieldError(save.error, 'capacity')} />
         <Field label="Precio por noche (S/)" type="number" min={0} step="0.01" required value={form.price_per_night} onChange={(e) => setForm({ ...form, price_per_night: e.target.value })} error={fieldError(save.error, 'price_per_night')} />
         <Field className="full" label="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+        <Field className="full" label="Incluye (servicios)" value={form.amenities} placeholder="Wi-Fi, TV, Baño privado"
+          hint="Separados por comas. El cliente los ve al reservar." onChange={(e) => setForm({ ...form, amenities: e.target.value })}
+          error={fieldError(save.error, 'amenities')} />
       </form>
     </Modal>
   )

@@ -15,16 +15,29 @@ class Role extends Model
 
     public const DEVELOPER = 'developer';
 
+    /** Huésped con cuenta propia: solo entra con Google y solo reserva para sí mismo. */
+    public const CLIENT = 'client';
+
     /** Nombre visible de cada rol. */
     public const LABELS = [
         self::ADMIN => 'Administrador',
         self::RECEPTIONIST => 'Recepcionista',
         self::STOREKEEPER => 'Almacenero',
         self::DEVELOPER => 'Programador',
+        self::CLIENT => 'Cliente',
     ];
 
-    /** Todos los roles son del personal del hotel: el sistema no tiene usuarios externos. */
+    /** Roles del personal del hotel: entran con correo y contraseña y usan el panel interno. */
     public const INTERNAL = [self::ADMIN, self::RECEPTIONIST, self::STOREKEEPER, self::DEVELOPER];
+
+    /** Cuentas del personal que el Programador puede crear; las de Programador solo las crea el Administrador. */
+    public const CREATABLE_BY_DEVELOPER = [self::ADMIN, self::RECEPTIONIST, self::STOREKEEPER];
+
+    /** @return list<string> Roles que $user puede asignar al registrar una cuenta del personal. */
+    public static function creatableBy(User $user): array
+    {
+        return $user->isAdmin() ? self::INTERNAL : self::CREATABLE_BY_DEVELOPER;
+    }
 
     protected $fillable = ['name', 'label'];
 

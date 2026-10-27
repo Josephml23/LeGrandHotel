@@ -153,19 +153,22 @@ export function Field({
 export function SelectField({
   label,
   error,
+  hint,
   options,
   className,
   ...props
-}: SelectHTMLAttributes<HTMLSelectElement> & { label: string; error?: string; options: { value: string | number; label: string }[] }) {
+}: SelectHTMLAttributes<HTMLSelectElement> & { label: string; error?: string; hint?: string; options: { value: string | number; label: string }[] }) {
   const id = useId()
+  const describedBy = [hint ? `${id}-hint` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined
   return (
     <div className={`field ${className ?? ''}`}>
       <label htmlFor={id}>{label}</label>
-      <select id={id} className="select" aria-invalid={!!error} aria-describedby={error ? `${id}-error` : undefined} {...props}>
+      <select id={id} className="select" aria-invalid={!!error} aria-describedby={describedBy} {...props}>
         {options.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </select>
+      {hint && <span id={`${id}-hint`} className="hint">{hint}</span>}
       {error && <span id={`${id}-error`} className="error">{error}</span>}
     </div>
   )

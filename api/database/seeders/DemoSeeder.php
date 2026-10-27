@@ -42,14 +42,23 @@ class DemoSeeder extends Seeder
             ]);
         }
 
+        // Nombre, descripción, capacidad, precio y servicios que ve el cliente al reservar.
         $types = collect([
-            ['Simple', 'Cama de 1.5 plazas, ideal para viajes de trabajo.', 1, 120],
-            ['Doble', 'Dos camas de 1.5 plazas.', 2, 180],
-            ['Matrimonial', 'Cama queen y vista a la ciudad.', 2, 220],
-            ['Suite', 'Sala independiente, jacuzzi y desayuno incluido.', 4, 450],
-        ])->map(fn ($t) => RoomType::firstOrCreate(['name' => $t[0]], [
-            'description' => $t[1], 'capacity' => $t[2], 'price_per_night' => $t[3],
-        ]));
+            ['Simple', 'Cama de 1.5 plazas, ideal para viajes de trabajo.', 1, 120, ['Wi-Fi', 'TV', 'Baño privado', 'Escritorio']],
+            ['Doble', 'Dos camas de 1.5 plazas.', 2, 180, ['Wi-Fi', 'TV', 'Baño privado', 'Aire acondicionado']],
+            ['Matrimonial', 'Cama queen y vista a la ciudad.', 2, 220, ['Wi-Fi', 'Smart TV', 'Baño privado', 'Aire acondicionado', 'Vista a la ciudad']],
+            ['Suite', 'Sala independiente, jacuzzi y desayuno incluido.', 4, 450, ['Wi-Fi', 'Smart TV', 'Jacuzzi', 'Minibar', 'Desayuno incluido', 'Sala independiente']],
+        ])->map(function ($t) {
+            $type = RoomType::firstOrCreate(['name' => $t[0]], [
+                'description' => $t[1], 'capacity' => $t[2], 'price_per_night' => $t[3],
+            ]);
+            // También completa los servicios de tipos creados antes de que existiera el campo.
+            if (! $type->amenities) {
+                $type->update(['amenities' => $t[4]]);
+            }
+
+            return $type;
+        });
 
         foreach (range(1, 4) as $floor) {
             foreach (range(1, 5) as $n) {

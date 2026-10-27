@@ -11,7 +11,7 @@ class UserRolesRequest extends ApiFormRequest
     {
         return [
             'roles' => ['required', 'array', 'min:1'],
-            'roles.*' => ['required', Rule::in(array_keys(Role::LABELS))],
+            'roles.*' => ['required', Rule::in(Role::INTERNAL)],
         ];
     }
 }

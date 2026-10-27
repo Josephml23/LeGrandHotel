@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\ClientPortalController;
 use App\Http\Controllers\Api\DeveloperController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\GoogleAuthController;
@@ -21,8 +22,8 @@ use Illuminate\Support\Facades\Route;
 
 /*
 | Todas las rutas viven bajo /api/v1 (bootstrap/app.php) y responden JSON.
-| Sistema interno del hotel. Roles: admin, receptionist, storekeeper, developer.
-| No hay registro público: el Administrador registra las cuentas del personal.
+| Personal del hotel (admin, receptionist, storekeeper, developer) con correo y contraseña;
+| clientes (client) solo con Google. El personal lo registran el Administrador y el Programador.
 */
 
 // ── Público ─────────────────────────────────────────────
@@ -44,12 +45,21 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::post('logout', [AuthController::class, 'logout']);
         Route::post('refresh', [AuthController::class, 'refresh']);
-        // Registro interno: solo el Administrador crea cuentas (3 por minuto).
-        Route::post('register', [AuthController::class, 'register'])->middleware(['role:admin', 'throttle:register']);
+        // Registro interno de personal: Administrador y Programador (3 por minuto). El rol permitido lo valida RegisterRequest.
+        Route::post('register', [AuthController::class, 'register'])->middleware(['role:admin,developer', 'throttle:register']);
     });
     Route::post('email/verification-notification', [EmailVerificationController::class, 'send'])->middleware('throttle:6,1');
 
-    Route::get('dashboard', [ReportController::class, 'dashboard']);
+    // Portal del cliente (entra con Google): sus datos, disponibilidad por tipo y sus reservas.
+    Route::middleware('role:client')->prefix('portal')->group(function () {
+        Route::put('profile', [ClientPortalController::class, 'saveProfile']);
+        Route::get('room-types', [ClientPortalController::class, 'roomTypes']);
+        Route::get('reservations', [ClientPortalController::class, 'reservations']);
+        Route::post('reservations', [ClientPortalController::class, 'book']);
+        Route::post('reservations/{reservation}/cancel', [ClientPortalController::class, 'cancel']);
+    });
+
+    Route::get('dashboard', [ReportController::class, 'dashboard'])->middleware('role:admin,receptionist,storekeeper,developer');
 
     // Tipos de habitación: Recepción lee, Admin escribe.
     Route::middleware('role:admin,receptionist')->group(function () {

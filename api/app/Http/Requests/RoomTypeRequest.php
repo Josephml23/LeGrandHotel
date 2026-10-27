@@ -11,6 +11,8 @@ class RoomTypeRequest extends ApiFormRequest
         return [
             'name' => [$this->required(), 'string', 'max:80', Rule::unique('room_types')->ignore($this->routeId('room_type'))],
             'description' => ['nullable', 'string', 'max:1000'],
+            'amenities' => ['nullable', 'array', 'max:20'],
+            'amenities.*' => ['string', 'distinct', 'max:40'],
             'capacity' => [$this->required(), 'integer', 'min:1', 'max:20'],
             'price_per_night' => [$this->required(), 'numeric', 'min:0', 'max:99999'],
         ];

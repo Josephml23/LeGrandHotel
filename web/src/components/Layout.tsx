@@ -12,6 +12,13 @@ interface NavItem {
 
 const NAV: { group: string; items: NavItem[] }[] = [
   {
+    group: 'Mi cuenta',
+    items: [
+      { to: '/reservar', label: 'Reservar', roles: ['client'] },
+      { to: '/mis-reservas', label: 'Mis reservas', roles: ['client'] },
+    ],
+  },
+  {
     group: 'Recepción',
     items: [
       { to: '/panel', label: 'Panel', roles: ['admin', 'receptionist', 'storekeeper'] },
@@ -31,7 +38,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     group: 'Administración',
     items: [
       { to: '/personal', label: 'Personal', roles: ['admin'] },
-      { to: '/registro', label: 'Registrar usuario', roles: ['admin'] },
+      { to: '/registro', label: 'Registrar personal', roles: ['admin', 'developer'] },
       { to: '/usuarios', label: 'Usuarios y roles', roles: ['admin'] },
       { to: '/reportes', label: 'Reportes', roles: ['admin'] },
       { to: '/auditoria', label: 'Auditoría', roles: ['admin'] },

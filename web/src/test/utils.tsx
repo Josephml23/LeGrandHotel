@@ -5,14 +5,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '../auth/AuthContext'
 import { ToastProvider } from '../components/Toasts'
 import { sessionStore } from '../lib/session'
-import type { RoleName } from '../types'
+import type { AuthUser, RoleName } from '../types'
 
-export function loginAs(roles: RoleName[] | null, verified = true) {
+export function loginAs(roles: RoleName[] | null, verified = true, extra: Partial<AuthUser> = {}) {
   if (!roles) return
   sessionStore.write({
     token: 'test-token',
     expires_at: new Date(Date.now() + 3_600_000).toISOString(),
-    user: { id: 1, name: 'Ana Prueba', email: 'ana@test.pe', email_verified: verified, roles },
+    user: { id: 1, name: 'Ana Prueba', email: 'ana@test.pe', email_verified: verified, roles, ...extra },
   })
 }
 

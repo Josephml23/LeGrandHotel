@@ -17,6 +17,7 @@ security:
 tags:
   - name: Salud
   - name: Auth
+  - name: Portal del cliente
   - name: Habitaciones
   - name: Clientes
   - name: Reservas
@@ -39,7 +40,7 @@ paths:
   /auth/register:
     post:
       tags: [Auth]
-      summary: Registro interno de una cuenta del personal. Solo Administrador. Rate limit 3/min.
+      summary: Registro de una cuenta del personal. Administrador o Programador (este no puede crear Programadores). Rate limit 3/min.
       requestBody:
         required: true
         content:
@@ -268,7 +269,7 @@ paths:
     parameters: [{ $ref: '#/components/parameters/id' }]
     post: { tags: [Estadías], summary: Check-in (crea la estadía y ocupa la habitación), responses: { '201': { description: Estadía creada }, '409': { $ref: '#/components/responses/Conflict' } } }
   /stays:
-    get: { tags: [Estadías], summary: Estadías (?active=1 solo en curso), responses: { '200': { $ref: '#/components/responses/Page' } } }
+    get: { tags: [Estadías], summary: 'Estadías (?active=1 solo en curso)', responses: { '200': { $ref: '#/components/responses/Page' } } }
   /stays/{id}:
     parameters: [{ $ref: '#/components/parameters/id' }]
     get: { tags: [Estadías], summary: Detalle, responses: { '200': { description: OK } } }
@@ -285,7 +286,7 @@ paths:
     put: { tags: [Cochera], summary: Editar, responses: { '200': { description: OK } } }
     delete: { tags: [Cochera], summary: Eliminar (409 si tiene historial), responses: { '204': { description: Eliminado } } }
   /parking-assignments:
-    get: { tags: [Cochera], summary: Vehículos (?active=1, ?search=placa), responses: { '200': { $ref: '#/components/responses/Page' } } }
+    get: { tags: [Cochera], summary: 'Vehículos (?active=1, ?search=placa)', responses: { '200': { $ref: '#/components/responses/Page' } } }
     post: { tags: [Cochera], summary: Registrar entrada (409 si el espacio no está libre), responses: { '201': { description: Creado }, '409': { $ref: '#/components/responses/Conflict' } } }
   /parking-assignments/{id}:
     parameters: [{ $ref: '#/components/parameters/id' }]
@@ -294,7 +295,7 @@ paths:
     delete: { tags: [Cochera], summary: Eliminar, responses: { '204': { description: Eliminado } } }
 
   /inventory-items:
-    get: { tags: [Inventario], summary: Insumos (?low_stock=1), responses: { '200': { $ref: '#/components/responses/Page' } } }
+    get: { tags: [Inventario], summary: 'Insumos (?low_stock=1)', responses: { '200': { $ref: '#/components/responses/Page' } } }
     post: { tags: [Inventario], summary: Crear, responses: { '201': { description: Creado } } }
   /inventory-items/{id}:
     parameters: [{ $ref: '#/components/parameters/id' }]
@@ -330,7 +331,7 @@ paths:
     put: { tags: [Personal y usuarios], summary: Editar (incluye cambio de rol), responses: { '200': { description: OK } } }
     delete: { tags: [Personal y usuarios], summary: Eliminar ficha y cuenta, responses: { '204': { description: Eliminado }, '409': { $ref: '#/components/responses/Conflict' } } }
   /users:
-    get: { tags: [Personal y usuarios], summary: Usuarios (?role=), responses: { '200': { $ref: '#/components/responses/Page' } } }
+    get: { tags: [Personal y usuarios], summary: 'Usuarios (?role=)', responses: { '200': { $ref: '#/components/responses/Page' } } }
     post: { tags: [Personal y usuarios], summary: Crear usuario con roles, responses: { '201': { description: Creado } } }
   /users/{id}:
     parameters: [{ $ref: '#/components/parameters/id' }]
@@ -340,6 +341,65 @@ paths:
   /users/{id}/roles:
     parameters: [{ $ref: '#/components/parameters/id' }]
     put: { tags: [Personal y usuarios], summary: Reemplaza los roles y revoca sus tokens, responses: { '200': { description: OK } } }
+
+  /portal/profile:
+    put:
+      tags: [Portal del cliente]
+      summary: El cliente (entró con Google) completa su DNI y teléfono. Si recepción ya tenía su ficha, se enlaza.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [document_number, phone]
+              properties:
+                document_number: { type: string, pattern: '^\d{8}$' }
+                phone: { type: string, pattern: '^9\d{8}$' }
+      responses:
+        '200': { description: Usuario actualizado con su ficha (data.client) }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { description: DOCUMENT_ALREADY_LINKED, el DNI ya pertenece a otra cuenta }
+        '422': { $ref: '#/components/responses/Validation' }
+  /portal/room-types:
+    get:
+      tags: [Portal del cliente]
+      summary: Tipos de habitación con sus servicios (amenities), habitaciones libres en las fechas y total de la estadía
+      parameters:
+        - { name: from, in: query, required: true, schema: { type: string, format: date } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date } }
+        - { name: guests, in: query, schema: { type: integer, minimum: 1 } }
+      responses: { '200': { $ref: '#/components/responses/Page' } }
+  /portal/reservations:
+    get: { tags: [Portal del cliente], summary: Reservas del propio cliente, responses: { '200': { $ref: '#/components/responses/Page' } } }
+    post:
+      tags: [Portal del cliente]
+      summary: Reserva por tipo; el sistema asigna una habitación libre de ese tipo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [room_type_id, check_in, check_out, guests]
+              properties:
+                room_type_id: { type: integer }
+                check_in: { type: string, format: date }
+                check_out: { type: string, format: date }
+                guests: { type: integer, minimum: 1 }
+      responses:
+        '201': { description: Reserva confirmada con su habitación asignada }
+        '409': { description: PROFILE_INCOMPLETE o NO_ROOMS_AVAILABLE }
+        '422': { $ref: '#/components/responses/Validation' }
+  /portal/reservations/{id}/cancel:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    post:
+      tags: [Portal del cliente]
+      summary: Cancela una reserva propia antes del día de llegada
+      responses:
+        '200': { description: Reserva cancelada }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { description: CANNOT_CANCEL }
 
   /reports/occupancy:
     get:

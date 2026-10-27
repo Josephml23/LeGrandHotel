@@ -7,7 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 
 /**
- * Las reservas las gestionan Administración y Recepción. Los huéspedes no tienen cuenta en el sistema.
+ * Las reservas las gestionan Administración y Recepción. Un cliente con cuenta (Google) solo ve y cancela las suyas.
  */
 class ReservationPolicy
 {
@@ -39,6 +39,14 @@ class ReservationPolicy
     public function manageStay(User $user, Reservation $reservation): bool
     {
         return $this->isFrontDesk($user);
+    }
+
+    /** Un cliente solo puede cancelar las reservas de su propia ficha. */
+    public function cancelOwn(User $user, Reservation $reservation): bool
+    {
+        $clientId = $user->client?->id;
+
+        return $clientId !== null && $reservation->client_id === $clientId;
     }
 
     private function isFrontDesk(User $user): bool

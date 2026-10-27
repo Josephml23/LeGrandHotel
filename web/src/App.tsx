@@ -7,6 +7,9 @@ import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
 import { AuthCallbackPage } from './pages/auth/AuthCallbackPage'
 import { VerifyEmailPage } from './pages/auth/VerifyEmailPage'
+import { CompleteProfilePage } from './pages/client/CompleteProfilePage'
+import { BookPage } from './pages/client/BookPage'
+import { MyReservationsPage } from './pages/client/MyReservationsPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { RoomsPage } from './pages/RoomsPage'
 import { RoomTypesPage } from './pages/RoomTypesPage'
@@ -49,7 +52,14 @@ export function App() {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
 
         <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedRoute roles={['client']} />}>
+            <Route path="/completar-registro" element={<CompleteProfilePage />} />
+          </Route>
           <Route element={<Layout />}>
+            <Route element={<ProtectedRoute roles={['client']} />}>
+              <Route path="/reservar" element={<BookPage />} />
+              <Route path="/mis-reservas" element={<MyReservationsPage />} />
+            </Route>
             <Route element={<ProtectedRoute roles={['admin', 'receptionist', 'storekeeper']} />}>
               <Route path="/panel" element={<DashboardPage />} />
             </Route>
@@ -64,8 +74,10 @@ export function App() {
             <Route element={<ProtectedRoute roles={['admin', 'storekeeper']} />}>
               <Route path="/inventario" element={<InventoryPage />} />
             </Route>
-            <Route element={<ProtectedRoute roles={['admin']} />}>
+            <Route element={<ProtectedRoute roles={['admin', 'developer']} />}>
               <Route path="/registro" element={<RegisterPage />} />
+            </Route>
+            <Route element={<ProtectedRoute roles={['admin']} />}>
               <Route path="/personal" element={<StaffPage />} />
               <Route path="/usuarios" element={<UsersPage />} />
               <Route path="/reportes" element={<ReportsPage />} />
