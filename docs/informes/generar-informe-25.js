@@ -4,7 +4,7 @@ const path = require('path')
 const {
   Document, Packer, Paragraph, TextRun, ImageRun, Table, TableRow, TableCell, WidthType, AlignmentType,
   HeadingLevel, PageBreak, Footer, PageNumber, LevelFormat, BorderStyle, ShadingType, TableOfContents,
-  VerticalAlign,
+  VerticalAlign, PageOrientation,
 } = require('docx')
 
 const ROOT = 'C:/Proyectos/LeGrandHotel'
@@ -26,6 +26,24 @@ const h1 = (text) => new Paragraph({ heading: HeadingLevel.HEADING_1, keepNext: 
 const h2 = (text) => new Paragraph({ heading: HeadingLevel.HEADING_2, keepNext: true, children: [new TextRun({ text, font: FONT })], spacing: { before: 200, after: 120 } })
 const bullet = (children) => new Paragraph({ numbering: { reference: 'bullets', level: 0 }, children: Array.isArray(children) ? children : [t(children)], spacing: { after: 60, line: 288 } })
 const code = (text) => new Paragraph({ children: [new TextRun({ text, font: 'Consolas', size: 19 })], spacing: { after: 0 }, shading: { type: ShadingType.CLEAR, fill: 'F2F2F2' } })
+let snippetNo = 0
+// Fragmento de código en un recuadro gris claro (legible impreso en blanco y negro).
+function snippet(file, lines, why) {
+  snippetNo += 1
+  const head = new Paragraph({ keepNext: true, spacing: { before: 120, after: 60 }, children: [t(`Fragmento ${snippetNo}. `, { bold: true, size: 21 }), t(file, { italics: true, size: 21 })] })
+  const box = new Table({
+    width: { size: PAGE_W, type: WidthType.DXA },
+    columnWidths: [PAGE_W],
+    rows: [new TableRow({ cantSplit: true, children: [new TableCell({
+      borders, width: { size: PAGE_W, type: WidthType.DXA },
+      shading: { type: ShadingType.CLEAR, fill: 'F2F2F2' },
+      margins: { top: 80, bottom: 80, left: 140, right: 140 },
+      children: lines.map((line) => new Paragraph({ spacing: { after: 0, line: 240 }, children: [new TextRun({ text: line || ' ', font: 'Consolas', size: 17 })] })),
+    })] })],
+  })
+  const reason = p([t('Por qué se usó: ', { bold: true }), t(why)], { spacing: { before: 80, after: 160, line: 300 } })
+  return [head, box, reason]
+}
 const pageBreak = () => new Paragraph({ children: [new PageBreak()] })
 const caption = (text) => center([t(text, { italics: true, size: 20 })], { spacing: { after: 200 } })
 
@@ -113,6 +131,16 @@ const capture = (name, label, widthCm = 15) => {
 }
 
 // ── contenido ────────────────────────────────────────────
+const erPage = [
+  h1('8. EXTRAS (adicionales a lo evaluado en el 25%)'),
+  p([t('Todo lo de esta sección es EXTRA: no forma parte de lo evaluado en el 25% y se presenta como avance adicional.', { bold: true })]),
+
+  h2('8.1 EXTRA: Diagrama de base de datos'),
+  p('13 tablas del dominio en MySQL 8 con los índices que pide el plan: rooms(status), reservations(check_in, check_out), reservations(client_id), clients(document_number) único e inventory_items(name). La versión editable está en DBML (docs/diagramas/legrandhotel.dbml) y se abre en dbdiagram.io.'),
+  image(path.join(ROOT, 'docs/diagramas/base-de-datos.png'), 21),
+  caption('Figura 5. Modelo entidad-relación de LeGrandHotel.'),
+]
+
 const body = [
   p([t('Índice', { bold: true, size: 30 })], { spacing: { after: 160 } }),
   new TableOfContents('Índice', { hyperlink: true, headingStyleRange: '1-2' }),
@@ -168,6 +196,27 @@ const body = [
     [2.2, 7, 2],
   ),
   gap(),
+  ...snippet('infra/terraform/data.tf y network.tf (resumen)', [
+    'resource "aws_db_instance" "main" {',
+    '  engine                  = "mysql"',
+    '  engine_version          = "8.0"',
+    '  instance_class          = var.db_instance_class   # db.t3.micro',
+    '  storage_encrypted       = true',
+    '  publicly_accessible     = false                   # sin IP pública',
+    '  db_subnet_group_name    = aws_db_subnet_group.main.name   # subredes privadas',
+    '  vpc_security_group_ids  = [aws_security_group.db.id]',
+    '  backup_retention_period = 7                       # snapshots diarios, 7 días',
+    '}',
+    '',
+    'resource "aws_security_group" "db" {',
+    '  ingress {',
+    '    from_port       = 3306',
+    '    to_port         = 3306',
+    '    protocol        = "tcp"',
+    '    security_groups = [aws_security_group.app.id]    # solo desde las EC2 de la API',
+    '  }',
+    '}',
+  ], 'la base de datos es lo más sensible del sistema. Con publicly_accessible = false y las subredes privadas no tiene dirección en internet; el Security Group solo deja entrar al puerto 3306 desde las instancias de la API. Además se cifra el disco y quedan 7 días de copias automáticas. Al estar escrito en Terraform, el mismo entorno se puede crear o destruir con un comando y revisar antes de aplicar.'),
   h2('3.2 Costo estimado'),
   table(
     ['Recurso', 'USD/mes (24/7)'],
@@ -200,10 +249,45 @@ const body = [
     [2.5, 6.5, 3],
   ),
   gap(),
+  ...snippet('api/routes/api.php (extracto)', [
+    "Route::get('health', HealthController::class);",
+    '',
+    "Route::prefix('auth')->group(function () {",
+    "    Route::post('register', [AuthController::class, 'register'])",
+    "        ->middleware('throttle:register');",
+    "    Route::post('login', [AuthController::class, 'login'])",
+    "        ->middleware('throttle:login');",
+    '});',
+    '',
+    "Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {",
+    "    Route::get('auth/me', [AuthController::class, 'me']);",
+    "    Route::middleware('role:admin')->group(function () {",
+    "        Route::post('room-types', [RoomTypeController::class, 'store']);",
+    '        // ...',
+    '    });',
+    '});',
+  ], 'todas las rutas se declaran en un solo archivo, agrupadas por quién puede usarlas. Las públicas (registro y login) llevan su propio límite de intentos; el resto exige un token de Sanctum y, cuando corresponde, un rol. Laravel agrega el prefijo /api/v1, así una versión futura de la API puede convivir con esta sin romper el frontend.'),
   h2('4.1 Formato único de respuesta'),
   code('Éxito: { "success": true, "data": {...}, "meta": { "page": 1, "per_page": 15, "total": 120 } }'),
   code('Error: { "success": false, "error": { "code": "ROOM_ALREADY_BOOKED", "message": "...", "details": {...} } }'),
   gap(),
+  ...snippet('api/app/Support/ApiResponse.php (extracto)', [
+    'public static function success(mixed $data = null, int $status = 200,',
+    '                               array $meta = []): JsonResponse',
+    '{',
+    "    $body = ['success' => true, 'data' => $data];",
+    "    if ($meta !== []) { $body['meta'] = $meta; }",
+    '    return response()->json($body, $status);',
+    '}',
+    '',
+    'public static function error(string $code, string $message, int $status,',
+    '                             mixed $details = null): JsonResponse',
+    '{',
+    "    $error = ['code' => $code, 'message' => $message];",
+    "    if ($details !== null) { $error['details'] = $details; }",
+    "    return response()->json(['success' => false, 'error' => $error], $status);",
+    '}',
+  ], 'si cada controlador armara su respuesta a mano, el frontend tendría que adivinar el formato de cada endpoint. Con una sola clase todas las respuestas tienen la misma forma, y el frontend maneja los errores en un único lugar leyendo error.code.'),
   h2('4.2 Códigos HTTP'),
   table(
     ['Código', 'Cuándo se devuelve'],
@@ -221,6 +305,17 @@ const body = [
     [2.5, 9],
   ),
 
+  ...snippet('api/app/Exceptions/ApiExceptionRenderer.php (extracto)', [
+    'return match (true) {',
+    "    $e instanceof ValidationException       => ApiResponse::error(..., 422),",
+    "    $e instanceof AuthenticationException   => ApiResponse::error(..., 401),",
+    "    $e instanceof AuthorizationException    => ApiResponse::error(..., 403),",
+    '    $e instanceof ModelNotFoundException    => $this->modelNotFound($e),      // 404',
+    "    $e instanceof ThrottleRequestsException => ApiResponse::error(..., 429),",
+    '    $this->isDatabaseDown($e)               => $this->serviceUnavailable($e), // 503',
+    '    default                                 => $this->internalError($e),      // 500',
+    '};',
+  ], 'es el punto central que traduce cualquier error a un código HTTP y al formato único. Así ningún error sale como página HTML ni muestra trazas del servidor; en los 500 se entrega un código de incidente que también queda en el log, para encontrar el error exacto sin mostrar detalles internos al usuario.'),
   h1('5. Registro y login diferenciados'),
   p('El registro y el inicio de sesión son dos endpoints, dos validaciones (FormRequest) y dos pantallas distintas:'),
   table(
@@ -240,6 +335,66 @@ const body = [
   ...capture('login.png', 'Figura 2. Pantalla de inicio de sesión (/login).'),
   ...capture('registro.png', 'Figura 3. Pantalla de registro de huésped (/registro), separada del login.'),
   ...capture('panel.png', 'Figura 4. Panel de recepción después de iniciar sesión como Administrador.'),
+  ...snippet('api/app/Http/Requests/Auth/RegisterRequest.php', [
+    'public function rules(): array',
+    '{',
+    '    return [',
+    "        'name'            => ['required', 'string', 'max:120'],",
+    "        'email'           => ['required', 'email', 'unique:users,email'],",
+    "        'password'        => ['required', 'confirmed',",
+    "                              Password::min(8)->letters()->numbers()],",
+    "        'document_type'   => ['required', Rule::in(Client::DOCUMENT_TYPES)],",
+    "        'document_number' => ['required', 'unique:clients,document_number'],",
+    '    ];',
+    '}',
+  ], 'el registro tiene su propia validación, distinta de la del login. Se valida antes de llegar al controlador: si un dato falla, Laravel responde 422 con el mensaje de cada campo y el formulario lo muestra junto al campo. Las reglas unique evitan correos o documentos duplicados.'),
+  ...snippet('api/app/Http/Controllers/Api/AuthController.php (extracto)', [
+    'public function register(RegisterRequest $request): JsonResponse',
+    '{',
+    '    $user = DB::transaction(function () use ($data) {',
+    "        $user = User::create([...]);              // la contraseña se guarda con bcrypt",
+    '        $user->assignRole(Role::CLIENT);           // todo registro público es Cliente',
+    "        Client::create(['user_id' => $user->id, ...]);",
+    '        return $user;',
+    '    });',
+    '    event(new Registered($user));                  // envía el correo de verificación',
+    "    return ApiResponse::created($this->tokenPayload($user, 'web'));",
+    '}',
+    '',
+    'public function login(LoginRequest $request): JsonResponse',
+    '{',
+    "    $user = User::where('email', $request->string('email'))->first();",
+    "    if (! $user || ! Hash::check($request->password, $user->password)) {",
+    "        throw new ApiException('INVALID_CREDENTIALS', '...', 401);",
+    '    }',
+    '    return ApiResponse::success($this->tokenPayload($user, ...));',
+    '}',
+  ], 'son dos acciones separadas con responsabilidades distintas. El registro crea en una transacción la cuenta, su rol y su ficha de huésped: si algo falla, no queda nada a medias. El login solo compara la contraseña con el hash bcrypt y responde el mismo mensaje si falla el correo o la contraseña, para no revelar qué correos existen. Ambos devuelven un token Bearer de Sanctum que vence a los 60 minutos.'),
+  ...snippet('api/app/Models/User.php y AppServiceProvider.php (extractos)', [
+    'protected function casts(): array',
+    '{',
+    '    return [',
+    "        'email_verified_at' => 'datetime',",
+    "        'password'          => 'hashed',   // bcrypt automático",
+    '    ];',
+    '}',
+    '',
+    "RateLimiter::for('login', fn (Request $r) => Limit::perMinute(5)",
+    "    ->by(Str::lower($r->input('email')).'|'.$r->ip()));",
+    "RateLimiter::for('register', fn (Request $r) => Limit::perMinute(3)->by($r->ip()));",
+  ], 'con el cast hashed, cualquier contraseña que se asigne al usuario se cifra con bcrypt antes de guardarse, sin depender de que cada desarrollador lo recuerde. Los límites de intentos frenan ataques de fuerza bruta: el login permite 5 intentos por minuto por correo e IP y el registro 3 por minuto por IP; al superarlos la API responde 429.'),
+  ...snippet('web/src/App.tsx (extracto)', [
+    '<Route element={<GuestRoute />}>',
+    '  <Route path="/login" element={<LoginPage />} />',
+    '  <Route path="/registro" element={<RegisterPage />} />',
+    '</Route>',
+    '',
+    '<Route element={<ProtectedRoute />}>',
+    "  <Route element={<ProtectedRoute roles={['admin']} />}>",
+    '    <Route path="/personal" element={<StaffPage />} />',
+    '  </Route>',
+    '</Route>',
+  ], 'en el frontend el login y el registro son dos pantallas con su propia ruta. GuestRoute las oculta si ya hay sesión, y ProtectedRoute comprueba la sesión y el rol: si alguien escribe a mano una ruta que su rol no puede ver, se muestra la pantalla 403. El backend valida lo mismo en cada endpoint, así que esconder la pantalla no es la única protección.'),
   h2('5.1 Pruebas automáticas del registro y login'),
   table(
     ['Prueba (api/tests/Feature/AuthTest.php)', 'Resultado'],
@@ -275,14 +430,9 @@ const body = [
   bullet('Los tres puntos del 25% están implementados: endpoints definidos y documentados, registro y login separados y probados, y el entorno cloud descrito como código.'),
   bullet('Las pruebas de carga locales (sección 8.2) muestran que el servidor de desarrollo se satura con pocos usuarios. En la entrega del 80% se repetirán en AWS con Nginx + PHP-FPM, que atiende varias peticiones a la vez.'),
 
-  pageBreak(),
-  h1('8. EXTRAS (adicionales a lo evaluado en el 25%)'),
-  p([t('Todo lo de esta sección es EXTRA: no forma parte de lo evaluado en el 25% y se presenta como avance adicional.', { bold: true })]),
+]
 
-  h2('8.1 EXTRA: Diagrama de base de datos'),
-  p('13 tablas del dominio en MySQL 8 con los índices que pide el plan: rooms(status), reservations(check_in, check_out), reservations(client_id), clients(document_number) único e inventory_items(name). La versión editable está en DBML (docs/diagramas/legrandhotel.dbml) y se abre en dbdiagram.io.'),
-  image(path.join(ROOT, 'docs/diagramas/base-de-datos.png'), 16.5),
-  caption('Figura 5. Modelo entidad-relación de LeGrandHotel.'),
+const bodyAfter = [
 
   h2('8.2 EXTRA: Pruebas de rendimiento y estrés con k6 (varias corridas)'),
   p('Se hicieron cinco corridas con k6 contra la API en el equipo de desarrollo (Windows, PHP 8.2, servidor integrado de PHP que atiende una petición a la vez, SQLite y caché en archivo). No es el servidor de producción: sirven para comparar la carga entre corridas y detectar cuellos de botella antes de subir a AWS.'),
@@ -308,6 +458,19 @@ const body = [
   caption('Figura 9. p95 por tipo de operación (lecturas, login, crear reserva).'),
   image(path.join(ROOT, 'docs/pruebas/graficos/05-evolucion-' + last.vus + 'vu.png'), 15),
   caption(`Figura 10. Evolución de la latencia segundo a segundo en la corrida de ${last.vus} usuarios.`),
+  ...snippet('tests/k6/reservas.js (extracto)', [
+    'escalon: {',
+    '  stages: [',
+    "    { duration: '10s', target: VUS },   // sube hasta VUS usuarios",
+    "    { duration: '45s', target: VUS },   // mantiene la carga",
+    "    { duration: '5s',  target: 0 },     // baja",
+    '  ],',
+    '  thresholds: {',
+    "    http_req_duration: ['p(95)<500'],   // meta: p95 menor a 500 ms",
+    "    http_req_failed: ['rate<0.01'],     // menos de 1% de errores",
+    '  },',
+    '},',
+  ], 'el mismo script se corre con distinta cantidad de usuarios (VUS) para comparar corridas entre sí. Los thresholds convierten la meta del plan (p95 menor a 500 ms y menos de 1% de errores) en una regla: si no se cumple, k6 marca la prueba como fallida sin interpretar los números a mano.'),
   h2('8.3 Análisis y cuello de botella encontrado'),
   bullet(`Con ${first.vus} usuarios el p95 fue ${fmt(first.p95)} ms; con ${last.vus} usuarios llegó a ${fmt(last.p95)} ms. Las peticiones por segundo apenas suben (${fmt(first.rps, 1)} → ${fmt(last.rps, 1)}): el servidor ya estaba al máximo de lo que puede atender.`),
   bullet('Causa: el servidor integrado de PHP en Windows procesa una petición a la vez. Cuando llegan más usuarios, las peticiones esperan en cola y el tiempo de respuesta crece de forma casi lineal, aunque el código de cada endpoint sea rápido (en la prueba masiva de Pest, el listado de 5000 reservas responde en menos de 500 ms).'),
@@ -321,6 +484,16 @@ const body = [
   table(['Build', 'Comando', 'Veces que aparece legible'], [['Normal', 'npm run build:plain', '1'], ['Ofuscado (producción)', 'npm run build', '0']], [3, 4, 4]),
   gap(),
   p('El backend no se publica: corre en un servidor privado sin acceso al código.'),
+  ...snippet('web/vite.config.ts (extracto)', [
+    'renderChunk(code, chunk) {',
+    '  const result = JavaScriptObfuscator.obfuscate(code, {',
+    "    identifierNamesGenerator: 'hexadecimal',   // nombres ilegibles",
+    "    stringArray: true, stringArrayEncoding: ['base64'],   // textos codificados",
+    '    splitStrings: true, compact: true,',
+    '  })',
+    '  return { code: result.getObfuscatedCode(), map: null }',
+    '}',
+  ], 'el código de una aplicación web se descarga al navegador, así que cualquiera puede leerlo. La ofuscación se aplica al paquete final de producción para dificultar copiarlo o estudiar su lógica, sin cambiar lo que hace. En desarrollo se trabaja con el código normal (npm run build:plain).'),
 
   h2('8.5 EXTRA: Vista del programador'),
   p('El rol Programador tiene una pantalla de diagnóstico (/programador) que muestra, sin entrar al servidor: estado de la aplicación, la base de datos y la caché; versión y configuración (vida del token, rate limits, CORS); latencias p50/p95/p99 calculadas del log JSON; rutas más lentas; últimas peticiones; errores buscables por código de incidente, el mismo que ve el usuario en la pantalla 500; y la lista de todas las rutas de la API con su rol de acceso. No muestra contraseñas ni claves, y una prueba automática lo verifica.'),
@@ -339,6 +512,21 @@ const body = [
   bullet('Configurar el login con Google (credenciales OAuth) y los respaldos automáticos de RDS y S3.'),
 ]
 
+const MARGIN = Math.round(2.5 * CM)
+// Secciones: vertical (carátula a 7), horizontal (8 y 8.1, diagrama de BD), vertical (8.2 en adelante).
+function section(children, landscape = false) {
+  return {
+    properties: { page: {
+      margin: landscape ? { top: Math.round(1.8 * CM), bottom: Math.round(1.8 * CM), left: MARGIN, right: MARGIN } : { top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN },
+      size: landscape
+        ? { width: 11906, height: 16838, orientation: PageOrientation.LANDSCAPE }
+        : { width: 11906, height: 16838 },
+    } },
+    footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 20 })] })] }) },
+    children,
+  }
+}
+
 const doc = new Document({
   creator: 'Equipo LeGrandHotel',
   title: 'LeGrandHotel – Entrega N.º 1 (25%)',
@@ -351,11 +539,11 @@ const doc = new Document({
   },
   numbering: { config: [{ reference: 'bullets', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 540, hanging: 270 } } } }] }] },
   features: { updateFields: true },
-  sections: [{
-    properties: { page: { margin: { top: Math.round(2.5 * CM), bottom: Math.round(2.5 * CM), left: Math.round(2.5 * CM), right: Math.round(2.5 * CM) } } },
-    footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 20 })] })] }) },
-    children: [...caratula, ...body],
-  }],
+  sections: [
+    section([...caratula, ...body]),
+    section(erPage, true),
+    section(bodyAfter),
+  ],
 })
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true })
