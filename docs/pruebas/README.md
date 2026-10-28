@@ -44,6 +44,20 @@ Escenario `reservas.js PROFILE=escalon`: 70% lecturas, 20% login, 10% crear rese
 cada comando y su respuesta). Smoke 5 VU p95 323 ms · 429 en el 6.º login · escalones 5/10/25/50 VU con p95
 610 ms / 1.8 s / 4.6 s / 9.3 s, ~4.8 pet./s y 0% errores. Se repite con `docs/pruebas/informe-k6/correr.sh`.
 
+**Mejora medida (2026-10-28, 50 clientes del portal con `tests/k6/portal.js`, misma laptop y misma base MySQL):**
+
+| Cómo corre la API | Peticiones en 1 min | Pet./s | p95 | Crear reserva (p95) | Errores |
+| --- | --- | --- | --- | --- | --- |
+| `php -S` (servidor de desarrollo, 1 petición a la vez, sin OPcache) | 317 | 4,6 | 11 099 ms | 11 223 ms | 0% |
+| Nginx + PHP-FPM (20 procesos) + OPcache, en Docker | 950 | 15,0 | 1 430 ms | 1 500 ms | 0% |
+| Lo anterior + caché de Laravel (`config:cache`, `route:cache`, `event:cache`) | 1 221 | 19,2 | 614 ms | 669 ms | 0% |
+
+Con la misma configuración que se usará en el servidor (PHP-FPM, OPcache y caché de Laravel) se atienden **4 veces más
+peticiones** y el p95 baja **18 veces** (de 11,1 s a 0,6 s); las búsquedas ya cumplen su meta (p95 < 800 ms).
+Salidas en `informe-k6/salidas/5-fpm-*` y `6-fpm-cache-*`. Para repetirlo: `docker compose up -d nginx app redis mysql`,
+`docker compose exec app php artisan config:cache` (y `route:cache`, `event:cache`), `docker compose restart app`;
+al terminar, `docker compose exec app php artisan optimize:clear` (si no, la API corrida desde Windows lee `DB_HOST=mysql`).
+
 **Cuello de botella:** el servidor integrado de PHP atiende una petición a la vez, así que se satura en ~5 pet./s y
 la latencia crece con la cola (todas las operaciones tienen el mismo p95). Sin errores: responde lento pero no se cae.
 **Corrección prevista (80%):** Nginx + PHP-FPM (20 procesos), OPcache, RDS y Redis; repetir las corridas en AWS.
