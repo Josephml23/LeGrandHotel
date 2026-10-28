@@ -40,6 +40,10 @@ Escenario `reservas.js PROFILE=escalon`: 70% lecturas, 20% login, 10% crear rese
 | Escalón 25 VU | 438 | 5.2 | 3 361 ms | 3 952 ms | 0% | `local-escalon-25vu.html` |
 | Escalón 50 VU | 483 | 5.3 | 7 016 ms | 7 885 ms | 0% | `local-escalon-50vu.html` |
 
+**Repetición del 2026-10-27 (noche) con informe propio:** `docs/pruebas/informe-k6/` (Word y PDF con capturas de
+cada comando y su respuesta). Smoke 5 VU p95 323 ms · 429 en el 6.º login · escalones 5/10/25/50 VU con p95
+610 ms / 1.8 s / 4.6 s / 9.3 s, ~4.8 pet./s y 0% errores. Se repite con `docs/pruebas/informe-k6/correr.sh`.
+
 **Cuello de botella:** el servidor integrado de PHP atiende una petición a la vez, así que se satura en ~5 pet./s y
 la latencia crece con la cola (todas las operaciones tienen el mismo p95). Sin errores: responde lento pero no se cae.
 **Corrección prevista (80%):** Nginx + PHP-FPM (20 procesos), OPcache, RDS y Redis; repetir las corridas en AWS.

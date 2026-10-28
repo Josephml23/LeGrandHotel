@@ -1,0 +1,61 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: tests/k6/rate-limit.js
+ web dashboard:
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 1 max VUs, 10m30s max duration (incl. graceful stop):
+              * default: 1 iterations shared among 1 VUs (maxDuration: 10m0s, gracefulStop: 30s)
+
+
+running (00m01.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+default   [   0% ] 1 VUs  00m01.0s/10m0s  0/1 shared iters
+
+running (00m02.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+default   [   0% ] 1 VUs  00m02.0s/10m0s  0/1 shared iters
+
+running (00m03.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+default   [   0% ] 1 VUs  00m03.0s/10m0s  0/1 shared iters
+time="2026-10-27T20:46:41-05:00" level=info msg="Estados recibidos: 401, 401, 401, 401, 401, 429" source=console
+time="2026-10-27T20:46:41-05:00" level=warning msg="The test run was short, report generation was skipped (not enough data)"
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 3       0.922251/s
+    checks_succeeded...: 100.00% 3 out of 3
+    checks_failed......: 0.00%   0 out of 3
+
+    ✓ 6.º intento → 429
+    ✓ trae Retry-After
+    ✓ formato JSON único
+
+    HTTP
+    http_req_duration..............: avg=536.72ms min=122.33ms med=125.84ms max=2.56s p(90)=1.36s p(95)=1.96s
+      { expected_response:true }...: avg=536.72ms min=122.33ms med=125.84ms max=2.56s p(90)=1.36s p(95)=1.96s
+    http_req_failed................: 0.00%  0 out of 6
+    http_reqs......................: 6      1.844502/s
+
+    EXECUTION
+    iteration_duration.............: avg=3.25s    min=3.25s    med=3.25s    max=3.25s p(90)=3.25s p(95)=3.25s
+    iterations.....................: 1      0.307417/s
+    vus............................: 1      min=1      max=1
+    vus_max........................: 1      min=1      max=1
+
+    NETWORK
+    data_received..................: 3.9 kB 1.2 kB/s
+    data_sent......................: 1.5 kB 446 B/s
+
+
+
+
+running (00m03.3s), 0/1 VUs, 1 complete and 0 interrupted iterations
+default ✓ [ 100% ] 1 VUs  00m03.3s/10m0s  1/1 shared iters
+exit 0
