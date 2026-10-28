@@ -21,3 +21,6 @@ Thumbs.db
 .playwright-mcp/
 
 .superpowers/
+
+# Tokens de los clientes de prueba de k6 (LoadTestClientsSeeder)
+tests/k6/.tokens-clientes.json

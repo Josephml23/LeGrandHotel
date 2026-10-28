@@ -7,10 +7,22 @@
 | `reservas.js` `PROFILE=carga-25` | 50 → 100 VU, p95 < 500 ms, 0% errores | 25% |
 | `reservas.js` `PROFILE=carga-80 VUS=1000/3000/5000` | carga a 1000, 3000 y 5000 VU | 80% |
 | `reservas.js` `PROFILE=estres / pico / resistencia` | punto de quiebre, picos y 30 min | 100% |
+| `portal.js` `VUS=100` | **Clientes** en el portal: 60% buscan habitaciones, 25% ven sus reservas, 15% reservan | extra |
 
 Escenario (recepción): 70% lecturas (habitaciones disponibles, reservas, tipos), 20% login y 10% crear reserva.
 Los usuarios virtuales son recepcionistas de prueba (`LoadTestUsersSeeder`) y reservan a nombre de huéspedes de `MassiveDataSeeder`.
 Los `thresholds` hacen que la corrida falle sola si no se cumple la meta.
+
+Escenario de clientes (`portal.js`): los clientes entran solo con Google y k6 no puede iniciar sesión en Google, así que
+`LoadTestClientsSeeder` crea clientes de prueba con DNI y teléfono y les abre la sesión (token de 24 h en
+`tests/k6/.tokens-clientes.json`, fuera de git). Si hay más usuarios virtuales que clientes, comparten la sesión.
+
+```powershell
+cd api; $env:K6_CLIENTS="50"; php artisan db:seed --class=LoadTestClientsSeeder; cd ..
+k6 run -e BASE_URL=http://127.0.0.1:8000/api/v1 -e VUS=100 tests/k6/portal.js
+cd api; php artisan k6:limpiar          # borra cuentas de carga (recepcionistas y clientes) y sus reservas
+php artisan k6:limpiar --masivos         # además, los huéspedes de MassiveDataSeeder y sus reservas
+```
 
 ## Cómo correrlas
 
