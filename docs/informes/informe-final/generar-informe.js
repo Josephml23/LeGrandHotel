@@ -1,4 +1,4 @@
-// Genera docs/informes/informe-final/LeGrandHotel_Informe_del_proyecto.docx:
+// Genera docs/informes/informe-final/LeGrandHotel_Semana11.docx (versión en inglés: generar-informe-en.js):
 // descripción y tecnologías, endpoints, registro y login, roles con su recorrido en capturas, pantallas de error,
 // registro de incidentes, pruebas k6 y diseño de la app móvil.
 //   node docs/informes/informe-final/generar-informe.js <logo_tecsup.jpg>
@@ -14,7 +14,7 @@ const BASE = path.join(ROOT, 'docs/informes/informe-final')
 const CAPS = path.join(BASE, 'capturas')
 const K6 = path.join(ROOT, 'docs/pruebas/informe-k6')
 const LOGO = process.argv[2]
-const OUT = path.join(BASE, 'LeGrandHotel_Informe_del_proyecto_v2.docx')
+const OUT = path.join(BASE, 'LeGrandHotel_Semana11.docx')
 
 const FONT = 'Times New Roman'
 const CODE = 'Consolas'
@@ -112,7 +112,8 @@ const caratula = [
   cov('CURSO: DESARROLLO DE SOLUCIONES EN LA NUBE', { bold: true }),
   cov('PROYECTO:', { bold: true }),
   cov('LeGrandHotel – Sistema web de gestión de hospedaje', { bold: true }, 240),
-  cov('INFORME DEL PROYECTO: FUNCIONALIDADES, PRUEBAS Y DISEÑO MÓVIL', { bold: true }),
+  cov('LeGrandHotel Semana11', { bold: true, size: 32 }, 120),
+  cov('Funcionalidades, pruebas y diseño móvil'),
   cov('AREQUIPA, 2026', {}, 360),
   cov('Docente:', { bold: true }),
   cov('VÍCTOR CALVO', {}, 360),
@@ -542,7 +543,7 @@ const landscape = (children) => ({ properties: { page: { margin: { ...margins, t
 
 const doc = new Document({
   creator: 'Equipo LeGrandHotel',
-  title: 'LeGrandHotel – Informe del proyecto',
+  title: 'LeGrandHotel Semana11',
   styles: {
     default: { document: { run: { font: FONT, size: 24 } } },
     paragraphStyles: [

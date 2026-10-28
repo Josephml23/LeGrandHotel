@@ -159,11 +159,22 @@ def conectar(ax, hijo, col, padre, regla, logica=False, cajas_=None, rutas=None)
     ax.plot([x1, canal, canal, x2], [y1, y1, y2, y2], **estilo)
     marca(ax, x1, y1, -1 if lp == "R" else 1, "cero_uno" if nulo else "uno")
     marca(ax, x2, y2, 1 if canal < x2 else -1, "cero_uno" if (hijo, col) in unicos else "cero_muchos")
-    texto = f"{col}" + (" · sin FK" if logica else f" · {regla}")
+    texto = f"{col}" + (f" · {T['sin_fk']}" if logica else f" · {regla}")
     xt = x2 + (-0.45 if canal < x2 else 0.45)
     ax.text(xt, y2 - 0.12, texto, ha="right" if canal < x2 else "left", va="bottom", fontsize=7.5, color=MID, zorder=6,
             bbox=dict(fc="white", ec="none", pad=0.6, alpha=0.9))
 
+
+# Textos del dibujo en español e inglés (las tablas y columnas son las de la base, no se traducen).
+TXT = {
+    "es": {"sin_fk": "sin FK", "leer": "Cómo leerlo", "uno": "exactamente uno", "cero_uno": "cero o uno",
+           "cero_muchos": "cero o muchos", "sin_clave": "sin clave foránea", "parte": "Parte", "ref": "parte",
+           "punteado": "Recuadro punteado = tabla de otra parte (solo su id). "},
+    "en": {"sin_fk": "no FK", "leer": "How to read it", "uno": "exactly one", "cero_uno": "zero or one",
+           "cero_muchos": "zero or many", "sin_clave": "no foreign key", "parte": "Part", "ref": "part",
+           "punteado": "Dashed box = table from another part (only its id). "},
+}
+T = TXT["es"]
 
 fig = plt.figure(figsize=(41, 15.7))
 ax = fig.add_axes([0, 0, 1, 1])
@@ -187,15 +198,15 @@ for c in cajas.values():
     c.dibujar(ax)
 
 def leyenda(ax, x0, ly, fs=9.5):
-    ax.text(x0, ly, "Cómo leerlo", fontsize=fs + 1.5, weight="bold", color=INK)
+    ax.text(x0, ly, T["leer"], fontsize=fs + 1.5, weight="bold", color=INK)
     x = x0
-    for tipo, txt in [("uno", "exactamente uno"), ("cero_uno", "cero o uno"), ("cero_muchos", "cero o muchos")]:
+    for tipo, txt in [("uno", T["uno"]), ("cero_uno", T["cero_uno"]), ("cero_muchos", T["cero_muchos"])]:
         ax.plot([x, x + 0.9], [ly + 0.55, ly + 0.55], color=LINE, lw=1.2)
         marca(ax, x + 0.9, ly + 0.55, 1, tipo)
         ax.text(x + 1.05, ly + 0.55, txt, va="center", fontsize=fs, color=INK)
         x += 2.6
     ax.plot([x, x + 0.9], [ly + 0.55, ly + 0.55], color=LINE, lw=1.2, ls=(0, (4, 3)))
-    ax.text(x + 1.05, ly + 0.55, "sin clave foránea", va="center", fontsize=fs, color=INK)
+    ax.text(x + 1.05, ly + 0.55, T["sin_clave"], va="center", fontsize=fs, color=INK)
 
 
 leyenda(ax, 0.1, 13.45)
@@ -210,7 +221,7 @@ plt.close(fig)
 
 # ── el mismo diagrama en 3 partes, para leerlo en una página cada una ──
 PARTES = [
-    ("1", "Cuentas, permisos y auditoría", (13.50, 12.2), {
+    ("1", {"es": "Cuentas, permisos y auditoría", "en": "Accounts, permissions and audit"}, (13.50, 12.2), {
         "roles": (2.00, 0.9), "role_user": (2.00, 3.3), "personal_access_tokens": (2.00, 4.8), "sessions": (2.00, 8.8),
         "users": (8.10, 0.9), "staff": (8.10, 4.7), "audit_logs": (8.10, 7.9),
     }, {}, {
@@ -220,51 +231,53 @@ PARTES = [
         ("sessions", "user_id"): ("L", "R", 7.60, 1.8),
         ("staff", "user_id"): ("R", "R", 12.55, 0.6),
         ("audit_logs", "user_id"): ("R", "R", 12.85, 1.2),
-    }, "users también es padre de clients (parte 2) e inventory_movements (parte 3)."),
-    ("2", "Huéspedes, reservas y habitaciones", (13.70, 12.2), {
+    }, {"es": "users también es padre de clients (parte 2) e inventory_movements (parte 3).", "en": "users is also the parent of clients (part 2) and inventory_movements (part 3)."}),
+    ("2", {"es": "Huéspedes, reservas y habitaciones", "en": "Guests, reservations and rooms"}, (13.70, 12.2), {
         "users": (2.00, 0.9), "clients": (2.00, 2.4), "room_types": (2.00, 6.6),
         "reservations": (8.00, 0.9), "rooms": (8.00, 5.6), "stays": (8.00, 8.8),
-    }, {"users": "parte 1"}, {
+    }, {"users": 1}, {
         ("clients", "user_id"): ("L", "L", 1.55, 0),
         ("reservations", "client_id"): ("R", "L", None, 0),
         ("rooms", "room_type_id"): ("R", "L", None, 0),
         ("reservations", "room_id"): ("R", "R", 12.70, 0),
         ("stays", "reservation_id"): ("R", "R", 13.00, 0.3),
-    }, "stays también es padre de parking_assignments (parte 3)."),
-    ("3", "Cochera e inventario", (12.4, 10.6), {
+    }, {"es": "stays también es padre de parking_assignments (parte 3).", "en": "stays is also the parent of parking_assignments (part 3)."}),
+    ("3", {"es": "Cochera e inventario", "en": "Parking and inventory"}, (12.4, 10.6), {
         "parking_spots": (0.9, 0.9), "stays": (0.9, 3.3),
         "inventory_items": (0.9, 5.4), "users": (0.9, 8.5),
         "parking_assignments": (7.0, 0.9), "inventory_movements": (7.0, 5.4),
-    }, {"stays": "parte 2", "users": "parte 1"}, {
+    }, {"stays": 2, "users": 1}, {
         ("parking_assignments", "parking_spot_id"): ("R", "L", 6.3, 0),
         ("parking_assignments", "stay_id"): ("R", "L", 5.9, 0),
         ("inventory_movements", "inventory_item_id"): ("R", "L", 6.3, 0),
         ("inventory_movements", "user_id"): ("R", "L", 5.9, 0),
-    }, ""),
+    }, {"es": "", "en": ""}),
 ]
 
-for num, titulo, (ancho, alto), pos, refs, rutas, nota in PARTES:
-    cj = {n: Caja(n, pos, refs.get(n)) for n in pos}
-    fig = plt.figure(figsize=(ancho, alto + 2.2))
-    ax = fig.add_axes([0, 0, 1, 1])
-    ax.set_xlim(0, ancho)
-    ax.set_ylim(alto + 1.6, -0.6)
-    ax.axis("off")
-    ax.text(0.15, -0.2, f"Parte {num}. {titulo}", fontsize=16, weight="bold", color=INK, va="center")
-    for f in fks:
-        if f["hijo"] in cj and f["padre"] in cj:
-            conectar(ax, f["hijo"], f["col"], f["padre"], f["regla"], cajas_=cj, rutas=rutas)
-    for hijo, col, padre in LOGICAS:
-        if hijo in cj and padre in cj:
-            conectar(ax, hijo, col, padre, "", logica=True, cajas_=cj, rutas=rutas)
-    for c in cj.values():
-        c.dibujar(ax)
-    ancho_real = max(c.x + c.w for c in cj.values())
-    assert ancho_real < ancho - 0.2, f"parte {num}: las tablas pasan el ancho ({ancho_real:.1f})"
-    leyenda(ax, 0.15, alto + 0.05, fs=9)
-    if nota:
-        ax.text(0.15, alto + 1.15, "Recuadro punteado = tabla de otra parte (solo su id). " + nota, fontsize=9, color=MID)
-    for ext in ("pdf", "png"):
-        fig.savefig(BASE / f"diagrama-bd-parte{num}.{ext}", dpi=220 if ext == "png" else None)
-    plt.close(fig)
+for idioma, nombre_archivo in (("es", "diagrama-bd-parte{}"), ("en", "diagrama-bd-part{}-en")):
+    T = TXT[idioma]
+    for num, titulos, (ancho, alto), pos, refs, rutas, notas in PARTES:
+        cj = {n: Caja(n, pos, f"{T['ref']} {refs[n]}" if n in refs else None) for n in pos}
+        fig = plt.figure(figsize=(ancho, alto + 2.2))
+        ax = fig.add_axes([0, 0, 1, 1])
+        ax.set_xlim(0, ancho)
+        ax.set_ylim(alto + 1.6, -0.6)
+        ax.axis("off")
+        ax.text(0.15, -0.2, f"{T['parte']} {num}. {titulos[idioma]}", fontsize=16, weight="bold", color=INK, va="center")
+        for f in fks:
+            if f["hijo"] in cj and f["padre"] in cj:
+                conectar(ax, f["hijo"], f["col"], f["padre"], f["regla"], cajas_=cj, rutas=rutas)
+        for hijo, col, padre in LOGICAS:
+            if hijo in cj and padre in cj:
+                conectar(ax, hijo, col, padre, "", logica=True, cajas_=cj, rutas=rutas)
+        for c in cj.values():
+            c.dibujar(ax)
+        ancho_real = max(c.x + c.w for c in cj.values())
+        assert ancho_real < ancho - 0.2, f"parte {num}: las tablas pasan el ancho ({ancho_real:.1f})"
+        leyenda(ax, 0.15, alto + 0.05, fs=9)
+        if notas[idioma]:
+            ax.text(0.15, alto + 1.15, T["punteado"] + notas[idioma], fontsize=9, color=MID)
+        for ext in ("pdf", "png"):
+            fig.savefig(BASE / f"{nombre_archivo.format(num)}.{ext}", dpi=220 if ext == "png" else None)
+        plt.close(fig)
 print("ok")

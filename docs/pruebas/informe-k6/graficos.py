@@ -39,28 +39,43 @@ for v in VUS:
 
 x = [str(r["vus"]) for r in rows]
 
-fig, ax = plt.subplots(figsize=(7, 3.6))
-ax.plot(x, [r["p95"] for r in rows], marker="o", color=INK, linewidth=2, label="p95")
-ax.plot(x, [r["p50"] for r in rows], marker="s", color=MID, linewidth=2, linestyle="--", label="p50 (mediana)")
-ax.axhline(500, color=LIGHT, linewidth=1.5, linestyle=":")
-ax.text(0.02, 520, "meta p95 < 500 ms", color=MID, fontsize=9)
-for i, r in enumerate(rows):
-    ax.annotate(f"{r['p95']:.0f} ms", (i, r["p95"]), textcoords="offset points", xytext=(0, 8), ha="center", fontsize=9)
-ax.set_xlabel("Usuarios virtuales (VU)")
-ax.set_ylabel("Tiempo de respuesta (ms)")
-ax.set_title("Tiempo de respuesta según la cantidad de usuarios")
-ax.legend(frameon=False)
-fig.tight_layout()
-fig.savefig(OUT / "01-latencia.png", dpi=200)
+# Mismos gráficos en español (graficos/) e inglés (graficos-en/).
+TEXTOS = {
+    "es": {"dir": "graficos", "f1": "01-latencia.png", "f2": "02-peticiones-por-segundo.png", "meta": "meta p95 < 500 ms",
+           "p50": "p50 (mediana)", "vu": "Usuarios virtuales (VU)", "tiempo": "Tiempo de respuesta (ms)",
+           "t1": "Tiempo de respuesta según la cantidad de usuarios", "ps": "Peticiones por segundo", "t2": "Peticiones atendidas por segundo"},
+    "en": {"dir": "graficos-en", "f1": "01-latency.png", "f2": "02-requests-per-second.png", "meta": "goal p95 < 500 ms",
+           "p50": "p50 (median)", "vu": "Virtual users (VU)", "tiempo": "Response time (ms)",
+           "t1": "Response time by number of users", "ps": "Requests per second", "t2": "Requests served per second"},
+}
+for tx in TEXTOS.values():
+    carpeta = BASE / tx["dir"]
+    carpeta.mkdir(exist_ok=True)
 
-fig, ax = plt.subplots(figsize=(7, 3.2))
-bars = ax.bar(x, [r["rps"] for r in rows], color=[LIGHT, "#999999", MID, INK], width=0.55)
-for b, r in zip(bars, rows):
-    ax.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.1, f"{r['rps']:.1f}", ha="center", fontsize=9)
-ax.set_xlabel("Usuarios virtuales (VU)")
-ax.set_ylabel("Peticiones por segundo")
-ax.set_title("Peticiones atendidas por segundo")
-fig.tight_layout()
-fig.savefig(OUT / "02-peticiones-por-segundo.png", dpi=200)
+    fig, ax = plt.subplots(figsize=(7, 3.6))
+    ax.plot(x, [r["p95"] for r in rows], marker="o", color=INK, linewidth=2, label="p95")
+    ax.plot(x, [r["p50"] for r in rows], marker="s", color=MID, linewidth=2, linestyle="--", label=tx["p50"])
+    ax.axhline(500, color=LIGHT, linewidth=1.5, linestyle=":")
+    ax.text(0.02, 520, tx["meta"], color=MID, fontsize=9)
+    for i, r in enumerate(rows):
+        ax.annotate(f"{r['p95']:.0f} ms", (i, r["p95"]), textcoords="offset points", xytext=(0, 8), ha="center", fontsize=9)
+    ax.set_xlabel(tx["vu"])
+    ax.set_ylabel(tx["tiempo"])
+    ax.set_title(tx["t1"])
+    ax.legend(frameon=False)
+    fig.tight_layout()
+    fig.savefig(carpeta / tx["f1"], dpi=200)
+    plt.close(fig)
+
+    fig, ax = plt.subplots(figsize=(7, 3.2))
+    bars = ax.bar(x, [r["rps"] for r in rows], color=[LIGHT, "#999999", MID, INK], width=0.55)
+    for bar, r in zip(bars, rows):
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.1, f"{r['rps']:.1f}", ha="center", fontsize=9)
+    ax.set_xlabel(tx["vu"])
+    ax.set_ylabel(tx["ps"])
+    ax.set_title(tx["t2"])
+    fig.tight_layout()
+    fig.savefig(carpeta / tx["f2"], dpi=200)
+    plt.close(fig)
 
 print(json.dumps(rows, indent=2))

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LeGrandHotel · Mobile app mockups</title>
+<style>
+  :root {
+    --ground: #f6f5f2; --surface: #ffffff; --raised: #f4f4f1; --border: #e6e5e1; --rule: #efeeeb;
+    --text: #131416; --muted: #5d5f60; --accent: #1b6c80; --accent-ink: #0f4552; --accent-tint: #e3f0f3;
+    --pos-bg: #dcfae5; --pos-ink: #04250e; --warn-bg: #fffbeb; --warn-ink: #92400e; --neg: #c4242a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9e8e4; font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); }
+  .board { display: flex; gap: 34px; padding: 34px 40px 26px; align-items: flex-start; }
+  .item { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .label { font-size: 15px; font-weight: 600; text-align: center; }
+  .label small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .phone { width: 300px; height: 620px; border-radius: 40px; background: #111; padding: 11px; box-shadow: 0 10px 28px rgba(0,0,0,.18); }
+  .screen { position: relative; width: 100%; height: 100%; border-radius: 30px; overflow: hidden; background: var(--ground); display: flex; flex-direction: column; }
+  .status { height: 34px; display: flex; justify-content: space-between; align-items: center; padding: 0 22px; font-size: 12px; font-weight: 600; }
+  .notch { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 90px; height: 22px; background: #111; border-radius: 12px; }
+  .top { padding: 6px 18px 10px; }
+  .top h1 { margin: 0; font-size: 21px; }
+  .top p { margin: 3px 0 0; font-size: 12.5px; color: var(--muted); }
+  .content { flex: 1; overflow: hidden; padding: 0 14px; display: flex; flex-direction: column; gap: 10px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 13px; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .t { font-weight: 600; font-size: 14px; }
+  .s { font-size: 12px; color: var(--muted); }
+  .money { font-weight: 700; font-size: 16px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
+  .chip { font-size: 10.5px; border: 1px solid var(--border); border-radius: 99px; padding: 2px 8px; color: var(--muted); }
+  .btn { display: block; text-align: center; background: var(--text); color: #fff; border-radius: 10px; padding: 9px; font-size: 13px; font-weight: 600; }
+  .btn.small { display: inline-block; padding: 6px 12px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+  .btn.ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn.accent { background: var(--accent); }
+  .field { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px; font-size: 13px; }
+  .field .s { font-size: 10.5px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pill { font-size: 10.5px; font-weight: 600; border-radius: 99px; padding: 2px 8px; }
+  .pos { background: var(--pos-bg); color: var(--pos-ink); }
+  .warn { background: var(--warn-bg); color: var(--warn-ink); }
+  .acc { background: var(--accent-tint); color: var(--accent-ink); }
+  .tabs { display: flex; justify-content: space-around; background: var(--surface); border-top: 1px solid var(--border); padding: 8px 4px 18px; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10.5px; color: var(--muted); }
+  .tab .ic { width: 22px; height: 22px; border-radius: 7px; border: 2px solid currentColor; }
+  .tab.on { color: var(--accent); font-weight: 600; }
+  .tab.on .ic { background: var(--accent-tint); }
+  .hero { background: var(--accent-ink); color: #fff; padding: 46px 22px 26px; }
+  .hero h1 { margin: 0; font-size: 26px; line-height: 1.15; }
+  .hero p { margin: 8px 0 0; font-size: 12.5px; opacity: .85; }
+  .logo { width: 34px; height: 34px; border-radius: 9px; background: #fff; color: var(--accent-ink); font-weight: 800; display: grid; place-items: center; margin-bottom: 18px; }
+  .sep { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); }
+  .sep:before, .sep:after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .bar { height: 6px; border-radius: 9px; background: var(--rule); overflow: hidden; margin-top: 7px; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  .bar i.low { background: var(--neg); }
+  .note { padding: 0 40px 30px; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="board">
+
+  <!-- 1. Inicio de sesión -->
+  <div class="item">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="hero"><div class="logo">L'</div><h1>Your room,<br>one tap away</h1><p>Book as a guest or sign in as hotel staff.</p></div>
+      <div class="content" style="padding-top:16px">
+        <div class="btn ghost">Continue with Google</div>
+        <div class="s" style="text-align:center">Guests create their account with Google</div>
+        <div class="sep">hotel staff</div>
+        <div class="field"><div class="s">Email</div>recepcion@legrandhotel.test</div>
+        <div class="field"><div class="s">Password</div>••••••••••</div>
+        <div class="btn">Sign in</div>
+        <div class="s" style="text-align:center">Unlock with fingerprint or Face ID</div>
+      </div>
+    </div></div>
+    <div class="label">Sign in<small>Staff with email · guests with Google</small></div>
+  </div>
+
+  <!-- 2. Cliente: Reservar -->
+  <div class="item">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="status"><span>9:41</span><span>●●● ▮</span></div>
+      <div class="top"><h1>Book</h1><p>Nov 14 → 17 · 2 guests · 3 nights</p></div>
+      <div class="content">
+        <div class="grid2"><div class="field"><div class="s">Check-in</div>14/11/2026</div><div class="field"><div class="s">Check-out</div>17/11/2026</div></div>
+        <div class="card">
+          <div class="row"><span class="t">Queen</span><span class="pill pos">12 free</span></div>
+          <div class="s">S/ 220.00 per night · up to 2 guests</div>
+          <div class="chips"><span class="chip">Wi-Fi</span><span class="chip">Smart TV</span><span class="chip">Private bathroom</span><span class="chip">City view</span></div>
+          <div class="row"><span class="money">S/ 660.00</span><span class="btn small">Book</span></div>
+        </div>
+        <div class="card">
+          <div class="row"><span class="t">Suite</span><span class="pill pos">10 free</span></div>
+          <div class="s">S/ 450.00 per night · up to 4 guests</div>
+          <div class="chips"><span class="chip">Jacuzzi</span><span class="chip">Minibar</span><span class="chip">Breakfast</span></div>
+          <div class="row"><span class="money">S/ 1,350.00</span><span class="btn small">Book</span></div>
+        </div>
+      </div>
+      <div class="tabs"><div class="tab on"><span class="ic"></span>Book</div><div class="tab"><span class="ic"></span>My bookings</div><div class="tab"><span class="ic"></span>Account</div></div>
+    </div></div>
+    <div class="label">Guest · Book<small>Free room types, amenities and total</small></div>
+  </div>
+
+  <!-- 3. Cliente: Mis reservas -->
+  <div class="item">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="status"><span>9:41</span><span>●●● ▮</span></div>
+      <div class="top"><h1>My bookings</h1><p>María Quispe Huamán</p></div>
+      <div class="content">
+        <div class="card">
+          <div class="row"><span class="t">Queen · Room 1023</span><span class="pill pos">Confirmed</span></div>
+          <div class="s">Nov 14 → Nov 17, 2026 · 3 nights</div>
+          <div class="row" style="margin-top:9px"><span class="money">S/ 660.00</span><span class="btn small ghost">Cancel</span></div>
+        </div>
+        <div class="card">
+          <div class="row"><span class="t">Double · Room 1001</span><span class="pill acc">Completed</span></div>
+          <div class="s">Sep 2 → Sep 4, 2026 · 2 nights</div>
+          <div class="row" style="margin-top:9px"><span class="money">S/ 360.00</span></div>
+        </div>
+        <div class="card" style="background:var(--accent-tint);border-color:transparent">
+          <div class="t" style="color:var(--accent-ink)">Reminder</div>
+          <div class="s">We will remind you one day before you arrive.</div>
+        </div>
+      </div>
+      <div class="tabs"><div class="tab"><span class="ic"></span>Book</div><div class="tab on"><span class="ic"></span>My bookings</div><div class="tab"><span class="ic"></span>Account</div></div>
+    </div></div>
+    <div class="label">Guest · My bookings<small>Status, total and cancellation</small></div>
+  </div>
+
+  <!-- 4. Recepción: Hoy -->
+  <div class="item">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="status"><span>9:41</span><span>●●● ▮</span></div>
+      <div class="top"><h1>Today</h1><p>Tuesday, Oct 28 · 51% occupancy</p></div>
+      <div class="content">
+        <div class="grid2">
+          <div class="card"><div class="s">Arrivals</div><div class="money">9</div></div>
+          <div class="card"><div class="s">Departures</div><div class="money">7</div></div>
+        </div>
+        <div class="s" style="font-weight:600">Today's arrivals</div>
+        <div class="card"><div class="row"><div><div class="t">Juana Lozano</div><div class="s">Room 1007 · Suite · 1 night</div></div><span class="btn small accent">Check-in</span></div></div>
+        <div class="card"><div class="row"><div><div class="t">Nahuel Naranjo</div><div class="s">Room 1016 · Single · 1 night</div></div><span class="btn small accent">Check-in</span></div></div>
+        <div class="card"><div class="row"><div><div class="t">Sophie Venegas</div><div class="s">Room 1014 · Double · 2 nights</div></div><span class="btn small accent">Check-in</span></div></div>
+      </div>
+      <div class="tabs"><div class="tab on"><span class="ic"></span>Today</div><div class="tab"><span class="ic"></span>Bookings</div><div class="tab"><span class="ic"></span>Rooms</div><div class="tab"><span class="ic"></span>Parking</div></div>
+    </div></div>
+    <div class="label">Front desk · Today<small>Check-in and check-out from the lobby</small></div>
+  </div>
+
+  <!-- 5. Almacén: Inventario -->
+  <div class="item">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div><div class="status"><span>9:41</span><span>●●● ▮</span></div>
+      <div class="top"><h1>Inventory</h1><p>2 supplies below minimum</p></div>
+      <div class="content">
+        <div class="card"><div class="row"><span class="t">Shampoo</span><span class="pill warn">Restock</span></div><div class="s">12 of 30 minimum units</div><div class="bar"><i class="low" style="width:40%"></i></div></div>
+        <div class="card"><div class="row"><span class="t">Hand soap</span><span class="pill warn">Restock</span></div><div class="s">18 of 40 minimum units</div><div class="bar"><i class="low" style="width:45%"></i></div></div>
+        <div class="card"><div class="row"><span class="t">Towels</span><span class="pill pos">In stock</span></div><div class="s">120 of 60 minimum units</div><div class="bar"><i style="width:100%"></i></div></div>
+        <div class="btn">Record stock in or out</div>
+      </div>
+      <div class="tabs"><div class="tab on"><span class="ic"></span>Inventory</div><div class="tab"><span class="ic"></span>Movements</div><div class="tab"><span class="ic"></span>Account</div></div>
+    </div></div>
+    <div class="label">Storeroom · Inventory<small>Stock, minimums and movements</small></div>
+  </div>
+
+</div>
+<div class="note">Design mockups (not screenshots): same API, roles and colors as the web app. The bottom tab bar changes with the account role.</div>
+</body>
+</html>
