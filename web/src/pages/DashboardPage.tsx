@@ -18,6 +18,15 @@ interface Dashboard {
 
 const today = todayISO
 
+/** El tablero necesita todas las habitaciones; la API entrega como máximo 50 por página. */
+async function allRooms(): Promise<Room[]> {
+  const first = await getList<Room>('/rooms', { per_page: 50 })
+  const rest = await Promise.all(
+    Array.from({ length: first.meta.last_page - 1 }, (_, i) => getList<Room>('/rooms', { per_page: 50, page: i + 2 })),
+  )
+  return [first, ...rest].flatMap((p) => p.data)
+}
+
 /**
  * Pregunta del panel: ¿quién llega y quién se va hoy, y qué habitaciones están listas?
  */
@@ -28,7 +37,7 @@ export function DashboardPage() {
   const dashboard = useQuery({ queryKey: ['dashboard'], queryFn: () => getOne<Dashboard>('/dashboard') })
   const rooms = useQuery({
     queryKey: ['rooms', 'rack'],
-    queryFn: () => getList<Room>('/rooms', { per_page: 50 }),
+    queryFn: allRooms,
     enabled: isDesk,
   })
   const arrivals = useQuery({
@@ -71,7 +80,7 @@ export function DashboardPage() {
                 <h2 id="rack-title" className="section-title" style={{ margin: 0 }}>{t('Tablero de habitaciones')}</h2>
                 <Link className="btn btn-sm" to="/habitaciones">{t('Ver todas')}</Link>
               </div>
-              <RoomRack rooms={rooms.data?.data} loading={rooms.isLoading} />
+              <RoomRack rooms={rooms.data} loading={rooms.isLoading} />
             </section>
           )}
 

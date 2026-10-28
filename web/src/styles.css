@@ -224,6 +224,9 @@ table.data .row-actions { text-align: right; white-space: nowrap; }
 .list-rows li:first-child { border-top: 0; }
 
 /* Tablero de habitaciones (rack de recepción): un piso por fila. */
+.rack-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.rack-filters .select { width: auto; height: 30px; }
+.rack-filters .segmented { max-width: 100%; overflow-x: auto; }
 .rack { display: flex; flex-direction: column; gap: 8px; }
 .rack-floor { display: grid; grid-template-columns: 56px 1fr; gap: 8px; align-items: center; }
 .rack-floor > span { color: var(--muted); font-size: 13px; }

@@ -313,6 +313,8 @@ export const en: Record<string, string> = {
   '¿Registrar el check-in de esta reserva ahora?': 'Check in this reservation now?',
   'Busca por huésped o documento. El check-in crea la estadía y ocupa la habitación.': 'Search by guest or document. Check-in creates the stay and occupies the room.',
   'Filtrar por estado': 'Filter by status',
+  'Filtrar por piso': 'Filter by floor',
+  'Todos los pisos': 'All floors',
   'Buscar huésped o documento': 'Search guest or document',
   'No hay reservas con este filtro.': 'No reservations match this filter.',
   '¿Cancelar esta reserva?': 'Cancel this reservation?',
