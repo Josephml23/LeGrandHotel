@@ -222,7 +222,7 @@ const body = [
   h1('10. Qué guarda cada tabla'),
   h2('10.1 Tablas del hotel'),
   table(['Tabla', 'Qué guarda', 'Se relaciona con'], [
-    ['clients', 'Fichas de huéspedes: nombre, documento, teléfono, correo. user_id indica si el huésped tiene cuenta web (rol Cliente)', 'users, reservations'],
+    ['clients', 'Fichas de huéspedes: nombre, tipo y número de documento, teléfono y nacionalidad (el correo está en users). user_id indica si el huésped tiene cuenta web (rol Cliente)', 'users, reservations'],
     ['room_types', 'Tipos de habitación: precio por noche, capacidad y amenities (lo que incluye, en formato JSON)', 'rooms'],
     ['rooms', 'Habitaciones: número, piso, estado (available, occupied, cleaning, maintenance)', 'room_types, reservations'],
     ['reservations', 'Reservas: huésped, habitación, fechas, estado y total', 'clients, rooms, stays'],

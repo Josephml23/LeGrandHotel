@@ -1,0 +1,13 @@
+audit_logs	user_id	users	id	SET NULL	audit_logs_user_id_foreign
+clients	user_id	users	id	SET NULL	clients_user_id_foreign
+inventory_movements	inventory_item_id	inventory_items	id	CASCADE	inventory_movements_inventory_item_id_foreign
+inventory_movements	user_id	users	id	SET NULL	inventory_movements_user_id_foreign
+parking_assignments	parking_spot_id	parking_spots	id	RESTRICT	parking_assignments_parking_spot_id_foreign
+parking_assignments	stay_id	stays	id	SET NULL	parking_assignments_stay_id_foreign
+reservations	client_id	clients	id	RESTRICT	reservations_client_id_foreign
+reservations	room_id	rooms	id	RESTRICT	reservations_room_id_foreign
+role_user	role_id	roles	id	CASCADE	role_user_role_id_foreign
+role_user	user_id	users	id	CASCADE	role_user_user_id_foreign
+rooms	room_type_id	room_types	id	RESTRICT	rooms_room_type_id_foreign
+staff	user_id	users	id	CASCADE	staff_user_id_foreign
+stays	reservation_id	reservations	id	CASCADE	stays_reservation_id_foreign

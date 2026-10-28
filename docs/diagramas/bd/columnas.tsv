@@ -1,0 +1,151 @@
+audit_logs	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+audit_logs	2	user_id	bigint unsigned	YES	MUL	∅	
+audit_logs	3	action	varchar(20)	NO		∅	
+audit_logs	4	entity	varchar(60)	NO	MUL	∅	
+audit_logs	5	entity_id	bigint unsigned	YES		∅	
+audit_logs	6	changes	json	YES		∅	
+audit_logs	7	ip	varchar(45)	YES		∅	
+audit_logs	8	created_at	timestamp	NO		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+cache	1	key	varchar(255)	NO	PRI	∅	
+cache	2	value	mediumtext	NO		∅	
+cache	3	expiration	int	NO	MUL	∅	
+cache_locks	1	key	varchar(255)	NO	PRI	∅	
+cache_locks	2	owner	varchar(255)	NO		∅	
+cache_locks	3	expiration	int	NO	MUL	∅	
+clients	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+clients	2	user_id	bigint unsigned	YES	UNI	∅	
+clients	3	document_type	varchar(20)	NO		∅	
+clients	4	document_number	varchar(20)	NO	UNI	∅	
+clients	5	full_name	varchar(255)	NO	MUL	∅	
+clients	6	phone	varchar(30)	YES		∅	
+clients	7	nationality	varchar(60)	YES		∅	
+clients	8	created_at	timestamp	YES		∅	
+clients	9	updated_at	timestamp	YES		∅	
+failed_jobs	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+failed_jobs	2	uuid	varchar(255)	NO	UNI	∅	
+failed_jobs	3	connection	text	NO		∅	
+failed_jobs	4	queue	text	NO		∅	
+failed_jobs	5	payload	longtext	NO		∅	
+failed_jobs	6	exception	longtext	NO		∅	
+failed_jobs	7	failed_at	timestamp	NO		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+inventory_items	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+inventory_items	2	name	varchar(255)	NO	MUL	∅	
+inventory_items	3	unit	varchar(20)	NO		∅	
+inventory_items	4	stock	int	NO		0	
+inventory_items	5	min_stock	int	NO		0	
+inventory_items	6	created_at	timestamp	YES		∅	
+inventory_items	7	updated_at	timestamp	YES		∅	
+inventory_movements	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+inventory_movements	2	inventory_item_id	bigint unsigned	NO	MUL	∅	
+inventory_movements	3	user_id	bigint unsigned	YES	MUL	∅	
+inventory_movements	4	type	varchar(10)	NO		∅	
+inventory_movements	5	quantity	int	NO		∅	
+inventory_movements	6	reason	varchar(255)	YES		∅	
+inventory_movements	7	created_at	timestamp	NO		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+job_batches	1	id	varchar(255)	NO	PRI	∅	
+job_batches	2	name	varchar(255)	NO		∅	
+job_batches	3	total_jobs	int	NO		∅	
+job_batches	4	pending_jobs	int	NO		∅	
+job_batches	5	failed_jobs	int	NO		∅	
+job_batches	6	failed_job_ids	longtext	NO		∅	
+job_batches	7	options	mediumtext	YES		∅	
+job_batches	8	cancelled_at	int	YES		∅	
+job_batches	9	created_at	int	NO		∅	
+job_batches	10	finished_at	int	YES		∅	
+jobs	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+jobs	2	queue	varchar(255)	NO	MUL	∅	
+jobs	3	payload	longtext	NO		∅	
+jobs	4	attempts	tinyint unsigned	NO		∅	
+jobs	5	reserved_at	int unsigned	YES		∅	
+jobs	6	available_at	int unsigned	NO		∅	
+jobs	7	created_at	int unsigned	NO		∅	
+migrations	1	id	int unsigned	NO	PRI	∅	auto_increment
+migrations	2	migration	varchar(255)	NO		∅	
+migrations	3	batch	int	NO		∅	
+parking_assignments	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+parking_assignments	2	parking_spot_id	bigint unsigned	NO	MUL	∅	
+parking_assignments	3	stay_id	bigint unsigned	YES	MUL	∅	
+parking_assignments	4	plate	varchar(15)	NO	MUL	∅	
+parking_assignments	5	entered_at	timestamp	NO		∅	
+parking_assignments	6	left_at	timestamp	YES		∅	
+parking_assignments	7	created_at	timestamp	YES		∅	
+parking_assignments	8	updated_at	timestamp	YES		∅	
+parking_spots	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+parking_spots	2	code	varchar(10)	NO	UNI	∅	
+parking_spots	3	status	varchar(20)	NO	MUL	free	
+parking_spots	4	created_at	timestamp	YES		∅	
+parking_spots	5	updated_at	timestamp	YES		∅	
+password_reset_tokens	1	email	varchar(255)	NO	PRI	∅	
+password_reset_tokens	2	token	varchar(255)	NO		∅	
+password_reset_tokens	3	created_at	timestamp	YES		∅	
+personal_access_tokens	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+personal_access_tokens	2	tokenable_type	varchar(255)	NO	MUL	∅	
+personal_access_tokens	3	tokenable_id	bigint unsigned	NO		∅	
+personal_access_tokens	4	name	text	NO		∅	
+personal_access_tokens	5	token	varchar(64)	NO	UNI	∅	
+personal_access_tokens	6	abilities	text	YES		∅	
+personal_access_tokens	7	last_used_at	timestamp	YES		∅	
+personal_access_tokens	8	expires_at	timestamp	YES	MUL	∅	
+personal_access_tokens	9	created_at	timestamp	YES		∅	
+personal_access_tokens	10	updated_at	timestamp	YES		∅	
+reservations	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+reservations	2	client_id	bigint unsigned	NO	MUL	∅	
+reservations	3	room_id	bigint unsigned	NO	MUL	∅	
+reservations	4	check_in	date	NO	MUL	∅	
+reservations	5	check_out	date	NO		∅	
+reservations	6	guests	smallint unsigned	NO		1	
+reservations	7	status	varchar(20)	NO		confirmed	
+reservations	8	total	decimal(10,2)	NO		∅	
+reservations	9	notes	text	YES		∅	
+reservations	10	created_at	timestamp	YES		∅	
+reservations	11	updated_at	timestamp	YES		∅	
+role_user	1	user_id	bigint unsigned	NO	PRI	∅	
+role_user	2	role_id	bigint unsigned	NO	PRI	∅	
+roles	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+roles	2	name	varchar(255)	NO	UNI	∅	
+roles	3	label	varchar(255)	NO		∅	
+roles	4	created_at	timestamp	YES		∅	
+roles	5	updated_at	timestamp	YES		∅	
+room_types	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+room_types	2	name	varchar(255)	NO	UNI	∅	
+room_types	3	description	text	YES		∅	
+room_types	4	amenities	json	YES		∅	
+room_types	5	capacity	smallint unsigned	NO		∅	
+room_types	6	price_per_night	decimal(10,2)	NO		∅	
+room_types	7	created_at	timestamp	YES		∅	
+room_types	8	updated_at	timestamp	YES		∅	
+rooms	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+rooms	2	room_type_id	bigint unsigned	NO	MUL	∅	
+rooms	3	number	varchar(10)	NO	UNI	∅	
+rooms	4	floor	smallint unsigned	NO		∅	
+rooms	5	status	varchar(20)	NO	MUL	available	
+rooms	6	created_at	timestamp	YES		∅	
+rooms	7	updated_at	timestamp	YES		∅	
+sessions	1	id	varchar(255)	NO	PRI	∅	
+sessions	2	user_id	bigint unsigned	YES	MUL	∅	
+sessions	3	ip_address	varchar(45)	YES		∅	
+sessions	4	user_agent	text	YES		∅	
+sessions	5	payload	longtext	NO		∅	
+sessions	6	last_activity	int	NO	MUL	∅	
+staff	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+staff	2	user_id	bigint unsigned	NO	UNI	∅	
+staff	3	position	varchar(60)	NO		∅	
+staff	4	shift	varchar(20)	NO		∅	
+staff	5	hired_at	date	NO		∅	
+staff	6	created_at	timestamp	YES		∅	
+staff	7	updated_at	timestamp	YES		∅	
+stays	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+stays	2	reservation_id	bigint unsigned	NO	UNI	∅	
+stays	3	checked_in_at	timestamp	NO		∅	
+stays	4	checked_out_at	timestamp	YES		∅	
+stays	5	created_at	timestamp	YES		∅	
+stays	6	updated_at	timestamp	YES		∅	
+users	1	id	bigint unsigned	NO	PRI	∅	auto_increment
+users	2	name	varchar(255)	NO		∅	
+users	3	email	varchar(255)	NO	UNI	∅	
+users	4	email_verified_at	timestamp	YES		∅	
+users	5	password	varchar(255)	YES		∅	
+users	6	google_id	varchar(255)	YES	UNI	∅	
+users	7	remember_token	varchar(100)	YES		∅	
+users	8	created_at	timestamp	YES		∅	
+users	9	updated_at	timestamp	YES		∅	

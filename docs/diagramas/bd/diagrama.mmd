@@ -1,0 +1,163 @@
+erDiagram
+    audit_logs {
+        bigint_unsigned id PK
+        bigint_unsigned user_id FK "NULL"
+        varchar(20) action
+        varchar(60) entity
+        bigint_unsigned entity_id  "NULL"
+        json changes  "NULL"
+        varchar(45) ip  "NULL"
+        timestamp created_at
+    }
+    clients {
+        bigint_unsigned id PK
+        bigint_unsigned user_id FK,UK "NULL"
+        varchar(20) document_type
+        varchar(20) document_number UK
+        varchar(255) full_name
+        varchar(30) phone  "NULL"
+        varchar(60) nationality  "NULL"
+        timestamp created_at  "NULL"
+        timestamp updated_at  "NULL"
+    }
+    inventory_items {
+        bigint_unsigned id PK
+        varchar(255) name
+        varchar(20) unit
+        int stock
+        int min_stock
+        timestamp created_at  "NULL"
+        timestamp updated_at  "NULL"
+    }
+    inventory_movements {
+        bigint_unsigned id PK
+        bigint_unsigned inventory_item_id FK
+        bigint_unsigned user_id FK "NULL"
+        varchar(10) type
+        int quantity
+        varchar(255) reason  "NULL"
+        timestamp created_at
+    }
+    parking_assignments {
+        bigint_unsigned id PK
+        bigint_unsigned parking_spot_id FK
+        bigint_unsigned stay_id FK "NULL"
+        varchar(15) plate
+        timestamp entered_at
+        timestamp left_at  "NULL"
+        timestamp created_at  "NULL"
+        timestamp updated_at  "NULL"
+    }
+    parking_spots {
+        bigint_unsigned id PK
+        varchar(10) code UK
+        varchar(20) status
+        timestamp created_at  "NULL"
+        timestamp updated_at  "NULL"
+    }
+    personal_access_tokens {
+        bigint_unsigned id PK
+        varchar(255) tokenable_type
+        bigint_unsigned tokenable_id FK
+        text name
+        varchar(64) token UK
+        text abilities  "NULL"
+        timestamp last_used_at  "NULL"
+        timestamp expires_at  "NULL"
+        timestamp created_at  "NULL"
+        timestamp updated_at  "NULL"
+    }
+    reservations {
+        bigint_unsigned id PK
+        bigint_unsigned client_id FK
+        bigint_unsigned room_id FK
+        date check_in
+        date check_out
+        smallint_unsigned guests
+        varchar(20) status
+        decimal(10-2) total
+        text notes  "NULL"
+        timestamp created_at  "NULL"
+        timestamp updated_at  "NULL"
+    }
+    role_user {
+        bigint_unsigned user_id PK,FK
+        bigint_unsigned role_id PK,FK
+    }
+    roles {
+        bigint_unsigned id PK
+        varchar(255) name UK
+        varchar(255) label
+        timestamp created_at  "NULL"
+        timestamp updated_at  "NULL"
+    }
+    room_types {
+        bigint_unsigned id PK
+        varchar(255) name UK
+        text description  "NULL"
+        json amenities  "NULL"
+        smallint_unsigned capacity
+        decimal(10-2) price_per_night
+        timestamp created_at  "NULL"
+        timestamp updated_at  "NULL"
+    }
+    rooms {
+        bigint_unsigned id PK
+        bigint_unsigned room_type_id FK
+        varchar(10) number UK
+        smallint_unsigned floor
+        varchar(20) status
+        timestamp created_at  "NULL"
+        timestamp updated_at  "NULL"
+    }
+    sessions {
+        varchar(255) id PK
+        bigint_unsigned user_id FK "NULL"
+        varchar(45) ip_address  "NULL"
+        text user_agent  "NULL"
+        longtext payload
+        int last_activity
+    }
+    staff {
+        bigint_unsigned id PK
+        bigint_unsigned user_id FK,UK
+        varchar(60) position
+        varchar(20) shift
+        date hired_at
+        timestamp created_at  "NULL"
+        timestamp updated_at  "NULL"
+    }
+    stays {
+        bigint_unsigned id PK
+        bigint_unsigned reservation_id FK,UK
+        timestamp checked_in_at
+        timestamp checked_out_at  "NULL"
+        timestamp created_at  "NULL"
+        timestamp updated_at  "NULL"
+    }
+    users {
+        bigint_unsigned id PK
+        varchar(255) name
+        varchar(255) email UK
+        timestamp email_verified_at  "NULL"
+        varchar(255) password  "NULL"
+        varchar(255) google_id UK "NULL"
+        varchar(100) remember_token  "NULL"
+        timestamp created_at  "NULL"
+        timestamp updated_at  "NULL"
+    }
+    users |o--o{ audit_logs : "user_id · ON DELETE SET NULL"
+    users |o--o| clients : "user_id · ON DELETE SET NULL"
+    inventory_items ||--o{ inventory_movements : "inventory_item_id · ON DELETE CASCADE"
+    users |o--o{ inventory_movements : "user_id · ON DELETE SET NULL"
+    parking_spots ||--o{ parking_assignments : "parking_spot_id · ON DELETE RESTRICT"
+    stays |o--o{ parking_assignments : "stay_id · ON DELETE SET NULL"
+    clients ||--o{ reservations : "client_id · ON DELETE RESTRICT"
+    rooms ||--o{ reservations : "room_id · ON DELETE RESTRICT"
+    roles ||--o{ role_user : "role_id · ON DELETE CASCADE"
+    users ||--o{ role_user : "user_id · ON DELETE CASCADE"
+    room_types ||--o{ rooms : "room_type_id · ON DELETE RESTRICT"
+    users ||--o| staff : "user_id · ON DELETE CASCADE"
+    reservations ||--o| stays : "reservation_id · ON DELETE CASCADE"
+    users |o..o{ personal_access_tokens : "tokenable_id (polimórfica, sin FK)"
+    users |o..o{ sessions : "user_id (sin FK)"
