@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\ApiResponse;
+use App\Support\Frontend;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -30,7 +31,7 @@ class EmailVerificationController extends Controller
     public function verify(Request $request, int $id, string $hash): RedirectResponse
     {
         $user = User::findOrFail($id);
-        $frontend = rtrim(config('hotel.frontend_url'), '/');
+        $frontend = Frontend::url();
 
         if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
             return redirect()->away("{$frontend}/verify-email?status=invalid");

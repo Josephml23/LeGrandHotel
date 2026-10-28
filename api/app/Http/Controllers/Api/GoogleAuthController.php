@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Frontend;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Facades\Socialite;
@@ -34,7 +35,7 @@ class GoogleAuthController extends Controller
 
     public function callback(): RedirectResponse
     {
-        $frontend = rtrim(config('hotel.frontend_url'), '/');
+        $frontend = Frontend::url();
 
         try {
             $googleUser = $this->google()->user();

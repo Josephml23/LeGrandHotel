@@ -32,6 +32,15 @@ function actingAsClient(): User
 }
 
 describe('registro con Google', function () {
+    it('vuelve al primer dominio del frontend aunque FRONTEND_URL liste varios', function () {
+        config(['hotel.frontend_url' => 'http://localhost:5173, http://localhost:4173']);
+        fakeGoogleUser('ana@gmail.com');
+
+        $location = $this->get('/api/v1/auth/google/callback')->assertRedirect()->headers->get('Location');
+
+        expect($location)->toStartWith('http://localhost:5173/auth/callback#token=')->not->toContain(',');
+    });
+
     it('crea una cuenta de cliente la primera vez y no la duplica después', function () {
         fakeGoogleUser('luis@gmail.com');
 
