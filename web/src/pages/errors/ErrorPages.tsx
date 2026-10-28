@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { API_URL } from '../../lib/api'
+import { t } from '../../lib/i18n'
 
 function StatusScreen({ code, title, children, full }: { code: string; title: string; children: ReactNode; full?: boolean }) {
   useEffect(() => {
@@ -16,24 +17,24 @@ function StatusScreen({ code, title, children, full }: { code: string; title: st
 
 export function NotFoundPage() {
   return (
-    <StatusScreen code="404" title="Página no encontrada" full>
-      <h1>Esta habitación no existe</h1>
-      <p>La dirección que abriste no corresponde a ninguna pantalla de LeGrandHotel. Revisa el enlace o vuelve al inicio.</p>
+    <StatusScreen code="404" title={t('Página no encontrada')} full>
+      <h1>{t('Esta habitación no existe')}</h1>
+      <p>{t('La dirección que abriste no corresponde a ninguna pantalla de LeGrandHotel. Revisa el enlace o vuelve al inicio.')}</p>
       <div className="actions">
-        <Link className="btn btn-primary" to="/">Ir al inicio</Link>
-        <button className="btn" onClick={() => window.history.back()}>Volver atrás</button>
+        <Link className="btn btn-primary" to="/">{t('Ir al inicio')}</Link>
+        <button className="btn" onClick={() => window.history.back()}>{t('Volver atrás')}</button>
       </div>
     </StatusScreen>
   )
 }
 
-export function UnderConstructionPage({ module = 'Este módulo' }: { module?: string }) {
+export function UnderConstructionPage({ module = t('Este módulo') }: { module?: string }) {
   return (
-    <StatusScreen code="…" title="En construcción">
-      <h1>{module} está en construcción</h1>
-      <p>Lo estamos terminando para la próxima entrega. Mientras tanto, el resto de módulos funciona con normalidad.</p>
+    <StatusScreen code="…" title={t('En construcción')}>
+      <h1>{t('{module} está en construcción', { module })}</h1>
+      <p>{t('Lo estamos terminando para la próxima entrega. Mientras tanto, el resto de módulos funciona con normalidad.')}</p>
       <div className="actions">
-        <Link className="btn btn-primary" to="/">Volver al panel</Link>
+        <Link className="btn btn-primary" to="/">{t('Volver al panel')}</Link>
       </div>
     </StatusScreen>
   )
@@ -41,11 +42,11 @@ export function UnderConstructionPage({ module = 'Este módulo' }: { module?: st
 
 export function ForbiddenPage() {
   return (
-    <StatusScreen code="403" title="Sin permiso">
-      <h1>No tienes acceso a esta sección</h1>
-      <p>Tu rol no permite ver esta pantalla, aunque escribas la dirección a mano. Si crees que deberías tener acceso, pídeselo al administrador.</p>
+    <StatusScreen code="403" title={t('Sin permiso')}>
+      <h1>{t('No tienes acceso a esta sección')}</h1>
+      <p>{t('Tu rol no permite ver esta pantalla, aunque escribas la dirección a mano. Si crees que deberías tener acceso, pídeselo al administrador.')}</p>
       <div className="actions">
-        <Link className="btn btn-primary" to="/">Ir a mi inicio</Link>
+        <Link className="btn btn-primary" to="/">{t('Ir a mi inicio')}</Link>
       </div>
     </StatusScreen>
   )
@@ -53,11 +54,11 @@ export function ForbiddenPage() {
 
 export function SessionExpiredPage() {
   return (
-    <StatusScreen code="401" title="Sesión expirada" full>
-      <h1>Tu sesión expiró</h1>
-      <p>Por seguridad, las sesiones duran 60 minutos sin renovarse. Vuelve a iniciar sesión para continuar donde estabas.</p>
+    <StatusScreen code="401" title={t('Sesión expirada')} full>
+      <h1>{t('Tu sesión expiró')}</h1>
+      <p>{t('Por seguridad, las sesiones duran 60 minutos sin renovarse. Vuelve a iniciar sesión para continuar donde estabas.')}</p>
       <div className="actions">
-        <Link className="btn btn-primary" to="/login">Iniciar sesión</Link>
+        <Link className="btn btn-primary" to="/login">{t('Iniciar sesión')}</Link>
       </div>
     </StatusScreen>
   )
@@ -67,13 +68,13 @@ export function ServerErrorPage() {
   const [params] = useSearchParams()
   const incident = params.get('incidente')
   return (
-    <StatusScreen code="500" title="Error del servidor" full>
-      <h1>El servidor tuvo un problema</h1>
-      <p>No es algo que hayas hecho tú. El error quedó registrado y el equipo lo revisará.</p>
-      {incident && <p className="meta">Código de incidente: <span className="mono">{incident}</span></p>}
+    <StatusScreen code="500" title={t('Error del servidor')} full>
+      <h1>{t('El servidor tuvo un problema')}</h1>
+      <p>{t('No es algo que hayas hecho tú. El error quedó registrado y el equipo lo revisará.')}</p>
+      {incident && <p className="meta">{t('Código de incidente:')} <span className="mono">{incident}</span></p>}
       <div className="actions">
-        <button className="btn btn-primary" onClick={() => window.history.back()}>Reintentar</button>
-        <Link className="btn" to="/">Ir al inicio</Link>
+        <button className="btn btn-primary" onClick={() => window.history.back()}>{t('Reintentar')}</button>
+        <Link className="btn" to="/">{t('Ir al inicio')}</Link>
       </div>
     </StatusScreen>
   )
@@ -83,7 +84,7 @@ export function ServerErrorPage() {
 export function ServiceUnavailablePage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
-  const reason = params.get('motivo') ?? 'El servicio no está disponible en este momento.'
+  const reason = params.get('motivo') ?? t('El servicio no está disponible en este momento.')
   const interval = Math.max(Number(params.get('reintento') ?? 30), 5)
   const [left, setLeft] = useState(interval)
 
@@ -106,12 +107,12 @@ export function ServiceUnavailablePage() {
   }, [left, interval, navigate])
 
   return (
-    <StatusScreen code="503" title="Servicio no disponible" full>
-      <h1>Servicio no disponible</h1>
+    <StatusScreen code="503" title={t('Servicio no disponible')} full>
+      <h1>{t('Servicio no disponible')}</h1>
       <p>{reason}</p>
-      <p className="meta num" aria-live="polite">Reintentando automáticamente en {left} s.</p>
+      <p className="meta num" aria-live="polite">{t('Reintentando automáticamente en {seconds} s.', { seconds: left })}</p>
       <div className="actions">
-        <button className="btn btn-primary" onClick={() => navigate(-1)}>Reintentar ahora</button>
+        <button className="btn btn-primary" onClick={() => navigate(-1)}>{t('Reintentar ahora')}</button>
       </div>
     </StatusScreen>
   )
@@ -130,12 +131,12 @@ export function TooManyRequestsPage() {
   }, [left])
 
   return (
-    <StatusScreen code="429" title="Demasiadas peticiones" full>
-      <h1>Vas demasiado rápido</h1>
-      <p>Para proteger el sistema limitamos las peticiones por minuto. Podrás continuar en unos segundos.</p>
-      <p className="meta num" aria-live="polite">{left > 0 ? `Espera ${left} s` : 'Ya puedes continuar.'}</p>
+    <StatusScreen code="429" title={t('Demasiadas peticiones')} full>
+      <h1>{t('Vas demasiado rápido')}</h1>
+      <p>{t('Para proteger el sistema limitamos las peticiones por minuto. Podrás continuar en unos segundos.')}</p>
+      <p className="meta num" aria-live="polite">{left > 0 ? t('Espera {seconds} s', { seconds: left }) : t('Ya puedes continuar.')}</p>
       <div className="actions">
-        <button className="btn btn-primary" disabled={left > 0} onClick={() => navigate(-1)}>Continuar</button>
+        <button className="btn btn-primary" disabled={left > 0} onClick={() => navigate(-1)}>{t('Continuar')}</button>
       </div>
     </StatusScreen>
   )
@@ -143,10 +144,10 @@ export function TooManyRequestsPage() {
 
 export function OfflineScreen() {
   return (
-    <StatusScreen code="—" title="Sin conexión" full>
-      <h1>Sin conexión a internet</h1>
-      <p>Tu equipo perdió la conexión. Cuando vuelva, esta pantalla se cerrará sola y podrás seguir; los datos que no se guardaron no se perdieron del formulario.</p>
-      <p className="meta">Revisa el wifi o el cable de red de la recepción.</p>
+    <StatusScreen code="—" title={t('Sin conexión')} full>
+      <h1>{t('Sin conexión a internet')}</h1>
+      <p>{t('Tu equipo perdió la conexión. Cuando vuelva, esta pantalla se cerrará sola y podrás seguir; los datos que no se guardaron no se perdieron del formulario.')}</p>
+      <p className="meta">{t('Revisa el wifi o el cable de red de la recepción.')}</p>
     </StatusScreen>
   )
 }

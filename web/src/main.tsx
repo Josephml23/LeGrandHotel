@@ -7,6 +7,7 @@ import { AuthProvider } from './auth/AuthContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ToastProvider } from './components/Toasts'
 import { App } from './App'
+import { PrefsRoot } from './lib/i18n'
 import './styles.css'
 
 const queryClient = new QueryClient({
@@ -27,7 +28,9 @@ createRoot(document.getElementById('root')!).render(
         <BrowserRouter>
           <AuthProvider>
             <ToastProvider>
-              <App />
+              <PrefsRoot>
+                <App />
+              </PrefsRoot>
             </ToastProvider>
           </AuthProvider>
         </BrowserRouter>

@@ -8,6 +8,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\LoginLockout;
 use App\Support\ApiResponse;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
@@ -41,13 +42,23 @@ class AuthController extends Controller
         return ApiResponse::created(self::userPayloadFor($user));
     }
 
-    public function login(LoginRequest $request): JsonResponse
+    public function login(LoginRequest $request, LoginLockout $lockout): JsonResponse
     {
-        $user = User::where('email', $request->string('email'))->first();
+        $email = (string) $request->string('email');
+
+        // Tras una contraseña incorrecta hay que esperar (30 s, 60 s, 2 min…) antes de volver a intentar.
+        if ($wait = $lockout->remaining($email, (string) $request->ip())) {
+            throw new ApiException('LOGIN_LOCKED', __('Demasiados intentos fallidos. Vuelve a intentarlo en :seconds segundos.', ['seconds' => $wait]), 429, ['retry_after' => $wait]);
+        }
+
+        $user = User::where('email', $email)->first();
 
         if (! $user || ! $user->password || ! Hash::check($request->string('password'), $user->password)) {
-            throw new ApiException('INVALID_CREDENTIALS', 'Correo o contraseña incorrectos.', 401);
+            $wait = $lockout->fail($email, (string) $request->ip());
+            throw new ApiException('INVALID_CREDENTIALS', 'Correo o contraseña incorrectos.', 401, ['retry_after' => $wait]);
         }
+
+        $lockout->clear($email, (string) $request->ip());
 
         // Con contraseña solo entra el personal; los clientes entran con Google (no tienen contraseña).
         if (! $user->hasRole(...Role::INTERNAL)) {
@@ -109,13 +120,15 @@ class AuthController extends Controller
             'roles' => $user->roles->pluck('name')->values(),
         ];
 
-        // Un cliente sin ficha todavía debe completar su DNI y teléfono antes de reservar.
+        // Perfil del cliente: el nombre, el DNI y el celular son opcionales hasta que reserva.
         if ($user->hasRole(Role::CLIENT)) {
             $client = $user->client;
             $payload['client'] = $client ? [
                 'id' => $client->id,
+                'full_name' => $client->full_name,
                 'document_number' => $client->document_number,
                 'phone' => $client->phone,
+                'complete' => (bool) ($client->document_number && $client->phone),
             ] : null;
         }
 

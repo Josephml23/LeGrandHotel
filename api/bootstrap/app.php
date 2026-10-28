@@ -5,6 +5,7 @@ use App\Exceptions\ApiExceptionRenderer;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\RequestContext;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(RequestContext::class);
+        $middleware->prepend(SetLocale::class);
         $middleware->append(SecurityHeaders::class);
         $middleware->alias(['role' => EnsureUserHasRole::class]);
         // El rol se valida antes de buscar el modelo: sin permiso → 403, nunca 404 (no revela qué ids existen).

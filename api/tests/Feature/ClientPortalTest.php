@@ -68,21 +68,41 @@ describe('registro con Google', function () {
     });
 });
 
-describe('datos del cliente (DNI y teléfono)', function () {
-    it('indica que falta completar el registro y lo guarda', function () {
-        actingAsRole(Role::CLIENT);
+describe('perfil del cliente (nombre, DNI y celular opcionales)', function () {
+    it('guarda solo el nombre: el DNI y el celular pueden quedar para después', function () {
+        $user = actingAsRole(Role::CLIENT);
         $this->getJson('/api/v1/auth/me')->assertJsonPath('data.client', null);
 
-        $this->putJson('/api/v1/portal/profile', ['document_number' => '45678912', 'phone' => '987654321'])
+        $this->putJson('/api/v1/portal/profile', ['full_name' => 'Luis Pérez Soto'])
             ->assertOk()
-            ->assertJsonPath('data.client.document_number', '45678912');
+            ->assertJsonPath('data.client.full_name', 'Luis Pérez Soto')
+            ->assertJsonPath('data.client.document_number', null)
+            ->assertJsonPath('data.client.complete', false);
+
+        expect($user->fresh()->name)->toBe('Luis Pérez Soto');
+    });
+
+    it('completa el perfil con DNI y celular, y luego los modifica', function () {
+        actingAsRole(Role::CLIENT);
+
+        $this->putJson('/api/v1/portal/profile', ['full_name' => 'Luis Pérez', 'document_number' => '45678912', 'phone' => '987654321'])
+            ->assertOk()
+            ->assertJsonPath('data.client.complete', true);
+
+        $this->putJson('/api/v1/portal/profile', ['full_name' => 'Luis Pérez', 'document_number' => '45678913', 'phone' => '912345678'])
+            ->assertOk()
+            ->assertJsonPath('data.client.document_number', '45678913')
+            ->assertJsonPath('data.client.phone', '912345678');
+
+        expect(Client::count())->toBe(1);
     });
 
     it('enlaza la ficha que recepción ya tenía con ese DNI en vez de duplicarla', function () {
         $existing = Client::factory()->create(['document_number' => '45678912']);
         $user = actingAsRole(Role::CLIENT);
+        $this->putJson('/api/v1/portal/profile', ['full_name' => 'Luis Pérez'])->assertOk();
 
-        $this->putJson('/api/v1/portal/profile', ['document_number' => '45678912', 'phone' => '987654321'])->assertOk();
+        $this->putJson('/api/v1/portal/profile', ['full_name' => 'Luis Pérez', 'document_number' => '45678912', 'phone' => '987654321'])->assertOk();
 
         expect(Client::count())->toBe(1)
             ->and($existing->fresh()->user_id)->toBe($user->id);
@@ -95,16 +115,35 @@ describe('datos del cliente (DNI y teléfono)', function () {
         $taken->save();
         actingAsRole(Role::CLIENT);
 
-        expect($this->putJson('/api/v1/portal/profile', ['document_number' => '45678912', 'phone' => '987654321']))
+        expect($this->putJson('/api/v1/portal/profile', ['full_name' => 'Luis Pérez', 'document_number' => '45678912', 'phone' => '987654321']))
             ->toBeApiError(409, 'DOCUMENT_ALREADY_LINKED');
     });
 
-    it('valida el formato del DNI y del teléfono', function () {
+    it('valida el nombre, el DNI y el celular', function () {
         actingAsRole(Role::CLIENT);
 
         $this->putJson('/api/v1/portal/profile', ['document_number' => '123', 'phone' => '12345'])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['document_number', 'phone'], 'error.details');
+            ->assertJsonValidationErrors(['full_name', 'document_number', 'phone'], 'error.details');
+    });
+
+    it('responde en inglés cuando el navegador lo pide', function () {
+        actingAsRole(Role::CLIENT);
+
+        $this->putJson('/api/v1/portal/profile', ['full_name' => 'Luis', 'document_number' => '123'], ['Accept-Language' => 'en-US,en;q=0.9'])
+            ->assertUnprocessable()
+            ->assertHeader('Content-Language', 'en')
+            ->assertJsonPath('error.message', 'The data sent is not valid.')
+            ->assertJsonPath('error.details.document_number.0', 'The DNI must have 8 digits.');
+    });
+
+    it('responde en español cuando la web lo pide', function () {
+        actingAsRole(Role::CLIENT);
+
+        $this->putJson('/api/v1/portal/profile', ['full_name' => 'Luis', 'document_number' => '123'], ['Accept-Language' => 'es'])
+            ->assertUnprocessable()
+            ->assertJsonPath('error.message', 'Los datos enviados no son válidos.')
+            ->assertJsonPath('error.details.document_number.0', 'El DNI debe tener 8 dígitos.');
     });
 });
 
@@ -147,8 +186,9 @@ describe('reservas del cliente', function () {
             ->toBeApiError(409, 'NO_ROOMS_AVAILABLE');
     });
 
-    it('no deja reservar sin completar el DNI y teléfono', function () {
+    it('no deja reservar sin completar el DNI y celular', function () {
         actingAsRole(Role::CLIENT);
+        $this->putJson('/api/v1/portal/profile', ['full_name' => 'Luis Pérez'])->assertOk();
 
         expect($this->postJson('/api/v1/portal/reservations', ['room_type_id' => $this->suite->id, 'guests' => 2, ...$this->dates]))
             ->toBeApiError(409, 'PROFILE_INCOMPLETE');

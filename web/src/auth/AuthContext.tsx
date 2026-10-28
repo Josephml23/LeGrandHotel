@@ -89,10 +89,30 @@ export function useAuth(): AuthState {
   return ctx
 }
 
+/** El cliente eligió completar su perfil después (se recuerda en este navegador). */
+export const profileLater = {
+  key: (userId: number) => `lgh.perfil-despues.${userId}`,
+  chosen(userId: number): boolean {
+    try {
+      return localStorage.getItem(this.key(userId)) === '1'
+    } catch {
+      return false
+    }
+  },
+  remember(userId: number) {
+    try {
+      localStorage.setItem(this.key(userId), '1')
+    } catch {
+      /* sin almacenamiento: se volverá a ofrecer la próxima vez */
+    }
+  },
+}
+
 /** Ruta de inicio según el rol principal del usuario. */
 export function homeFor(user: AuthUser | null): string {
   if (!user) return '/login'
-  if (user.roles.includes('client')) return user.client ? '/reservar' : '/completar-registro'
+  // Al cliente nuevo se le ofrece completar su perfil una vez; si elige "Más tarde", va directo a reservar.
+  if (user.roles.includes('client')) return user.client || profileLater.chosen(user.id) ? '/reservar' : '/completar-registro'
   if (user.roles.includes('developer') && user.roles.length === 1) return '/programador'
   return '/panel'
 }

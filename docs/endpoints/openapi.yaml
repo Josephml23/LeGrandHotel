@@ -65,7 +65,10 @@ paths:
     post:
       tags: [Auth]
       security: []
-      summary: Inicio de sesión. Rate limit 5/min por IP + correo.
+      summary: >-
+        Inicio de sesión. Tras una contraseña incorrecta hay que esperar 30 s, y la espera se duplica en cada
+        fallo (60 s, 2 min…, máx. 15 min) por correo + IP; un ingreso correcto la reinicia. Además, 5/min por IP + correo.
+        Los mensajes salen en el idioma de Accept-Language (es por defecto, en).
       requestBody:
         required: true
         content:
@@ -78,9 +81,9 @@ paths:
                 password: { type: string }
       responses:
         '200': { $ref: '#/components/responses/Session' }
-        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '401': { description: 'INVALID_CREDENTIALS; error.details.retry_after indica los segundos de espera' }
         '403': { description: Cuenta sin rol del hotel (ACCOUNT_WITHOUT_ACCESS) }
-        '429': { $ref: '#/components/responses/TooMany' }
+        '429': { description: 'LOGIN_LOCKED (todavía en espera) o TOO_MANY_REQUESTS; cabecera Retry-After y error.details.retry_after' }
 
   /auth/me:
     get:
@@ -345,19 +348,22 @@ paths:
   /portal/profile:
     put:
       tags: [Portal del cliente]
-      summary: El cliente (entró con Google) completa su DNI y teléfono. Si recepción ya tenía su ficha, se enlaza.
+      summary: >-
+        Perfil del cliente (entró con Google): nombre completo obligatorio; DNI y celular opcionales hasta reservar.
+        Sirve para crearlo y para modificarlo (Mi perfil). Si recepción ya tenía una ficha con ese DNI, se enlaza.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [document_number, phone]
+              required: [full_name]
               properties:
-                document_number: { type: string, pattern: '^\d{8}$' }
-                phone: { type: string, pattern: '^9\d{8}$' }
+                full_name: { type: string, minLength: 3, maxLength: 120 }
+                document_number: { type: string, nullable: true, pattern: '^\d{8}$' }
+                phone: { type: string, nullable: true, pattern: '^9\d{8}$' }
       responses:
-        '200': { description: Usuario actualizado con su ficha (data.client) }
+        '200': { description: 'Usuario con su ficha: data.client = { full_name, document_number, phone, complete }' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { description: DOCUMENT_ALREADY_LINKED, el DNI ya pertenece a otra cuenta }
         '422': { $ref: '#/components/responses/Validation' }

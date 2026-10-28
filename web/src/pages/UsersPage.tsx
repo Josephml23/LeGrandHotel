@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { send } from '../lib/api'
+import { formatNumber } from '../lib/format'
 import { remove, useAction, useServerList } from '../lib/hooks'
 import { useAuth } from '../auth/AuthContext'
 import { DataTable, Field, FormError, Modal, Pagination, Pill, SearchInput, TitleRow, fieldError, type Column } from '../components/ui'
 import { ROLE_LABELS, STAFF_ROLES, type RoleName, type UserRow } from '../types'
+import { t } from '../lib/i18n'
 
 /** Pestañas del listado: el personal y los clientes (que entran con Google). */
 const ALL_ROLES = Object.keys(ROLE_LABELS) as RoleName[]
@@ -14,39 +16,39 @@ export function UsersPage() {
   const [role, setRole] = useState<'' | RoleName>('')
   const list = useServerList<UserRow>('users', { role })
   const [editing, setEditing] = useState<UserRow | 'new' | null>(null)
-  const destroy = useAction(remove('users'), { invalidate: ['users', 'staff'], success: 'Usuario eliminado.' })
+  const destroy = useAction(remove('users'), { invalidate: ['users', 'staff'], success: t('Usuario eliminado.') })
 
   const columns: Column<UserRow>[] = [
-    { key: 'name', header: 'Usuario', render: (u) => <span className="identity"><strong>{u.name}</strong><span>{u.email}</span></span> },
-    { key: 'roles', header: 'Roles', render: (u) => u.roles.map((r) => ROLE_LABELS[r.name]).join(', ') || <span className="muted">—</span> },
-    { key: 'verified', header: 'Correo', className: 'hide-sm', render: (u) => (u.email_verified_at ? <Pill tone="positive">Verificado</Pill> : <Pill tone="warning">Sin verificar</Pill>) },
+    { key: 'name', header: t('Usuario'), render: (u) => <span className="identity"><strong>{u.name}</strong><span>{u.email}</span></span> },
+    { key: 'roles', header: t('Roles'), render: (u) => u.roles.map((r) => ROLE_LABELS[r.name]).join(', ') || <span className="muted">—</span> },
+    { key: 'verified', header: t('Correo'), className: 'hide-sm', render: (u) => (u.email_verified_at ? <Pill tone="positive">{t('Verificado')}</Pill> : <Pill tone="warning">{t('Sin verificar')}</Pill>) },
   ]
 
   return (
     <>
-      <TitleRow title="Usuarios y roles" lede="Al cambiar los roles de alguien se cierran sus sesiones abiertas.">
-        <Link className="btn btn-primary" to="/registro">Registrar usuario</Link>
+      <TitleRow title={t('Usuarios y roles')} lede={t('Al cambiar los roles de alguien se cierran sus sesiones abiertas.')}>
+        <Link className="btn btn-primary" to="/registro">{t('Registrar usuario')}</Link>
       </TitleRow>
-      <div className="tabs" role="tablist" aria-label="Filtrar por rol">
+      <div className="tabs" role="tablist" aria-label={t('Filtrar por rol')}>
         {(['', ...ALL_ROLES] as const).map((r) => (
-          <button key={r} role="tab" className="tab" aria-selected={role === r} onClick={() => { setRole(r); list.setPage(1) }}>{r ? ROLE_LABELS[r] : 'Todos'}</button>
+          <button key={r} role="tab" className="tab" aria-selected={role === r} onClick={() => { setRole(r); list.setPage(1) }}>{r ? ROLE_LABELS[r] : t('Todos')}</button>
         ))}
       </div>
       <div className="toolbar">
-        <SearchInput value={list.search} onChange={list.setSearch} label="Buscar nombre o correo" />
-        <span className="muted num">{(list.meta?.total ?? 0).toLocaleString('es-PE')} usuarios</span>
+        <SearchInput value={list.search} onChange={list.setSearch} label={t('Buscar nombre o correo')} />
+        <span className="muted num">{formatNumber(list.meta?.total ?? 0)} {t('usuarios')}</span>
       </div>
       <FormError error={destroy.error} />
-      <DataTable columns={columns} rows={list.rows} loading={list.isLoading} error={list.error} empty="No hay usuarios con este filtro."
+      <DataTable columns={columns} rows={list.rows} loading={list.isLoading} error={list.error} empty={t('No hay usuarios con este filtro.')}
         actions={(u) => (
           <>
-            <button className="btn btn-sm btn-ghost" onClick={() => setEditing(u)}>Editar</button>
+            <button className="btn btn-sm btn-ghost" onClick={() => setEditing(u)}>{t('Editar')}</button>
             {u.id !== me?.id && (
-              <button className="btn btn-sm btn-ghost btn-danger" onClick={() => confirm(`¿Eliminar la cuenta de ${u.name}?`) && destroy.mutate(u.id)}>Eliminar</button>
+              <button className="btn btn-sm btn-ghost btn-danger" onClick={() => confirm(t('¿Eliminar la cuenta de {name}?', { name: u.name })) && destroy.mutate(u.id)}>{t('Eliminar')}</button>
             )}
           </>
         )} />
-      <Pagination meta={list.meta} onPage={list.setPage} noun="usuarios" />
+      <Pagination meta={list.meta} onPage={list.setPage} noun={t('usuarios')} />
       {editing !== null && <UserForm key={editing === 'new' ? 'new' : editing.id} value={editing} onClose={() => setEditing(null)} />}
     </>
   )
@@ -69,7 +71,7 @@ function UserForm({ value, onClose }: { value: UserRow | 'new' | null; onClose: 
     if (form.password && !isClient) body.password = form.password
     const updated = await send('put', `/users/${current.id}`, body)
     return isClient ? updated : send('put', `/users/${current.id}/roles`, { roles: form.roles })
-  }, { invalidate: ['users', 'staff'], success: 'Usuario guardado.' })
+  }, { invalidate: ['users', 'staff'], success: t('Usuario guardado.') })
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
@@ -79,20 +81,20 @@ function UserForm({ value, onClose }: { value: UserRow | 'new' | null; onClose: 
     setForm((f) => ({ ...f, roles: f.roles.includes(role) ? f.roles.filter((r) => r !== role) : [...f.roles, role] }))
 
   return (
-    <Modal open={value !== null} title={current ? current.name : 'Nuevo usuario'} onClose={() => { save.reset(); onClose() }}
-      footer={<><button className="btn" onClick={onClose}>Cancelar</button><button className="btn btn-primary" form="user-form" disabled={save.isPending || (!isClient && form.roles.length === 0)}>Guardar</button></>}>
+    <Modal open={value !== null} title={current ? current.name : t('Nuevo usuario')} onClose={() => { save.reset(); onClose() }}
+      footer={<><button className="btn" onClick={onClose}>{t('Cancelar')}</button><button className="btn btn-primary" form="user-form" disabled={save.isPending || (!isClient && form.roles.length === 0)}>{t('Guardar')}</button></>}>
       <FormError error={save.error} />
       <form id="user-form" className="form-grid" onSubmit={submit}>
-        <Field className="full" label="Nombre" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} error={fieldError(save.error, 'name')} />
-        <Field label="Correo" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} error={fieldError(save.error, 'email')} />
+        <Field className="full" label={t('Nombre')} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} error={fieldError(save.error, 'name')} />
+        <Field label={t('Correo')} type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} error={fieldError(save.error, 'email')} />
         {isClient ? (
-          <p className="full muted small" style={{ margin: 0 }}>Cuenta de cliente: entra con Google, no tiene contraseña y sus roles no se cambian desde aquí.</p>
+          <p className="full muted small" style={{ margin: 0 }}>{t('Cuenta de cliente: entra con Google, no tiene contraseña y sus roles no se cambian desde aquí.')}</p>
         ) : (
-          <Field label={current ? 'Nueva contraseña (opcional)' : 'Contraseña'} type="password" autoComplete="new-password" value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })} error={fieldError(save.error, 'password')} hint="Mínimo 8 caracteres, con letras y números." />
+          <Field label={current ? t('Nueva contraseña (opcional)') : t('Contraseña')} type="password" autoComplete="new-password" value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })} error={fieldError(save.error, 'password')} hint={t('Mínimo 8 caracteres, con letras y números.')} />
         )}
         {!isClient && <fieldset className="full field" style={{ border: 0, padding: 0, margin: 0 }}>
-          <legend style={{ fontWeight: 500, marginBottom: 6 }}>Roles</legend>
+          <legend style={{ fontWeight: 500, marginBottom: 6 }}>{t('Roles')}</legend>
           <div className="actions">
             {STAFF_ROLES.map((r) => (
               <label key={r} className="btn btn-sm" style={{ background: form.roles.includes(r) ? 'var(--active)' : undefined }}>
@@ -101,7 +103,7 @@ function UserForm({ value, onClose }: { value: UserRow | 'new' | null; onClose: 
               </label>
             ))}
           </div>
-          <span className="muted small">El rol de Programador no se asigna ni se quita: el hotel tiene un solo Programador.</span>
+          <span className="muted small">{t('El rol de Programador no se asigna ni se quita: el hotel tiene un solo Programador.')}</span>
           {fieldError(save.error, 'roles') && <span className="error">{fieldError(save.error, 'roles')}</span>}
         </fieldset>}
       </form>

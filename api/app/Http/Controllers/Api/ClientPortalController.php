@@ -26,28 +26,41 @@ class ClientPortalController extends Controller
     public function __construct(private readonly ReservationService $reservations) {}
 
     /**
-     * Guarda el DNI y el teléfono. Si recepción ya tenía una ficha con ese DNI, se enlaza en vez de duplicarla.
+     * Guarda el nombre completo y, si los da, el DNI y el celular (pueden quedar para después).
+     * Si recepción ya tenía una ficha con ese DNI, se enlaza esa en vez de duplicarla.
      */
     public function saveProfile(ClientProfileRequest $request): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
         $data = $request->validated();
+        $document = $data['document_number'] ?? null;
 
-        DB::transaction(function () use ($user, $data) {
-            $own = $user->client;
-            $byDocument = Client::where('document_number', $data['document_number'])->lockForUpdate()->first();
+        DB::transaction(function () use ($user, $data, $document) {
+            $own = $user->client()->first();
+            $byDocument = $document ? Client::where('document_number', $document)->lockForUpdate()->first() : null;
 
-            $linkedToSomeoneElse = $byDocument && $byDocument->user_id !== null && $byDocument->user_id !== $user->id;
-            $isAnotherRecord = $own && $byDocument && ! $byDocument->is($own);
-            if ($linkedToSomeoneElse || $isAnotherRecord) {
-                throw ApiException::conflict('DOCUMENT_ALREADY_LINKED', 'Ese DNI ya está asociado a otra cuenta. Acércate a recepción para revisarlo.');
+            if ($byDocument && ! $byDocument->is($own)) {
+                // La ficha de recepción se puede tomar si no es de otra cuenta y la propia todavía no tiene reservas.
+                $takenByOther = $byDocument->user_id !== null && $byDocument->user_id !== $user->id;
+                if ($takenByOther || ($own && $own->reservations()->exists())) {
+                    throw ApiException::conflict('DOCUMENT_ALREADY_LINKED', 'Ese DNI ya está asociado a otra cuenta. Acércate a recepción para revisarlo.');
+                }
+                $own?->delete();
+                $own = $byDocument;
             }
 
-            $client = $own ?? $byDocument ?? new Client(['document_type' => 'DNI', 'full_name' => $user->name]);
-            $client->fill(['document_number' => $data['document_number'], 'phone' => $data['phone']]);
+            $client = $own ?? new Client;
+            $client->fill([
+                'full_name' => $data['full_name'],
+                'document_type' => $document ? 'DNI' : $client->document_type,
+                'document_number' => $document,
+                'phone' => $data['phone'] ?? null,
+            ]);
             $client->user_id = $user->id;
             $client->save();
+
+            $user->update(['name' => $data['full_name']]);
         });
 
         return ApiResponse::success(AuthController::userPayloadFor($user->fresh()));
@@ -104,8 +117,11 @@ class ClientPortalController extends Controller
      */
     public function book(ClientBookingRequest $request): JsonResponse
     {
-        $client = $request->user()->client
-            ?? throw ApiException::conflict('PROFILE_INCOMPLETE', 'Completa tu DNI y teléfono antes de reservar.');
+        // Se reserva a nombre del cliente: hacen falta su nombre, DNI y celular (la web los pide si faltan).
+        $client = $request->user()->client;
+        if (! $client || ! $client->document_number || ! $client->phone) {
+            throw ApiException::conflict('PROFILE_INCOMPLETE', 'Completa tu nombre, DNI y celular antes de reservar.');
+        }
         $data = $request->validated();
 
         $candidates = Room::query()

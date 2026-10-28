@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getOne } from '../lib/api'
-import { addDaysISO, formatDate, formatMoney, todayISO } from '../lib/format'
+import { addDaysISO, formatDate, formatMoney, formatNumber, todayISO } from '../lib/format'
+import { intlLocale, t } from '../lib/i18n'
 import { Field, Kpi, TitleRow } from '../components/ui'
 
 interface Occupancy {
@@ -22,8 +23,7 @@ interface Income {
   months: { month: string; reservations: number; income: number }[]
 }
 
-const monthName = new Intl.DateTimeFormat('es-PE', { month: 'short', year: '2-digit' })
-const label = (ym: string) => monthName.format(new Date(Number(ym.slice(0, 4)), Number(ym.slice(5, 7)) - 1, 1))
+const label = (ym: string) => new Intl.DateTimeFormat(intlLocale(), { month: 'short', year: '2-digit' }).format(new Date(Number(ym.slice(0, 4)), Number(ym.slice(5, 7)) - 1, 1))
 
 export function ReportsPage() {
   const [range, setRange] = useState({ from: addDaysISO(todayISO(), -30), to: todayISO() })
@@ -37,26 +37,26 @@ export function ReportsPage() {
   return (
     <>
       <TitleRow
-        title="Reportes"
-        lede="Ocupación del rango elegido e ingresos de los últimos seis meses."
-        finding={o ? `Del ${formatDate(o.from)} al ${formatDate(o.to)} se vendieron ${o.nights_sold.toLocaleString('es-PE')} noches: ${o.occupancy_rate}% de ocupación.` : undefined}
+        title={t('Reportes')}
+        lede={t('Ocupación del rango elegido e ingresos de los últimos seis meses.')}
+        finding={o ? t('Del {from} al {to} se vendieron {nights} noches: {rate}% de ocupación.', { from: formatDate(o.from), to: formatDate(o.to), nights: formatNumber(o.nights_sold), rate: o.occupancy_rate }) : undefined}
       >
-        <Field label="Desde" type="date" value={range.from} max={range.to} onChange={(e) => setRange({ ...range, from: e.target.value })} />
-        <Field label="Hasta" type="date" value={range.to} min={range.from} onChange={(e) => setRange({ ...range, to: e.target.value })} />
+        <Field label={t('Desde')} type="date" value={range.from} max={range.to} onChange={(e) => setRange({ ...range, from: e.target.value })} />
+        <Field label={t('Hasta')} type="date" value={range.to} min={range.from} onChange={(e) => setRange({ ...range, to: e.target.value })} />
       </TitleRow>
 
       <div className="stack enter">
         <div className="kpis">
-          <Kpi label="Ocupación del rango" value={o ? `${o.occupancy_rate}%` : '—'} caption={o ? `${o.nights_sold} noches de ${o.total_rooms} habitaciones` : undefined} />
-          <Kpi label="Ocupadas ahora" value={o ? `${o.occupied_now} de ${o.total_rooms}` : '—'} caption={o ? `${o.current_occupancy_rate}% en este momento` : undefined} />
-          <Kpi label="Ingresos, 6 meses" value={income.data ? formatMoney(income.data.total_income) : '—'} caption="Reservas confirmadas, en curso y cerradas" />
-          <Kpi label="Mejor mes" value={best ? label(best.month) : '—'} caption={best ? `${formatMoney(best.income)} en ${best.reservations} reservas` : 'Sin ingresos en el periodo'} />
+          <Kpi label={t('Ocupación del rango')} value={o ? `${o.occupancy_rate}%` : '—'} caption={o ? t('{nights} noches de {rooms} habitaciones', { nights: o.nights_sold, rooms: o.total_rooms }) : undefined} />
+          <Kpi label={t('Ocupadas ahora')} value={o ? t('{n} de {total}', { n: o.occupied_now, total: o.total_rooms }) : '—'} caption={o ? t('{rate}% en este momento', { rate: o.current_occupancy_rate }) : undefined} />
+          <Kpi label={t('Ingresos, 6 meses')} value={income.data ? formatMoney(income.data.total_income) : '—'} caption={t('Reservas confirmadas, en curso y cerradas')} />
+          <Kpi label={t('Mejor mes')} value={best ? label(best.month) : '—'} caption={best ? t('{amount} en {n} reservas', { amount: formatMoney(best.income), n: best.reservations }) : t('Sin ingresos en el periodo')} />
         </div>
 
         <section className="card" aria-labelledby="income-title">
-          <h2 id="income-title" className="section-title">Ingresos por mes (S/)</h2>
+          <h2 id="income-title" className="section-title">{t('Ingresos por mes (S/)')}</h2>
           {months.length === 0 ? (
-            <p className="muted">{income.isLoading ? 'Cargando…' : 'No hay ingresos registrados en los últimos seis meses.'}</p>
+            <p className="muted">{income.isLoading ? t('Cargando…') : t('No hay ingresos registrados en los últimos seis meses.')}</p>
           ) : (
             <IncomeBars months={months} highlight={[best?.month, months.at(-1)?.month]} />
           )}
@@ -71,22 +71,22 @@ function IncomeBars({ months, highlight }: { months: Income['months']; highlight
   const max = Math.max(...months.map((m) => m.income), 1)
   return (
     <div className="chart">
-      <div className="bars" role="img" aria-label="Ingresos mensuales en soles">
+      <div className="bars" role="img" aria-label={t('Ingresos mensuales en soles')}>
         {months.map((m) => (
-          <button key={m.month} type="button" className="bar" aria-label={`${label(m.month)}: ${formatMoney(m.income)}, ${m.reservations} reservas`}>
+          <button key={m.month} type="button" className="bar" aria-label={`${label(m.month)}: ${formatMoney(m.income)}, ${t('{n} reservas', { n: m.reservations })}`}>
             <span className="fill" style={{ height: `${(m.income / max) * 100}%` }} />
             {highlight.includes(m.month) && (
               <span className="value num" style={{ bottom: `${(m.income / max) * 100}%` }}>{formatMoney(m.income)}</span>
             )}
-            <span className="tip num">{label(m.month)} · {formatMoney(m.income)} · {m.reservations} reservas</span>
+            <span className="tip num">{label(m.month)} · {formatMoney(m.income)} · {t('{n} reservas', { n: m.reservations })}</span>
           </button>
         ))}
       </div>
       <div className="axis" aria-hidden="true">{months.map((m) => <span key={m.month}>{label(m.month)}</span>)}</div>
       <details style={{ marginTop: 12 }}>
-        <summary className="muted">Ver como tabla</summary>
+        <summary className="muted">{t('Ver como tabla')}</summary>
         <table className="data">
-          <thead><tr><th scope="col">Mes</th><th className="right" scope="col">Reservas</th><th className="right" scope="col">Ingresos</th></tr></thead>
+          <thead><tr><th scope="col">{t('Mes')}</th><th className="right" scope="col">{t('Reservas')}</th><th className="right" scope="col">{t('Ingresos')}</th></tr></thead>
           <tbody>
             {months.map((m) => (
               <tr key={m.month}><td>{label(m.month)}</td><td className="right num">{m.reservations}</td><td className="right num">{formatMoney(m.income)}</td></tr>

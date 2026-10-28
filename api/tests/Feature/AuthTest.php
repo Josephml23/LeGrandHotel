@@ -103,13 +103,43 @@ describe('login', function () {
             ->toBeApiError(403, 'ACCOUNT_WITHOUT_ACCESS');
     });
 
-    it('limita el login a 5 intentos por minuto', function () {
-        foreach (range(1, 5) as $_) {
-            $this->postJson('/api/v1/auth/login', ['email' => 'recepcion@example.com', 'password' => 'mala'])->assertStatus(401);
-        }
+    it('tras una contraseña incorrecta hace esperar 30 segundos', function () {
+        $this->postJson('/api/v1/auth/login', ['email' => 'recepcion@example.com', 'password' => 'mala'])
+            ->assertStatus(401)
+            ->assertJsonPath('error.details.retry_after', 30);
 
-        expect($this->postJson('/api/v1/auth/login', ['email' => 'recepcion@example.com', 'password' => 'mala']))
-            ->toBeApiError(429, 'TOO_MANY_REQUESTS');
+        $response = $this->postJson('/api/v1/auth/login', ['email' => 'recepcion@example.com', 'password' => 'Secreta123']);
+        expect($response)->toBeApiError(429, 'LOGIN_LOCKED');
+        $response->assertHeader('Retry-After', 30);
+    });
+
+    it('la espera sube con cada fallo: 30 s, 1 min, 2 min…', function () {
+        $login = fn () => $this->postJson('/api/v1/auth/login', ['email' => 'recepcion@example.com', 'password' => 'mala']);
+
+        $login()->assertJsonPath('error.details.retry_after', 30);
+        $this->travel(31)->seconds();
+        $login()->assertJsonPath('error.details.retry_after', 60);
+        $this->travel(61)->seconds();
+        $login()->assertJsonPath('error.details.retry_after', 120);
+        $this->travel(30)->seconds();
+        $login()->assertStatus(429)->assertJsonPath('error.details.retry_after', 90);
+    });
+
+    it('un ingreso correcto reinicia la espera', function () {
+        $this->postJson('/api/v1/auth/login', ['email' => 'recepcion@example.com', 'password' => 'mala']);
+        $this->travel(31)->seconds();
+        $this->postJson('/api/v1/auth/login', ['email' => 'recepcion@example.com', 'password' => 'Secreta123'])->assertOk();
+
+        $this->postJson('/api/v1/auth/login', ['email' => 'recepcion@example.com', 'password' => 'mala'])
+            ->assertJsonPath('error.details.retry_after', 30);
+    });
+
+    it('avisa la espera en inglés si se pide', function () {
+        $this->postJson('/api/v1/auth/login', ['email' => 'recepcion@example.com', 'password' => 'mala'], ['Accept-Language' => 'en'])
+            ->assertJsonPath('error.message', 'Incorrect email or password.');
+
+        $this->postJson('/api/v1/auth/login', ['email' => 'recepcion@example.com', 'password' => 'mala'], ['Accept-Language' => 'en'])
+            ->assertJsonPath('error.message', 'Too many failed attempts. Try again in 30 seconds.');
     });
 });
 

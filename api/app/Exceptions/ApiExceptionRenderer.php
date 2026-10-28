@@ -35,7 +35,13 @@ class ApiExceptionRenderer
     {
         return match (true) {
             $e instanceof HttpResponseException => $e->getResponse(),
-            $e instanceof ApiException => ApiResponse::error($e->errorCode, $e->getMessage(), $e->status, $e->details),
+            $e instanceof ApiException => ApiResponse::error(
+                $e->errorCode,
+                $e->getMessage(),
+                $e->status,
+                $e->details,
+                $e->status === 429 && isset($e->details['retry_after']) ? ['Retry-After' => $e->details['retry_after']] : [],
+            ),
             $e instanceof ValidationException => ApiResponse::error('VALIDATION_FAILED', 'Los datos enviados no son válidos.', 422, $e->errors()),
             $e instanceof AuthenticationException => ApiResponse::error('UNAUTHENTICATED', 'Sesión no iniciada o token expirado.', 401),
             $e instanceof AuthorizationException, $e instanceof AccessDeniedHttpException => ApiResponse::error('FORBIDDEN', 'No tienes permiso para realizar esta acción.', 403),

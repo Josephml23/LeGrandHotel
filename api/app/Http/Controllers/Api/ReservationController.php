@@ -101,7 +101,7 @@ class ReservationController extends Controller
             $reservation = Reservation::lockForUpdate()->findOrFail($reservation->id);
 
             if (! in_array($reservation->status, [Reservation::PENDING, Reservation::CONFIRMED], true)) {
-                throw ApiException::conflict('INVALID_RESERVATION_STATUS', "No se puede hacer check-in de una reserva en estado {$reservation->status}.");
+                throw ApiException::conflict('INVALID_RESERVATION_STATUS', __('No se puede hacer check-in de una reserva en estado :status.', ['status' => $reservation->status]));
             }
 
             // Una habitación no puede tener dos huéspedes dentro a la vez: primero va el check-out del anterior.

@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { ROLE_LABELS, type RoleName } from '../types'
 import { Mark } from './ui'
+import { t } from '../lib/i18n'
 
 interface NavItem {
   to: string
@@ -16,6 +17,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     items: [
       { to: '/reservar', label: 'Reservar', roles: ['client'] },
       { to: '/mis-reservas', label: 'Mis reservas', roles: ['client'] },
+      { to: '/perfil', label: 'Mi perfil', roles: ['client'] },
     ],
   },
   {
@@ -52,6 +54,10 @@ const NAV: { group: string; items: NavItem[] }[] = [
     group: 'Programador',
     items: [{ to: '/programador', label: 'Vista del programador', roles: ['developer', 'admin'] }],
   },
+  {
+    group: 'Preferencias',
+    items: [{ to: '/configuracion', label: 'Configuración', roles: ['admin', 'receptionist', 'storekeeper', 'developer', 'client'] }],
+  },
 ]
 
 export function Layout() {
@@ -71,32 +77,32 @@ export function Layout() {
 
   return (
     <div className="shell">
-      <NavLink to="/" className="brand" aria-label="LeGrandHotel, inicio">
+      <NavLink to="/" className="brand" aria-label={t('LeGrandHotel, inicio')}>
         <Mark />
         <span>LeGrandHotel</span>
       </NavLink>
 
       <header className="topbar">
         <button className="btn btn-ghost menu-button" aria-expanded={open} aria-controls="sidebar" onClick={() => setOpen((v) => !v)}>
-          Menú
+          {t('Menú')}
         </button>
         <div className="who">
           <strong>{user.name}</strong>
           <span className="small muted">{roles}</span>
         </div>
-        <button className="btn btn-sm" onClick={() => logout()}>Cerrar sesión</button>
+        <button className="btn btn-sm" onClick={() => logout()}>{t('Cerrar sesión')}</button>
       </header>
 
-      <nav id="sidebar" className={`sidebar ${open ? 'open' : ''}`} aria-label="Principal">
+      <nav id="sidebar" className={`sidebar ${open ? 'open' : ''}`} aria-label={t('Principal')}>
         {NAV.map(({ group, items }) => {
           const visible = items.filter((item) => hasRole(...item.roles))
           if (visible.length === 0) return null
           return (
             <div key={group} style={{ display: 'contents' }}>
-              <span className="group">{group}</span>
+              <span className="group">{t(group)}</span>
               {visible.map((item) => (
                 <NavLink key={item.to} to={item.to} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-                  {item.label}
+                  {t(item.label)}
                 </NavLink>
               ))}
             </div>

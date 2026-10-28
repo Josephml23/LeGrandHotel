@@ -11,7 +11,7 @@ Leyenda: ✅ hecho y probado en código · ☁️ código listo, falta crear el 
 | --- | --- | --- |
 | Entorno cloud preparado (cuenta AWS, VPC, EC2, RDS) | ☁️ | `infra/terraform` (network, compute, data); faltan capturas de la consola |
 | Endpoints definidos | ✅ | `api/routes/api.php`, `docs/endpoints/README.md`, `docs/endpoints/openapi.yaml` |
-| Registro y login diferenciados y funcionales | ✅ | `/auth/register` (personal: Administrador y Programador) y `/auth/login`; clientes con Google + DNI y teléfono (`/completar-registro`); `AuthTest`, `ClientPortalTest`, `forms.test.tsx`, `client.test.tsx` |
+| Registro y login diferenciados y funcionales | ✅ | `/auth/register` (personal: Administrador y Programador) y `/auth/login`; clientes con Google; el nombre completo, el DNI y el celular son opcionales al registrarse (`/completar-registro`, "Más tarde"), se editan en Mi perfil (`/perfil`) y se piden al reservar si faltan; `AuthTest`, `ClientPortalTest`, `forms.test.tsx`, `client.test.tsx` |
 | EXTRA: VPC con subredes privadas | ☁️ | `infra/terraform/network.tf` |
 | EXTRA: diagrama de BD | ✅ | `docs/diagramas/legrandhotel.dbml` |
 | EXTRA: cifrar el código | ✅ | build ofuscado (`web/vite.config.ts`), comparación en `docs/seguridad.md` |
@@ -21,7 +21,8 @@ Leyenda: ✅ hecho y probado en código · ☁️ código listo, falta crear el 
 
 | Punto | Estado | Evidencia |
 | --- | --- | --- |
-| Rate limits | ✅ | login 5/min, registro 3/min, API 60/min; 429 con `Retry-After` en pruebas y `tests/k6/rate-limit.js` |
+| Rate limits | ✅ | login: espera de 30 s tras cada contraseña incorrecta que se duplica hasta 15 min (`LoginLockout`, cuenta regresiva en el login) más 5/min; registro 3/min, API 60/min; 429 con `Retry-After` en pruebas y `tests/k6/rate-limit.js` |
+| Configuración: modo oscuro e idioma | ✅ | `/configuracion` para todos los roles (tema claro, oscuro o del sistema; español o inglés). La API responde en el idioma de `Accept-Language` (`SetLocale`, `lang/en.json`); `i18n.test.tsx` revisa que cada texto tenga traducción |
 | Vista 404 y "En construcción" | ✅ | `web/src/pages/errors/ErrorPages.tsx` (ruta `*` y `/facturacion`) |
 | Control de respuestas HTTP | ✅ | formato único + tabla de códigos en `docs/endpoints/README.md` |
 | CRUD estructurado | ✅ | todos los módulos con CRUD completo |

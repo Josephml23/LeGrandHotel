@@ -1,13 +1,15 @@
+import { translated } from './lib/i18n'
+
 /** Personal del hotel (correo y contraseña) y clientes (solo Google). */
 export type RoleName = 'admin' | 'receptionist' | 'storekeeper' | 'developer' | 'client'
 
-export const ROLE_LABELS: Record<RoleName, string> = {
+export const ROLE_LABELS: Record<RoleName, string> = translated({
   admin: 'Administrador',
   receptionist: 'Recepcionista',
   storekeeper: 'Almacenero',
   developer: 'Programador',
   client: 'Cliente',
-}
+})
 
 /** Roles del personal: usan el panel interno. */
 export const STAFF_ROLES: RoleName[] = ['admin', 'receptionist', 'storekeeper', 'developer']
@@ -18,8 +20,11 @@ export interface AuthUser {
   email: string
   email_verified: boolean
   roles: RoleName[]
-  /** Solo en cuentas de cliente: null hasta que completa su DNI y teléfono. */
-  client?: { id: number; document_number: string; phone: string | null } | null
+  /**
+   * Solo en cuentas de cliente: null hasta que guarda su perfil. El nombre, el DNI y el celular son
+   * opcionales hasta que reserva; `complete` indica que ya tiene DNI y celular.
+   */
+  client?: { id: number; full_name: string; document_number: string | null; phone: string | null; complete: boolean } | null
 }
 
 export interface Session {
@@ -86,8 +91,8 @@ export interface Room {
 export interface Client {
   id: number
   user_id: number | null
-  document_type: 'DNI' | 'PASAPORTE' | 'CE'
-  document_number: string
+  document_type: 'DNI' | 'PASAPORTE' | 'CE' | null
+  document_number: string | null
   full_name: string
   phone: string | null
   nationality: string | null

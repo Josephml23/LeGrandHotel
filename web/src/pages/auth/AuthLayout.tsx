@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Mark } from '../../components/ui'
+import { LanguageSwitch } from '../../components/Preferences'
 
 /** Mitad izquierda: la llave de habitación como motivo; mitad derecha: el formulario. */
 export function AuthLayout({ heading, lede, children, wide }: { heading: string; lede: string; children: ReactNode; wide?: boolean }) {
@@ -21,6 +22,7 @@ export function AuthLayout({ heading, lede, children, wide }: { heading: string;
         </svg>
       </aside>
       <main className="auth-main">
+        <div className="auth-lang"><LanguageSwitch /></div>
         <div className={`auth-card enter ${wide ? 'wide' : ''}`}>{children}</div>
       </main>
     </div>

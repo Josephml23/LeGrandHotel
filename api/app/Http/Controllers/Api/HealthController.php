@@ -45,7 +45,7 @@ class HealthController extends Controller
         $down = collect($checks)->filter(fn ($c) => $c['status'] !== 'ok')->keys()->implode(', ');
         $body['error'] = [
             'code' => 'SERVICE_UNAVAILABLE',
-            'message' => "Servicio degradado: no responde {$down}.",
+            'message' => __('Servicio degradado: no responde :down.', ['down' => $down]),
             'details' => ['retry_after' => ApiExceptionRenderer::RETRY_AFTER],
         ];
 

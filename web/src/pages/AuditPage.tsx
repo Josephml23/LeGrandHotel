@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useServerList } from '../lib/hooks'
-import { formatDateTime } from '../lib/format'
+import { formatDateTime, formatNumber } from '../lib/format'
 import { DataTable, Pagination, Pill, SelectField, TitleRow, type Column } from '../components/ui'
 import type { AuditLog } from '../types'
+import { t } from '../lib/i18n'
 
 const ACTION = {
   created: { label: 'Creó', tone: 'positive' },
@@ -17,26 +18,26 @@ export function AuditPage() {
   const list = useServerList<AuditLog>('audit-logs', { entity }, 25)
 
   const columns: Column<AuditLog>[] = [
-    { key: 'when', header: 'Cuándo', render: (l) => <span className="num">{formatDateTime(l.created_at)}</span> },
-    { key: 'who', header: 'Quién', render: (l) => l.user?.name ?? <span className="muted">Sistema</span> },
-    { key: 'action', header: 'Acción', render: (l) => <Pill tone={ACTION[l.action].tone}>{ACTION[l.action].label}</Pill> },
-    { key: 'entity', header: 'Registro', render: (l) => <span className="num">{l.entity} #{l.entity_id}</span> },
+    { key: 'when', header: t('Cuándo'), render: (l) => <span className="num">{formatDateTime(l.created_at)}</span> },
+    { key: 'who', header: t('Quién'), render: (l) => l.user?.name ?? <span className="muted">{t('Sistema')}</span> },
+    { key: 'action', header: t('Acción'), render: (l) => <Pill tone={ACTION[l.action].tone}>{t(ACTION[l.action].label)}</Pill> },
+    { key: 'entity', header: t('Registro'), render: (l) => <span className="num">{l.entity} #{l.entity_id}</span> },
     {
-      key: 'changes', header: 'Cambios', className: 'hide-sm', render: (l) =>
+      key: 'changes', header: t('Cambios'), className: 'hide-sm', render: (l) =>
         l.changes ? <span className="muted small">{Object.keys(l.changes).filter((k) => k !== 'created_at').slice(0, 5).join(', ')}</span> : '—',
     },
   ]
 
   return (
     <>
-      <TitleRow title="Auditoría" lede="Quién creó, editó o eliminó cada registro y cuándo." />
+      <TitleRow title={t('Auditoría')} lede={t('Quién creó, editó o eliminó cada registro y cuándo.')} />
       <div className="toolbar">
-        <SelectField label="Tipo de registro" value={entity} onChange={(e) => { setEntity(e.target.value); list.setPage(1) }}
-          options={ENTITIES.map((e) => ({ value: e, label: e || 'Todos' }))} />
-        <span className="muted num">{(list.meta?.total ?? 0).toLocaleString('es-PE')} eventos</span>
+        <SelectField label={t('Tipo de registro')} value={entity} onChange={(e) => { setEntity(e.target.value); list.setPage(1) }}
+          options={ENTITIES.map((e) => ({ value: e, label: e || t('Todos') }))} />
+        <span className="muted num">{formatNumber(list.meta?.total ?? 0)} {t('eventos')}</span>
       </div>
-      <DataTable columns={columns} rows={list.rows} loading={list.isLoading} error={list.error} empty="Sin eventos registrados." />
-      <Pagination meta={list.meta} onPage={list.setPage} noun="eventos" />
+      <DataTable columns={columns} rows={list.rows} loading={list.isLoading} error={list.error} empty={t('Sin eventos registrados.')} />
+      <Pagination meta={list.meta} onPage={list.setPage} noun={t('eventos')} />
     </>
   )
 }

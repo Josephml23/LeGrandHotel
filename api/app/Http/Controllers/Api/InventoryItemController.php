@@ -69,7 +69,7 @@ class InventoryItemController extends Controller
             $item = InventoryItem::lockForUpdate()->findOrFail($inventoryItem->id);
 
             if ($data['type'] === InventoryMovement::OUT && $data['quantity'] > $item->stock) {
-                throw ApiException::conflict('INSUFFICIENT_STOCK', "Stock insuficiente: quedan {$item->stock} {$item->unit}.", [
+                throw ApiException::conflict('INSUFFICIENT_STOCK', __('Stock insuficiente: quedan :stock :unit.', ['stock' => $item->stock, 'unit' => $item->unit]), [
                     'available' => $item->stock,
                 ]);
             }

@@ -2,6 +2,7 @@ import axios, { AxiosError } from 'axios'
 import type { ApiErrorBody, PageMeta } from '../types'
 import { appEvents } from './events'
 import { sessionStore } from './session'
+import { currentLang, t } from './i18n'
 
 export const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000/api/v1'
 
@@ -14,6 +15,8 @@ export const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = sessionStore.read()?.token
   if (token) config.headers.Authorization = `Bearer ${token}`
+  // La API responde los mensajes en el idioma elegido en Configuración.
+  config.headers['Accept-Language'] = currentLang()
   return config
 })
 
@@ -49,19 +52,20 @@ api.interceptors.response.use(
     if (!error.response) {
       const offline = typeof navigator !== 'undefined' && !navigator.onLine
       if (offline) appEvents.emit({ type: 'offline' })
-      else appEvents.emit({ type: 'service-unavailable', reason: 'No se pudo contactar con el servidor.', retryAfter: 30 })
-      return Promise.reject(new ApiError(0, offline ? 'OFFLINE' : 'NETWORK_ERROR', 'Sin conexión con el servidor.'))
+      else appEvents.emit({ type: 'service-unavailable', reason: t('No se pudo contactar con el servidor.'), retryAfter: 30 })
+      return Promise.reject(new ApiError(0, offline ? 'OFFLINE' : 'NETWORK_ERROR', t('Sin conexión con el servidor.')))
     }
 
     const { status, data, headers } = error.response
     const body = data?.error
-    const apiError = new ApiError(status, body?.code ?? `HTTP_${status}`, body?.message ?? 'Error inesperado.', body?.details)
+    const apiError = new ApiError(status, body?.code ?? `HTTP_${status}`, body?.message ?? t('Error inesperado.'), body?.details)
     const retryAfter = Number(headers['retry-after'] ?? body?.details?.retry_after ?? 30)
 
     if (status === 401 && !AUTH_PUBLIC.some((path) => url.endsWith(path))) {
       sessionStore.clear()
       appEvents.emit({ type: 'session-expired' })
-    } else if (status === 429) {
+    } else if (status === 429 && !url.endsWith('/auth/login')) {
+      // El login muestra su propia cuenta regresiva tras una contraseña incorrecta.
       appEvents.emit({ type: 'rate-limited', retryAfter })
     } else if (status === 503) {
       appEvents.emit({ type: 'service-unavailable', reason: apiError.message, retryAfter })

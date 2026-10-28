@@ -4,6 +4,7 @@ import { api } from '../../lib/api'
 import { sessionStore } from '../../lib/session'
 import { homeFor, useAuth } from '../../auth/AuthContext'
 import type { AuthUser } from '../../types'
+import { t } from '../../lib/i18n'
 
 /**
  * Vuelta del login con Google: el token llega en el fragmento (#token=…),
@@ -44,8 +45,8 @@ export function AuthCallbackPage() {
   return (
     <main className="status-screen full">
       <div className="status-copy">
-        <h1>Conectando con Google…</h1>
-        <p className="muted">Un momento, estamos abriendo tu sesión.</p>
+        <h1>{t('Conectando con Google…')}</h1>
+        <p className="muted">{t('Un momento, estamos abriendo tu sesión.')}</p>
       </div>
     </main>
   )

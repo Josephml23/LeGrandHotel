@@ -10,6 +10,9 @@ import { VerifyEmailPage } from './pages/auth/VerifyEmailPage'
 import { CompleteProfilePage } from './pages/client/CompleteProfilePage'
 import { BookPage } from './pages/client/BookPage'
 import { MyReservationsPage } from './pages/client/MyReservationsPage'
+import { ProfilePage } from './pages/client/ProfilePage'
+import { SettingsPage } from './pages/SettingsPage'
+import { t } from './lib/i18n'
 import { DashboardPage } from './pages/DashboardPage'
 import { RoomsPage } from './pages/RoomsPage'
 import { RoomTypesPage } from './pages/RoomTypesPage'
@@ -59,6 +62,7 @@ export function App() {
             <Route element={<ProtectedRoute roles={['client']} />}>
               <Route path="/reservar" element={<BookPage />} />
               <Route path="/mis-reservas" element={<MyReservationsPage />} />
+              <Route path="/perfil" element={<ProfilePage />} />
             </Route>
             <Route element={<ProtectedRoute roles={['admin', 'receptionist', 'storekeeper']} />}>
               <Route path="/panel" element={<DashboardPage />} />
@@ -82,11 +86,12 @@ export function App() {
               <Route path="/usuarios" element={<UsersPage />} />
               <Route path="/reportes" element={<ReportsPage />} />
               <Route path="/auditoria" element={<AuditPage />} />
-              <Route path="/facturacion" element={<UnderConstructionPage module="Facturación electrónica" />} />
+              <Route path="/facturacion" element={<UnderConstructionPage module={t('Facturación electrónica')} />} />
             </Route>
             <Route element={<ProtectedRoute roles={['developer', 'admin']} />}>
               <Route path="/programador" element={<DeveloperPage />} />
             </Route>
+            <Route path="/configuracion" element={<SettingsPage />} />
             <Route path="/403" element={<ForbiddenPage />} />
           </Route>
         </Route>

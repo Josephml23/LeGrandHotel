@@ -45,7 +45,8 @@ class ApiResponse
 
     public static function error(string $code, string $message, int $status, mixed $details = null, array $headers = []): JsonResponse
     {
-        $error = ['code' => $code, 'message' => $message];
+        // El mensaje se traduce al idioma de la petición (Accept-Language); el código no cambia nunca.
+        $error = ['code' => $code, 'message' => __($message)];
         if ($details !== null) {
             $error['details'] = $details;
         }

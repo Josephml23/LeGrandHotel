@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, useState, type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes } from 'react'
 import type { PageMeta } from '../types'
 import { ApiError } from '../lib/api'
+import { formatNumber } from '../lib/format'
+import { t } from '../lib/i18n'
 
 type Tone = 'positive' | 'negative' | 'warning' | 'neutral' | 'accent'
 
@@ -79,7 +81,7 @@ export function DataTable<T extends { id: number }>({
                 {c.header}
               </th>
             ))}
-            {actions && <th className="right" scope="col"><span className="sr-only">Acciones</span></th>}
+            {actions && <th className="right" scope="col"><span className="sr-only">{t('Acciones')}</span></th>}
           </tr>
         </thead>
         <tbody aria-busy={loading}>
@@ -92,7 +94,7 @@ export function DataTable<T extends { id: number }>({
               </tr>
             ))}
           {!loading && error != null && (
-            <tr><td colSpan={span}><span className="muted">{error instanceof ApiError ? error.message : 'No se pudo cargar la lista.'}</span></td></tr>
+            <tr><td colSpan={span}><span className="muted">{error instanceof ApiError ? error.message : t('No se pudo cargar la lista.')}</span></td></tr>
           )}
           {!loading && !error && rows?.length === 0 && (
             <tr><td colSpan={span}><span className="muted">{empty}</span></td></tr>
@@ -118,14 +120,14 @@ export function Pagination({ meta, onPage, noun }: { meta?: PageMeta; onPage: (p
   const from = meta.total === 0 ? 0 : (meta.page - 1) * meta.per_page + 1
   const to = Math.min(meta.page * meta.per_page, meta.total)
   return (
-    <nav className="pagination" aria-label="Paginación">
+    <nav className="pagination" aria-label={t('Paginación')}>
       <span className="muted num">
-        {from}–{to} de {meta.total.toLocaleString('es-PE')} {noun}
+        {t('{from}–{to} de {total}', { from, to, total: formatNumber(meta.total) })} {noun}
       </span>
       <div className="actions">
-        <button className="btn btn-sm" disabled={meta.page <= 1} onClick={() => onPage(meta.page - 1)}>Anterior</button>
-        <span className="num small muted">Página {meta.page} de {Math.max(meta.last_page, 1)}</span>
-        <button className="btn btn-sm" disabled={meta.page >= meta.last_page} onClick={() => onPage(meta.page + 1)}>Siguiente</button>
+        <button className="btn btn-sm" disabled={meta.page <= 1} onClick={() => onPage(meta.page - 1)}>{t('Anterior')}</button>
+        <span className="num small muted">{t('Página {page} de {pages}', { page: meta.page, pages: Math.max(meta.last_page, 1) })}</span>
+        <button className="btn btn-sm" disabled={meta.page >= meta.last_page} onClick={() => onPage(meta.page + 1)}>{t('Siguiente')}</button>
       </div>
     </nav>
   )
@@ -202,7 +204,7 @@ export function Modal({
         <>
           <div className="modal-head">
             <h2 id="modal-title">{title}</h2>
-            <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label="Cerrar">Cerrar</button>
+            <button className="btn btn-ghost btn-sm" onClick={onClose} aria-label={t('Cerrar')}>{t('Cerrar')}</button>
           </div>
           <div className="modal-body">{children}</div>
           {footer && <div className="modal-foot">{footer}</div>}
@@ -214,7 +216,7 @@ export function Modal({
 
 export function FormError({ error }: { error: unknown }) {
   if (!error) return null
-  const message = error instanceof ApiError ? error.message : 'No se pudo guardar. Intenta de nuevo.'
+  const message = error instanceof ApiError ? error.message : t('No se pudo guardar. Intenta de nuevo.')
   return <div className="form-error" role="alert">{message}</div>
 }
 

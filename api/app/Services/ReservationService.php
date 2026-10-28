@@ -48,8 +48,8 @@ class ReservationService
 
             $guests = (int) ($data['guests'] ?? $reservation->guests ?? 1);
             if ($guests > $room->roomType->capacity) {
-                throw new ApiException('CAPACITY_EXCEEDED', "La habitación admite máximo {$room->roomType->capacity} huéspedes.", 422, [
-                    'guests' => ["Máximo {$room->roomType->capacity} huéspedes."],
+                throw new ApiException('CAPACITY_EXCEEDED', __('La habitación admite máximo :capacity huéspedes.', ['capacity' => $room->roomType->capacity]), 422, [
+                    'guests' => [__('Máximo :capacity huéspedes.', ['capacity' => $room->roomType->capacity])],
                 ]);
             }
 

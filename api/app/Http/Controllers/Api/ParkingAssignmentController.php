@@ -33,7 +33,7 @@ class ParkingAssignmentController extends Controller
             $spot = ParkingSpot::lockForUpdate()->findOrFail($request->integer('parking_spot_id'));
 
             if ($spot->status !== ParkingSpot::FREE) {
-                throw ApiException::conflict('PARKING_SPOT_NOT_FREE', "El espacio {$spot->code} no está libre.");
+                throw ApiException::conflict('PARKING_SPOT_NOT_FREE', __('El espacio :code no está libre.', ['code' => $spot->code]));
             }
 
             $assignment = ParkingAssignment::create([

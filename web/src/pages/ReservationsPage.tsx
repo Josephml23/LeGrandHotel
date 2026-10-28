@@ -3,9 +3,10 @@ import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ApiError, getList, send } from '../lib/api'
 import { remove, useAction, useServerList } from '../lib/hooks'
-import { addDaysISO, formatDate, formatMoney, nights, RESERVATION_STATUS, todayISO } from '../lib/format'
+import { addDaysISO, formatDate, formatMoney, formatNumber, nights, RESERVATION_STATUS, todayISO } from '../lib/format'
 import { DataTable, Field, FormError, Modal, Pagination, Pill, SearchInput, SelectField, TitleRow, fieldError, useDebounced, type Column } from '../components/ui'
 import type { Client, Reservation, ReservationStatus, Room } from '../types'
+import { t } from '../lib/i18n'
 
 const TABS: { value: '' | ReservationStatus; label: string }[] = [
   { value: '', label: 'Todas' },
@@ -25,62 +26,62 @@ export function ReservationsPage() {
 
   const checkIn = useAction((id: number) => send('post', `/reservations/${id}/check-in`), {
     invalidate: ['reservations', 'rooms', 'stays'],
-    success: 'Check-in registrado. La habitación quedó ocupada.',
+    success: t('Check-in registrado. La habitación quedó ocupada.'),
   })
   const cancel = useAction((id: number) => send('put', `/reservations/${id}`, { status: 'cancelled' }), {
     invalidate: ['reservations'],
-    success: 'Reserva cancelada.',
+    success: t('Reserva cancelada.'),
   })
-  const destroy = useAction(remove('reservations'), { invalidate: ['reservations'], success: 'Reserva eliminada.' })
+  const destroy = useAction(remove('reservations'), { invalidate: ['reservations'], success: t('Reserva eliminada.') })
 
   // Desde el panel: /reservas?checkin=ID
   useEffect(() => {
-    if (checkinId && confirm('¿Registrar el check-in de esta reserva ahora?')) checkIn.mutate(checkinId)
+    if (checkinId && confirm(t('¿Registrar el check-in de esta reserva ahora?'))) checkIn.mutate(checkinId)
     if (checkinId) setParams({}, { replace: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkinId])
 
   const columns: Column<Reservation>[] = [
-    { key: 'client', header: 'Huésped', render: (r) => <span className="identity"><strong>{r.client?.full_name}</strong><span className="num">{r.client?.document_number}</span></span> },
-    { key: 'room', header: 'Habitación', render: (r) => <span className="identity"><strong className="num">{r.room?.number}</strong><span>{r.room?.room_type?.name}</span></span> },
-    { key: 'dates', header: 'Fechas', render: (r) => <span className="num">{formatDate(r.check_in)} → {formatDate(r.check_out)}</span> },
-    { key: 'nights', header: 'Noches', align: 'right', className: 'hide-sm', render: (r) => <span className="num">{nights(r.check_in, r.check_out)}</span> },
-    { key: 'total', header: 'Total', align: 'right', render: (r) => <span className="num">{formatMoney(r.total)}</span> },
-    { key: 'status', header: 'Estado', render: (r) => <Pill tone={RESERVATION_STATUS[r.status].tone}>{RESERVATION_STATUS[r.status].label}</Pill> },
+    { key: 'client', header: t('Huésped'), render: (r) => <span className="identity"><strong>{r.client?.full_name}</strong><span className="num">{r.client?.document_number}</span></span> },
+    { key: 'room', header: t('Habitación'), render: (r) => <span className="identity"><strong className="num">{r.room?.number}</strong><span>{r.room?.room_type?.name}</span></span> },
+    { key: 'dates', header: t('Fechas'), render: (r) => <span className="num">{formatDate(r.check_in)} → {formatDate(r.check_out)}</span> },
+    { key: 'nights', header: t('Noches'), align: 'right', className: 'hide-sm', render: (r) => <span className="num">{nights(r.check_in, r.check_out)}</span> },
+    { key: 'total', header: t('Total'), align: 'right', render: (r) => <span className="num">{formatMoney(r.total)}</span> },
+    { key: 'status', header: t('Estado'), render: (r) => <Pill tone={RESERVATION_STATUS[r.status].tone}>{RESERVATION_STATUS[r.status].label}</Pill> },
   ]
 
   const actionError = checkIn.error ?? cancel.error ?? destroy.error
 
   return (
     <>
-      <TitleRow title="Reservas" lede="Busca por huésped o documento. El check-in crea la estadía y ocupa la habitación.">
-        <button className="btn btn-primary" onClick={() => setCreating(true)}>Nueva reserva</button>
+      <TitleRow title={t('Reservas')} lede={t('Busca por huésped o documento. El check-in crea la estadía y ocupa la habitación.')}>
+        <button className="btn btn-primary" onClick={() => setCreating(true)}>{t('Nueva reserva')}</button>
       </TitleRow>
-      <div className="tabs" role="tablist" aria-label="Filtrar por estado">
-        {TABS.map((t) => (
-          <button key={t.value} role="tab" className="tab" aria-selected={status === t.value} onClick={() => { setStatus(t.value); list.setPage(1) }}>{t.label}</button>
+      <div className="tabs" role="tablist" aria-label={t('Filtrar por estado')}>
+        {TABS.map((tab) => (
+          <button key={tab.value} role="tab" className="tab" aria-selected={status === tab.value} onClick={() => { setStatus(tab.value); list.setPage(1) }}>{t(tab.label)}</button>
         ))}
       </div>
       <div className="toolbar">
-        <SearchInput value={list.search} onChange={list.setSearch} label="Buscar huésped o documento" />
-        <span className="muted num">{(list.meta?.total ?? 0).toLocaleString('es-PE')} reservas</span>
+        <SearchInput value={list.search} onChange={list.setSearch} label={t('Buscar huésped o documento')} />
+        <span className="muted num">{formatNumber(list.meta?.total ?? 0)} {t('reservas')}</span>
       </div>
       {actionError != null && <FormError error={actionError} />}
-      <DataTable columns={columns} rows={list.rows} loading={list.isLoading} error={list.error} empty="No hay reservas con este filtro."
+      <DataTable columns={columns} rows={list.rows} loading={list.isLoading} error={list.error} empty={t('No hay reservas con este filtro.')}
         actions={(r) => (
           <>
             {(r.status === 'confirmed' || r.status === 'pending') && (
               <>
-                <button className="btn btn-sm" onClick={() => checkIn.mutate(r.id)} disabled={checkIn.isPending}>Check-in</button>{' '}
-                <button className="btn btn-sm btn-ghost" onClick={() => confirm('¿Cancelar esta reserva?') && cancel.mutate(r.id)}>Cancelar</button>
+                <button className="btn btn-sm" onClick={() => checkIn.mutate(r.id)} disabled={checkIn.isPending}>{t('Check-in')}</button>{' '}
+                <button className="btn btn-sm btn-ghost" onClick={() => confirm(t('¿Cancelar esta reserva?')) && cancel.mutate(r.id)}>{t('Cancelar')}</button>
               </>
             )}
             {(r.status === 'cancelled') && (
-              <button className="btn btn-sm btn-ghost btn-danger" onClick={() => confirm('¿Eliminar la reserva cancelada?') && destroy.mutate(r.id)}>Eliminar</button>
+              <button className="btn btn-sm btn-ghost btn-danger" onClick={() => confirm(t('¿Eliminar la reserva cancelada?')) && destroy.mutate(r.id)}>{t('Eliminar')}</button>
             )}
           </>
         )} />
-      <Pagination meta={list.meta} onPage={list.setPage} noun="reservas" />
+      <Pagination meta={list.meta} onPage={list.setPage} noun={t('reservas')} />
       <NewReservation open={creating} onClose={() => { setCreating(false); if (params.get('nueva')) setParams({}, { replace: true }) }} />
     </>
   )
@@ -116,7 +117,7 @@ export function NewReservation({ open, onClose }: { open: boolean; onClose: () =
       guests: Number(form.guests),
       notes: form.notes || null,
     }),
-    { invalidate: ['reservations', 'rooms'], success: 'Reserva creada.' },
+    { invalidate: ['reservations', 'rooms'], success: t('Reserva creada.') },
   )
 
   const submit = (e: FormEvent) => {
@@ -132,29 +133,29 @@ export function NewReservation({ open, onClose }: { open: boolean; onClose: () =
   const conflict = save.error instanceof ApiError && save.error.code === 'ROOM_ALREADY_BOOKED'
 
   return (
-    <Modal open={open} title="Nueva reserva" onClose={() => { save.reset(); onClose() }}
+    <Modal open={open} title={t('Nueva reserva')} onClose={() => { save.reset(); onClose() }}
       footer={<>
-        <span className="muted num" style={{ marginRight: 'auto' }}>{estimate !== null ? `Total estimado: ${formatMoney(estimate)} · ${nights(form.check_in, form.check_out)} noches` : 'Elige una habitación para ver el total'}</span>
-        <button className="btn" onClick={onClose}>Cancelar</button>
-        <button className="btn btn-primary" form="reservation-form" disabled={save.isPending || !form.room_id}>Reservar</button>
+        <span className="muted num" style={{ marginRight: 'auto' }}>{estimate !== null ? t('Total estimado: {amount} · {n} noches', { amount: formatMoney(estimate), n: nights(form.check_in, form.check_out) }) : t('Elige una habitación para ver el total')}</span>
+        <button className="btn" onClick={onClose}>{t('Cancelar')}</button>
+        <button className="btn btn-primary" form="reservation-form" disabled={save.isPending || !form.room_id}>{t('Reservar')}</button>
       </>}>
       <FormError error={save.error} />
-      {conflict && <p className="muted">Otra persona reservó esa habitación en esas fechas. La lista de disponibles ya se actualizó: elige otra.</p>}
+      {conflict && <p className="muted">{t('Otra persona reservó esa habitación en esas fechas. La lista de disponibles ya se actualizó: elige otra.')}</p>}
       <form id="reservation-form" className="form-grid" onSubmit={submit}>
         <>
-            <Field className="full" label="Buscar huésped" type="search" value={clientSearch} onChange={(e) => setClientSearch(e.target.value)} hint="Nombre o número de documento." />
-            <SelectField className="full" label="Huésped" required value={form.client_id} onChange={(e) => setForm({ ...form, client_id: e.target.value })} error={fieldError(save.error, 'client_id')}
-              options={[{ value: '', label: clients.isLoading ? 'Cargando…' : 'Selecciona un huésped' }, ...(clients.data?.data ?? []).map((c) => ({ value: c.id, label: `${c.full_name} · ${c.document_type} ${c.document_number}` }))]} />
+            <Field className="full" label={t('Buscar huésped')} type="search" value={clientSearch} onChange={(e) => setClientSearch(e.target.value)} hint={t('Nombre o número de documento.')} />
+            <SelectField className="full" label={t('Huésped')} required value={form.client_id} onChange={(e) => setForm({ ...form, client_id: e.target.value })} error={fieldError(save.error, 'client_id')}
+              options={[{ value: '', label: clients.isLoading ? t('Cargando…') : t('Selecciona un huésped') }, ...(clients.data?.data ?? []).map((c) => ({ value: c.id, label: `${c.full_name} · ${c.document_type} ${c.document_number}` }))]} />
         </>
-        <Field label="Entrada" type="date" min={todayISO()} required value={form.check_in} onChange={(e) => setForm({ ...form, check_in: e.target.value, room_id: '' })} error={fieldError(save.error, 'check_in')} />
-        <Field label="Salida" type="date" min={addDaysISO(form.check_in, 1)} required value={form.check_out} onChange={(e) => setForm({ ...form, check_out: e.target.value, room_id: '' })} error={fieldError(save.error, 'check_out')} />
-        <Field label="Huéspedes" type="number" min={1} max={8} value={form.guests} onChange={(e) => setForm({ ...form, guests: e.target.value, room_id: '' })} error={fieldError(save.error, 'guests')} />
-        <SelectField label="Habitación disponible" required value={form.room_id} onChange={(e) => setForm({ ...form, room_id: e.target.value })} error={fieldError(save.error, 'room_id')}
+        <Field label={t('Entrada')} type="date" min={todayISO()} required value={form.check_in} onChange={(e) => setForm({ ...form, check_in: e.target.value, room_id: '' })} error={fieldError(save.error, 'check_in')} />
+        <Field label={t('Salida')} type="date" min={addDaysISO(form.check_in, 1)} required value={form.check_out} onChange={(e) => setForm({ ...form, check_out: e.target.value, room_id: '' })} error={fieldError(save.error, 'check_out')} />
+        <Field label={t('Huéspedes')} type="number" min={1} max={8} value={form.guests} onChange={(e) => setForm({ ...form, guests: e.target.value, room_id: '' })} error={fieldError(save.error, 'guests')} />
+        <SelectField label={t('Habitación disponible')} required value={form.room_id} onChange={(e) => setForm({ ...form, room_id: e.target.value })} error={fieldError(save.error, 'room_id')}
           options={[
-            { value: '', label: !validRange ? 'La salida debe ser después de la entrada' : available.isLoading ? 'Buscando…' : `${available.data?.meta.total ?? 0} disponibles` },
-            ...(available.data?.data ?? []).map((r) => ({ value: r.id, label: `${r.number} · ${r.room_type?.name} · S/ ${r.room_type?.price_per_night}/noche` })),
+            { value: '', label: !validRange ? t('La salida debe ser después de la entrada') : available.isLoading ? t('Buscando…') : t('{n} disponibles', { n: available.data?.meta.total ?? 0 }) },
+            ...(available.data?.data ?? []).map((r) => ({ value: r.id, label: `${r.number} · ${r.room_type?.name} · ${t('S/ {price}/noche', { price: r.room_type?.price_per_night ?? '' })}` })),
           ]} />
-        <Field className="full" label="Notas" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+        <Field className="full" label={t('Notas')} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
       </form>
     </Modal>
   )

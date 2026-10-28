@@ -26,7 +26,7 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'role.in' => 'No puedes crear cuentas con ese rol.',
+            'role.in' => __('No puedes crear cuentas con ese rol.'),
         ];
     }
 }

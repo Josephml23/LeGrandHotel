@@ -5,6 +5,7 @@ import { api, send } from '../../lib/api'
 import { homeFor, useAuth } from '../../auth/AuthContext'
 import { FormError } from '../../components/ui'
 import type { AuthUser } from '../../types'
+import { t } from '../../lib/i18n'
 import { AuthLayout } from './AuthLayout'
 
 export function VerifyEmailPage() {
@@ -24,34 +25,36 @@ export function VerifyEmailPage() {
 
   if (status === 'verified') {
     return (
-      <AuthLayout heading="Correo verificado" lede="Tu cuenta del personal está lista.">
-        <h1>¡Listo! Tu correo está verificado</h1>
-        <Link className="btn btn-primary" to={user ? homeFor(user) : '/login'}>{user ? 'Ir al inicio' : 'Iniciar sesión'}</Link>
+      <AuthLayout heading={t('Correo verificado')} lede={t('Tu cuenta del personal está lista.')}>
+        <h1>{t('¡Listo! Tu correo está verificado')}</h1>
+        <Link className="btn btn-primary" to={user ? homeFor(user) : '/login'}>{user ? t('Ir al inicio') : t('Iniciar sesión')}</Link>
       </AuthLayout>
     )
   }
 
   return (
-    <AuthLayout heading="Un paso más" lede="Verificamos tu correo para proteger tu cuenta.">
+    <AuthLayout heading={t('Un paso más')} lede={t('Verificamos tu correo para proteger tu cuenta.')}>
       <div>
-        <h1>Revisa tu correo</h1>
+        <h1>{t('Revisa tu correo')}</h1>
         <p className="muted">
           {status === 'invalid'
-            ? 'El enlace no es válido o ya venció. Pide uno nuevo.'
-            : `Te enviamos un enlace de verificación${user ? ` a ${user.email}` : ''}. Ábrelo para confirmar tu cuenta.`}
+            ? t('El enlace no es válido o ya venció. Pide uno nuevo.')
+            : user
+              ? t('Te enviamos un enlace de verificación a {email}. Ábrelo para confirmar tu cuenta.', { email: user.email })
+              : t('Te enviamos un enlace de verificación. Ábrelo para confirmar tu cuenta.')}
         </p>
       </div>
       <FormError error={resend.error} />
-      {resend.isSuccess && <div className="form-ok" role="status">Enlace reenviado. Revisa también la carpeta de spam.</div>}
+      {resend.isSuccess && <div className="form-ok" role="status">{t('Enlace reenviado. Revisa también la carpeta de spam.')}</div>}
       {user ? (
         <>
           <button className="btn btn-primary" onClick={() => resend.mutate()} disabled={resend.isPending}>
-            {resend.isPending ? 'Enviando…' : 'Reenviar enlace'}
+            {resend.isPending ? t('Enviando…') : t('Reenviar enlace')}
           </button>
-          <Link className="btn" to={homeFor(user)}>Continuar sin verificar</Link>
+          <Link className="btn" to={homeFor(user)}>{t('Continuar sin verificar')}</Link>
         </>
       ) : (
-        <Link className="btn btn-primary" to="/login">Iniciar sesión</Link>
+        <Link className="btn btn-primary" to="/login">{t('Iniciar sesión')}</Link>
       )}
     </AuthLayout>
   )

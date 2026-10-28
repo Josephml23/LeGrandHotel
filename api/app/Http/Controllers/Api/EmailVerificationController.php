@@ -16,12 +16,12 @@ class EmailVerificationController extends Controller
     public function send(Request $request): JsonResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return ApiResponse::success(['message' => 'El correo ya está verificado.']);
+            return ApiResponse::success(['message' => __('El correo ya está verificado.')]);
         }
 
         $request->user()->sendEmailVerificationNotification();
 
-        return ApiResponse::success(['message' => 'Enlace de verificación enviado.']);
+        return ApiResponse::success(['message' => __('Enlace de verificación enviado.')]);
     }
 
     /**

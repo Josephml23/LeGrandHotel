@@ -62,6 +62,19 @@ describe('formularios de acceso', () => {
     expect(sendMock).toHaveBeenCalledWith('post', '/auth/login', { email: 'a@b.pe', password: 'mala' })
   })
 
+  it('tras una contraseña incorrecta bloquea el botón con una cuenta regresiva', async () => {
+    sendMock.mockRejectedValueOnce(new ApiError(401, 'INVALID_CREDENTIALS', 'Correo o contraseña incorrectos.', { retry_after: 30 } as never))
+    renderApp(<App />, '/login')
+
+    await userEvent.type(await screen.findByLabelText('Correo'), 'a@b.pe')
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'mala')
+    await userEvent.click(screen.getByRole('button', { name: 'Ingresar' }))
+
+    expect(await screen.findByRole('button', { name: 'Espera 30 s' })).toBeDisabled()
+    expect(screen.getByText(/espera 30 s antes de volver a intentar/)).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('Correo o contraseña incorrectos.')
+  })
+
   it('marca los campos inválidos del registro (422) junto a cada campo', async () => {
     sendMock.mockRejectedValueOnce(new ApiError(422, 'VALIDATION_FAILED', 'Los datos enviados no son válidos.', {
       email: ['El correo ya está registrado.'],

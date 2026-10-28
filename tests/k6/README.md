@@ -3,7 +3,7 @@
 | Script | Para qué | Entrega |
 | --- | --- | --- |
 | `smoke.js` | 20 VU · 1 min antes y después de cada despliegue | todas |
-| `rate-limit.js` | Demuestra el 429 del login (5/min) | 25% / 80% |
+| `rate-limit.js` | Demuestra la espera del login (401 y luego 429 `LOGIN_LOCKED`) | 25% / 80% |
 | `reservas.js` `PROFILE=carga-25` | 50 → 100 VU, p95 < 500 ms, 0% errores | 25% |
 | `reservas.js` `PROFILE=carga-80 VUS=1000/3000/5000` | carga a 1000, 3000 y 5000 VU | 80% |
 | `reservas.js` `PROFILE=estres / pico / resistencia` | punto de quiebre, picos y 30 min | 100% |
