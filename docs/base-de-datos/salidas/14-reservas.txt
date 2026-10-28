@@ -1,0 +1,12 @@
++------+------------------------------------------+------+------------+------------+-----------+--------+
+| id   | huesped                                  | hab  | check_in   | check_out  | status    | total  |
++------+------------------------------------------+------+------------+------------+-----------+--------+
+|  798 | Juana María Paula Lozano Montaño Hijo    | 1007 | 2026-10-28 | 2026-10-29 | confirmed | 450.00 |
+| 1697 | Nahuel Eduardo Naranjo Baca              | 1016 | 2026-10-28 | 2026-10-29 | confirmed | 120.00 |
+| 2497 | Dn. Thiago Alarcón Figueroa Hijo         | 1024 | 2026-10-28 | 2026-10-29 | confirmed | 120.00 |
+| 1499 | Sophie Josefina Venegas Santillán Hijo   | 1014 | 2026-10-28 | 2026-10-30 | confirmed | 440.00 |
+| 4998 | Magdalena Gabriela Cabrera Cantú Hijo    | 1049 | 2026-10-28 | 2026-10-30 | confirmed | 360.00 |
+|  995 | Valentina Guadalupe Delgadillo Montañez  | 1009 | 2026-10-28 | 2026-10-31 | confirmed | 540.00 |
+| 1797 | Santiago Javier Serna Páez               | 1017 | 2026-10-28 | 2026-10-31 | confirmed | 540.00 |
+| 2697 | Dn. Francisco Alicea Palomo              | 1026 | 2026-10-28 | 2026-10-31 | confirmed | 660.00 |
++------+------------------------------------------+------+------------+------------+-----------+--------+

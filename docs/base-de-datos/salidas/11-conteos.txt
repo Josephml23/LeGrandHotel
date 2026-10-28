@@ -1,0 +1,11 @@
++-----------------+-------+
+| tabla           | filas |
++-----------------+-------+
+| clients         |  1000 |
+| reservations    |  5000 |
+| rooms           |    70 |
+| room_types      |     4 |
+| users           |    55 |
+| stays           |     1 |
+| inventory_items |     6 |
++-----------------+-------+

@@ -1,0 +1,2 @@
+NAME                   IMAGE       COMMAND                  SERVICE   CREATED        STATUS                   PORTS
+legrandhotel-mysql-1   mysql:8.4   "docker-entrypoint.s…"   mysql     11 hours ago   Up 6 seconds (healthy)   0.0.0.0:3306->3306/tcp, [::]:3306->3306/tcp

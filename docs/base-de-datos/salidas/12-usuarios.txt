@@ -1,0 +1,8 @@
++----+--------------------+-----------------------------+--------------+
+| id | name               | email                       | rol          |
++----+--------------------+-----------------------------+--------------+
+|  1 | Administrador Demo | admin@legrandhotel.test     | admin        |
+|  2 | Recepción Demo     | recepcion@legrandhotel.test | receptionist |
+|  3 | Almacén Demo       | almacen@legrandhotel.test   | storekeeper  |
+|  4 | Programador Demo   | dev@legrandhotel.test       | developer    |
++----+--------------------+-----------------------------+--------------+

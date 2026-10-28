@@ -1,0 +1,27 @@
++------------------------+
+| Tables_in_legrandhotel |
++------------------------+
+| audit_logs             |
+| cache                  |
+| cache_locks            |
+| clients                |
+| failed_jobs            |
+| inventory_items        |
+| inventory_movements    |
+| job_batches            |
+| jobs                   |
+| migrations             |
+| parking_assignments    |
+| parking_spots          |
+| password_reset_tokens  |
+| personal_access_tokens |
+| reservations           |
+| role_user              |
+| roles                  |
+| room_types             |
+| rooms                  |
+| sessions               |
+| staff                  |
+| stays                  |
+| users                  |
++------------------------+

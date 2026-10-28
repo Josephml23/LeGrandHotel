@@ -1,0 +1,2 @@
+ Container legrandhotel-mysql-1 Starting 
+ Container legrandhotel-mysql-1 Started 
