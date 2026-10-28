@@ -93,10 +93,14 @@ const k6 = (name) => JSON.parse(fs.readFileSync(path.join(K6, 'salidas', `${name
 const ms = (v) => `${Math.round(v).toLocaleString('es-PE')} ms`
 const pct = (v) => `${(v * 100).toFixed(2)} %`
 const smoke = k6('1-smoke')
+// Escalones de clientes del portal (tests/k6/portal.js).
 const ESC = [5, 10, 25, 50].map((v) => {
-  const m = k6(`3-escalon-${v}vu`)
+  const m = k6(`4-clientes-${v}vu`)
   const d = m.http_req_duration
-  return { vus: v, reqs: m.http_reqs.count, rps: m.http_reqs.rate, p50: d.med, p95: d['p(95)'], max: d.max, failed: m.http_req_failed.value }
+  return {
+    vus: v, reqs: m.http_reqs.count, rps: m.http_reqs.rate, p50: d.med, p95: d['p(95)'], max: d.max, failed: m.http_req_failed.value,
+    busqueda: m['http_req_duration{tipo:busqueda}']['p(95)'], reserva: m.reserva_cliente_ms['p(95)'], checks: m.checks.passes,
+  }
 })
 
 const incidentes = fs.readFileSync(path.join(ROOT, 'docs/incidentes.md'), 'utf8').split('\n')
@@ -436,46 +440,60 @@ const e5 = ESC[0]
 const e50 = ESC[3]
 const s7 = [
   h1('7. Pruebas de rendimiento y estrés con k6'),
-  p('k6 simula muchos «usuarios virtuales» (VU) usando la API a la vez y mide cuánto tarda cada respuesta. Cada guion tiene metas (thresholds): si no se cumplen, k6 marca la prueba con ✗ y termina con código 99. Las corridas se hicieron el 27 de octubre de 2026 en la laptop del equipo, con la API en el servidor integrado de PHP (php -S, que atiende una petición a la vez) y la base con 5000 reservas.'),
+  p('k6 simula muchos «usuarios virtuales» (VU) usando la API a la vez y mide cuánto tarda cada respuesta. Cada guion tiene metas (thresholds): si no se cumplen, k6 marca la prueba con ✗ y termina con código 99. Las pruebas de carga se hicieron con clientes, como si muchos huéspedes usaran el portal de reservas al mismo tiempo. Las corridas se hicieron en la laptop del equipo, con la API en el servidor integrado de PHP (php -S, que atiende una petición a la vez) y la base MySQL con 70 habitaciones y 5000 reservas de demostración.'),
   table(['Prueba', 'Qué hace', 'Para qué'], [
     ['1. Humo (smoke)', '5 VU durante 30 s piden /health y una ruta protegida sin token', 'Confirmar que la API, la base y la caché funcionan antes de cargar'],
     ['2. Límite de login', '6 intentos de login con contraseña incorrecta', 'Demostrar la protección contra fuerza bruta (429)'],
-    ['3 a 6. Escalones', 'El trabajo de recepción (70 % consultas, 20 % login, 10 % crear reserva) con 5, 10, 25 y 50 VU, 1 minuto cada uno', 'Ver desde cuándo la API se pone lenta y si aparecen errores al subir la carga'],
+    ['3 a 6. Escalones de clientes', 'Clientes del portal (60 % buscan habitaciones libres, 25 % ven sus reservas y 15 % reservan) con 5, 10, 25 y 50 VU, 1 minuto cada uno', 'Ver cuántos clientes a la vez aguanta el portal con buena velocidad y si aparecen errores'],
   ], [2.6, 5, 3.9]),
+  gap(),
+  p([b('Cómo se simulan los clientes. '), t('Los clientes solo entran con Google y k6 no puede iniciar sesión en Google. Por eso LoadTestClientsSeeder crea 50 clientes de prueba con su DNI y teléfono y les abre la sesión (un token por cliente), y el guion tests/k6/portal.js usa esas sesiones. Al terminar, php artisan k6:limpiar borra esos clientes y las reservas que hicieron.')]),
+  ...code('tests/k6/portal.js (lo que hace cada cliente en cada vuelta)', [
+    "if (dice < 0.6) {          // 60 %: busca habitaciones libres para unas fechas",
+    "  http.get(`${BASE_URL}/portal/room-types?from=${from}&to=${to}&guests=2`, auth(token))",
+    "} else if (dice < 0.85) {  // 25 %: revisa sus reservas",
+    "  http.get(`${BASE_URL}/portal/reservations`, auth(token))",
+    "} else {                   // 15 %: busca y reserva un tipo con habitaciones libres",
+    "  http.post(`${BASE_URL}/portal/reservations`, JSON.stringify({ room_type_id, check_in, check_out, guests: 1 }), {",
+    "    ...auth(token), responseCallback: http.expectedStatuses(201, 409) })  // 409 = otro cliente la tomó antes",
+    "}",
+    "sleep(1 + Math.random() * 2)   // pausa de 1 a 3 s, como una persona",
+  ]),
   h2('7.1 Prueba de humo'),
   ...img(path.join(K6, 'capturas/t1-smoke.png'), 'Comando de la prueba de humo y la respuesta de k6.', 15),
   p(`Interpretación: las tres metas salen con ✓. El 95 % de las respuestas tardó menos de ${ms(smoke.http_req_duration['p(95)'])} (meta: 800 ms), no hubo peticiones fallidas (${pct(smoke.http_req_failed.value)}) y los ${smoke.checks.passes} checks pasaron: la API, la base de datos y la caché responden, y una ruta protegida sin token devuelve 401 en JSON.`),
   h2('7.2 Límite de intentos de login'),
   ...img(path.join(K6, 'capturas/t2-rate-limit.png'), 'Prueba del límite de login: el sexto intento recibe 429.', 15),
   p('Interpretación: «Estados recibidos: 401, 401, 401, 401, 401, 429». Los cinco primeros intentos responden 401 (contraseña incorrecta) y el sexto 429 con la cabecera Retry-After y el código TOO_MANY_REQUESTS. Nadie puede probar contraseñas sin límite.'),
-  h2('7.3 Escalones de carga (5, 10, 25 y 50 usuarios)'),
-  ...img(path.join(K6, 'capturas/t3-escalon-5vu.png'), 'Escalón de 5 usuarios: comando y respuesta.', 15),
-  p(`Interpretación: con 5 usuarios todas las peticiones responden bien (0 % de errores y todos los checks ✓), pero la meta de velocidad sale con ✗: el p95 fue ${ms(e5.p95)} y la meta es 500 ms. La línea final «thresholds … have been crossed» es k6 avisando que la prueba no se aprobó.`),
-  ...img(path.join(K6, 'capturas/t3-escalon-50vu.png'), 'Escalón de 50 usuarios: comando y respuesta.', 15),
-  p(`Interpretación: con 50 usuarios sigue sin haber errores (${pct(e50.failed)}), pero el p95 sube a ${ms(e50.p95)}. La API no se cae: responde todo, solo que las peticiones esperan su turno.`),
-  table(['Usuarios', 'Peticiones', 'Pet./s', 'Mediana', 'p95', 'Máximo', 'Errores', 'Meta p95 < 500 ms'],
-    ESC.map((e) => [e.vus, e.reqs, e.rps.toFixed(1), ms(e.p50), ms(e.p95), ms(e.max), pct(e.failed), e.p95 < 500 ? '✓' : '✗']),
-    [1.2, 1.4, 1.1, 1.6, 1.5, 1.5, 1.3, 1.8]),
+  h2('7.3 Escalones de clientes (5, 10, 25 y 50 a la vez)'),
+  ...img(path.join(K6, 'capturas/t4-clientes-5vu.png'), 'Escalón de 5 clientes: comando y respuesta.', 15),
+  p(`Interpretación: con 5 clientes a la vez la prueba se aprueba completa: todas las metas salen con ✓. El 95 % de las respuestas tardó menos de ${ms(e5.p95)} (meta: 500 ms), las búsquedas ${ms(e5.busqueda)} (meta: 800 ms), no hubo errores y pasaron los ${e5.checks} checks: buscar, ver sus reservas y reservar (201, o 409 si otro cliente tomó la última habitación). Crear una reserva tardó ${ms(e5.reserva)} en el p95.`),
+  ...img(path.join(K6, 'capturas/t4-clientes-50vu.png'), 'Escalón de 50 clientes: comando y respuesta.', 15),
+  p(`Interpretación: con 50 clientes a la vez siguen pasando todos los checks y no hay errores (${pct(e50.failed)}), pero las metas de velocidad salen con ✗: el p95 sube a ${ms(e50.p95)} y crear una reserva a ${ms(e50.reserva)}. La línea final «thresholds … have been crossed» es k6 avisando que la prueba no se aprobó por lentitud, no por fallas.`),
+  table(['Clientes', 'Peticiones', 'Pet./s', 'Mediana', 'p95', 'Reservar (p95)', 'Errores', 'Meta p95 < 500 ms'],
+    ESC.map((e) => [e.vus, e.reqs, e.rps.toFixed(1), ms(e.p50), ms(e.p95), ms(e.reserva), pct(e.failed), e.p95 < 500 ? '✓' : '✗']),
+    [1.2, 1.4, 1.1, 1.5, 1.4, 1.6, 1.2, 1.8]),
   gap(),
-  ...img(path.join(K6, 'graficos/01-latencia.png'), 'Tiempo de respuesta (mediana y p95) según la cantidad de usuarios.', 14.5),
-  p(`Interpretación del gráfico: el eje horizontal son los usuarios a la vez y el vertical el tiempo de respuesta. La línea punteada es la meta de 500 ms. Las dos curvas suben casi en línea recta: al pasar de 5 a 50 usuarios el p95 crece de ${ms(e5.p95)} a ${ms(e50.p95)}. Que crezca en proporción a los usuarios es la señal de una cola: cada usuario nuevo espera a los anteriores.`),
-  ...img(path.join(K6, 'graficos/02-peticiones-por-segundo.png'), 'Peticiones atendidas por segundo en cada escalón.', 14.5),
-  p(`Interpretación del gráfico: las barras casi no cambian (de ${ESC[0].rps.toFixed(1)} a ${e50.rps.toFixed(1)} peticiones por segundo). Aunque haya diez veces más usuarios, la API atiende lo mismo por segundo: llegó a su techo. Junto con el gráfico anterior confirma el cuello de botella.`),
-  h2('7.4 Reporte HTML de k6 (escalón de 50 usuarios)'),
-  p('k6 genera además un reporte con gráficos del minuto que duró la prueba (salidas/3-escalon-50vu.html). Sus tres gráficos se muestran por separado. El eje horizontal es la hora (de 20:50:20 a 20:51:40) y cada punto resume 10 segundos.'),
-  ...img(path.join(K6, 'capturas/d1a-http-performance.png'), 'HTTP Performance overview: peticiones por segundo, p95 y peticiones fallidas.', 16),
-  p([b('Qué muestra: '), t('tres medidas a la vez, cada una con su propio eje. La línea verde es la cantidad de peticiones por segundo (eje de 2/s a 6/s); la azul, el p95 del tiempo de respuesta (eje derecho, de 0 a 10 s); la morada, el porcentaje de peticiones fallidas (eje izquierdo).')]),
-  p([b('Interpretación: '), t(`hasta las 20:50:30 casi no hay carga y el p95 es bajo. Desde las 20:50:35, cuando entran los usuarios, el p95 sube de golpe hasta unos 9,7 s a las 20:51:00 y se queda entre 8 y 9 s el resto de la prueba (p95 total: ${ms(e50.p95)}). Las peticiones por segundo suben solo hasta unas 5,5/s y se aplanan: la API ya no atiende más aunque haya más usuarios esperando. La línea morada está pegada en 0 % todo el tiempo: ninguna de las ${e50.reqs} peticiones falló. Conclusión: la API se pone lenta, pero no se cae.`)]),
-  ...img(path.join(K6, 'capturas/d1b-vus.png'), 'VUs: usuarios virtuales activos y peticiones por segundo.', 13),
-  p([b('Qué muestra: '), t('la línea verde son los usuarios virtuales activos (eje izquierdo, de 0 a 50); la azul, las peticiones por segundo (eje derecho).')]),
-  p([b('Interpretación: '), t('se ven las tres etapas del escalón: la subida de 0 a 50 usuarios entre las 20:50:38 y las 20:51:00, la meseta con 50 usuarios hasta las 20:51:30 y el inicio de la bajada al final. Antes de la subida ya hay peticiones con 0 usuarios: es la preparación (setup), que inicia sesión con los 50 recepcionistas de prueba. Lo importante es que la línea azul llega a su techo (unas 5,5/s) cuando todavía hay unos 40 usuarios y no sube más al llegar a 50: los usuarios extra solo agregan espera. Es la misma señal de cuello de botella del gráfico anterior.')]),
-  ...img(path.join(K6, 'capturas/d1c-transfer-rate.png'), 'Transfer Rate: datos recibidos y enviados por segundo.', 13),
+  ...img(path.join(K6, 'graficos-clientes/01-latencia.png'), 'Tiempo de respuesta (mediana y p95) según la cantidad de clientes.', 14.5),
+  p(`Interpretación del gráfico: el eje horizontal son los clientes a la vez y el vertical el tiempo de respuesta; la línea punteada es la meta de 500 ms. Con 5 clientes el p95 (${ms(e5.p95)}) queda justo debajo de la meta. Desde 10 clientes las dos curvas suben casi en línea recta hasta ${ms(e50.p95)} con 50. Que crezca en proporción a los clientes es la señal de una cola: cada cliente nuevo espera a los anteriores.`),
+  ...img(path.join(K6, 'graficos-clientes/02-peticiones-por-segundo.png'), 'Peticiones atendidas por segundo en cada escalón de clientes.', 14.5),
+  p(`Interpretación del gráfico: de 5 a 25 clientes las peticiones por segundo suben (de ${ESC[0].rps.toFixed(1)} a ${ESC[2].rps.toFixed(1)}), porque todavía hay capacidad libre. De 25 a 50 casi no cambian (${ESC[2].rps.toFixed(1)} → ${e50.rps.toFixed(1)}): la API llegó a su techo de unas 4,6 peticiones por segundo y los clientes extra solo esperan más. Junto con el gráfico anterior confirma el cuello de botella.`),
+  h2('7.4 Reporte HTML de k6 (escalón de 50 clientes)'),
+  p('k6 genera además un reporte con gráficos de la prueba (salidas/4-clientes-50vu.html). Sus tres gráficos se muestran por separado. El eje horizontal es la hora (de 07:51:03 a 07:51:53) y cada punto resume 10 segundos.'),
+  ...img(path.join(K6, 'capturas/d2a-clientes-http-performance.png'), 'HTTP Performance overview: peticiones por segundo, p95 y peticiones fallidas (50 clientes).', 16),
+  p([b('Qué muestra: '), t('tres medidas a la vez, cada una con su propio eje. La línea verde es la cantidad de peticiones por segundo (eje de 4/s a 5/s); la azul, el p95 del tiempo de respuesta (eje derecho, en segundos); la morada, el porcentaje de peticiones fallidas (eje izquierdo).')]),
+  p([b('Interpretación: '), t(`las peticiones por segundo se mueven en una franja angosta, entre unas 4,1/s y 4,9/s, sin poder subir más: es el techo de la API. Mientras tanto el p95 crece de unos 4 s al inicio a unos 8 s a las 07:51:23, cuando ya están los 50 clientes, y llega a unos 11 s a las 07:51:43. La línea morada está pegada en 0 % todo el tiempo: ninguna de las ${e50.reqs} peticiones falló. Conclusión: con 50 clientes el portal se pone lento, pero no se cae ni pierde reservas.`)]),
+  ...img(path.join(K6, 'capturas/d2b-clientes-vus.png'), 'VUs: clientes activos y peticiones por segundo.', 13),
+  p([b('Qué muestra: '), t('la línea verde son los clientes activos (eje izquierdo); la azul, las peticiones por segundo (eje derecho). El eje de clientes empieza en 42 para que se vea el detalle.')]),
+  p([b('Interpretación: '), t('los clientes pasan de 43 a 50 entre las 07:51:13 y las 07:51:23 y se quedan en 50 hasta el final. Al llegar a 50 las peticiones por segundo no suben: bajan de 4,9/s a 4,1/s a las 07:51:33 y luego se recuperan hasta 4,6/s. Más clientes no significa más trabajo atendido: la API ya estaba en su techo y la cola crece. A diferencia del escenario del personal, aquí no hay inicios de sesión al comienzo, porque los clientes de prueba ya tienen su sesión abierta.')]),
+  ...img(path.join(K6, 'capturas/d2c-clientes-transfer-rate.png'), 'Transfer Rate: datos recibidos y enviados por segundo (50 clientes).', 13),
   p([b('Qué muestra: '), t('cuántos datos recibió k6 de la API (data_received, verde) y cuántos le envió (data_sent, azul), en kilobytes por segundo.')]),
-  p([b('Interpretación: '), t('lo recibido varía entre 11 y 38 kB/s y tiene un pico a las 20:51:10. Varía porque depende de qué pidió cada usuario: una lista de reservas o de habitaciones libres pesa más que un login. Lo enviado se queda cerca de 1 a 2 kB/s porque las peticiones son pequeñas (un token y unos pocos datos). En total fueron 1,8 MB recibidos y 108 kB enviados en todo el minuto: la red está muy lejos de ser el límite, así que la lentitud viene de la API que procesa una petición a la vez, no de la cantidad de datos.')]),
+  p([b('Interpretación: '), t('lo recibido va de 5 a 9,3 kB/s, con un pico a las 07:51:23; lo enviado se mantiene entre 1 y 1,5 kB/s. Son cifras pequeñas porque las respuestas del portal son livianas (los tipos de habitación y las reservas de un solo cliente). En total fueron 483 kB recibidos y 83 kB enviados: la red no es el límite, la lentitud viene de la API que procesa una petición a la vez.')]),
   h2('7.5 Conclusión de las pruebas'),
-  bullet('Correcta y estable: en las 6 corridas no hubo ni una petición fallida ni errores 500.'),
+  bullet(`Hasta 5 clientes a la vez el portal cumple todas las metas (p95 de ${ms(e5.p95)}).`),
+  bullet('Correcta y estable: en todas las corridas no hubo ni una petición fallida ni errores 500, y las reservas simultáneas sobre la misma habitación se resolvieron con 409, sin reservas dobles.'),
   bullet('Segura bajo carga: 401 sin sesión y 429 al pasar el límite de login, siempre en el formato JSON de la API.'),
-  bullet('Lenta en la laptop por el servidor de desarrollo de PHP, que atiende una petición a la vez. La solución es correr la API con varios procesos PHP en paralelo y caché de código (OPcache) en el servidor definitivo, y repetir estas mismas pruebas allí, con más usuarios, cuando se defina el servidor.'),
+  bullet('Desde 10 clientes se pone lenta en la laptop por el servidor de desarrollo de PHP, que atiende una petición a la vez (techo de unas 4,6 peticiones por segundo). La solución es correr la API con varios procesos PHP en paralelo y caché de código (OPcache) en el servidor definitivo, y repetir estas mismas pruebas allí, con más clientes, cuando se defina el servidor.'),
 ]
 
 // ── 8/9. App móvil ───────────────────────────────────────
@@ -532,7 +550,7 @@ const s10 = [
   p([b('2. El acceso está separado y protegido. '), t('El personal entra con correo y contraseña y lo registran el Administrador o el Programador; los clientes entran solo con Google. Cada rol ve solo su menú, la API responde 403 aunque alguien escriba la dirección a mano y existe un solo Programador.')]),
   p([b('3. Las reglas del negocio las cuida el servidor. '), t('La API impide la doble reserva, dos huéspedes en la misma habitación, el stock negativo y la cochera ocupada (409), calcula los totales y deja cada cambio en la auditoría.')]),
   p([b('4. Las fallas se registran y se corrigen con evidencia. '), t('El registro de incidentes y el código de incidente que ve el usuario permitieron encontrar la causa de cada falla en el registro de la API y corregirla el mismo día, con una prueba automática nueva cuando correspondía.')]),
-  p([b('5. La API es estable bajo carga y el siguiente paso está claro. '), t('En las pruebas k6 no hubo ni un error con hasta 50 usuarios a la vez; la velocidad en la laptop la limita el servidor de desarrollo y se medirá de nuevo cuando se defina el servidor. La app Android e iOS reutilizará esta misma API.')]),
+  p([b('5. La API es estable bajo carga y el siguiente paso está claro. '), t('En las pruebas k6 con clientes del portal no hubo ni un error con hasta 50 clientes a la vez y con 5 se cumplen todas las metas; la velocidad en la laptop la limita el servidor de desarrollo y se medirá de nuevo cuando se defina el servidor. La app Android e iOS reutilizará esta misma API.')]),
 ]
 
 // ── documento ────────────────────────────────────────────

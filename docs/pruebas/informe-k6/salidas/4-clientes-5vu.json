@@ -1,0 +1,210 @@
+{
+    "metrics": {
+        "http_req_waiting": {
+            "min": 140.8242,
+            "med": 211.9667,
+            "p(90)": 414.21928,
+            "p(95)": 476.48272499999956,
+            "p(99)": 816.6221459999996,
+            "max": 963.4518,
+            "avg": 267.7086590909091
+        },
+        "http_req_duration{tipo:busqueda}": {
+            "max": 869.6393,
+            "avg": 269.6916406976745,
+            "min": 166.1153,
+            "med": 215.4399,
+            "p(90)": 400.5762,
+            "p(95)": 490.06077500000004,
+            "p(99)": 728.685755000001,
+            "thresholds": {
+                "p(95)<800": false
+            }
+        },
+        "checks": {
+            "passes": 115,
+            "fails": 0,
+            "value": 1
+        },
+        "http_req_tls_handshaking": {
+            "p(99)": 0,
+            "max": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_sending": {
+            "p(95)": 0.545905,
+            "p(99)": 0.7344479999999995,
+            "max": 1.0449,
+            "avg": 0.0857348484848485,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0.51061
+        },
+        "data_received": {
+            "count": 185441,
+            "rate": 3044.31032828192
+        },
+        "vus": {
+            "value": 2,
+            "min": 1,
+            "max": 5
+        },
+        "group_duration": {
+            "p(99)": 894.974216,
+            "max": 1258.2493,
+            "avg": 307.7806026086955,
+            "min": 164.4699,
+            "med": 217.7118,
+            "p(90)": 545.1078400000001,
+            "p(95)": 708.52764
+        },
+        "reserva_cliente_ms": {
+            "p(95)": 776.7720999999998,
+            "p(99)": 927.5039399999998,
+            "max": 965.1869,
+            "avg": 345.9245933333334,
+            "min": 183.2718,
+            "med": 241.6975,
+            "p(90)": 586.3013799999999
+        },
+        "http_req_blocked": {
+            "p(90)": 1.62623,
+            "p(95)": 1.8413099999999991,
+            "p(99)": 2.3436,
+            "max": 4.5362,
+            "avg": 0.7747590909090907,
+            "min": 0,
+            "med": 0.5539
+        },
+        "http_req_duration": {
+            "avg": 269.945078030303,
+            "min": 142.6679,
+            "med": 214.52589999999998,
+            "p(90)": 418.33272000000005,
+            "p(95)": 479.55390499999965,
+            "p(99)": 818.2327129999996,
+            "max": 965.1869,
+            "thresholds": {
+                "p(95)<500": false
+            }
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(95)": 479.55390499999965,
+            "p(99)": 818.2327129999996,
+            "max": 965.1869,
+            "avg": 269.945078030303,
+            "min": 142.6679,
+            "med": 214.52589999999998,
+            "p(90)": 418.33272000000005
+        },
+        "http_req_connecting": {
+            "avg": 0.7175265151515149,
+            "min": 0,
+            "med": 0.5468999999999999,
+            "p(90)": 1.19551,
+            "p(95)": 1.7807199999999992,
+            "p(99)": 2.2973789999999994,
+            "max": 4.5362
+        },
+        "data_sent": {
+            "count": 34209,
+            "rate": 561.5953970276056
+        },
+        "iterations": {
+            "count": 115,
+            "rate": 1.8879087567065578
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 132,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_reqs": {
+            "rate": 2.16699092074144,
+            "count": 132
+        },
+        "http_req_receiving": {
+            "max": 4.3448,
+            "avg": 2.1506840909090914,
+            "min": 0.7402,
+            "med": 2.09185,
+            "p(90)": 2.87627,
+            "p(95)": 3.1132849999999976,
+            "p(99)": 3.7746049999999998
+        },
+        "vus_max": {
+            "value": 5,
+            "min": 5,
+            "max": 5
+        },
+        "iteration_duration": {
+            "p(95)": 3153.58322,
+            "p(99)": 3549.936724,
+            "max": 3659.7937,
+            "avg": 2332.478462608695,
+            "min": 1204.0123,
+            "med": 2341.5117,
+            "p(90)": 3044.56878
+        }
+    },
+    "root_group": {
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "mis reservas": {
+                "path": "::mis reservas",
+                "id": "8d70cca5205e1b5edb62999559afeaf2",
+                "groups": {},
+                "checks": {
+                        "mis reservas: 2xx": {
+                            "name": "mis reservas: 2xx",
+                            "path": "::mis reservas::mis reservas: 2xx",
+                            "id": "8bee664e7cdba6b2ec1288d80a804915",
+                            "passes": 29,
+                            "fails": 0
+                        }
+                    },
+                "name": "mis reservas"
+            },
+            "buscar habitaciones": {
+                "checks": {
+                    "buscar: 2xx": {
+                        "name": "buscar: 2xx",
+                        "path": "::buscar habitaciones::buscar: 2xx",
+                        "id": "6983f42f7d03604ab071209ef547bc74",
+                        "passes": 71,
+                        "fails": 0
+                    }
+                },
+                "name": "buscar habitaciones",
+                "path": "::buscar habitaciones",
+                "id": "317d6ffab3a1b06ae908b7f1fad499b9",
+                "groups": {}
+            },
+            "reservar": {
+                "name": "reservar",
+                "path": "::reservar",
+                "id": "ac96ada00c7b9adc55b0805a4eff4cda",
+                "groups": {},
+                "checks": {
+                        "reservar: 201 o 409": {
+                            "name": "reservar: 201 o 409",
+                            "path": "::reservar::reservar: 201 o 409",
+                            "id": "65537d956147c5ec6f9f3ce0c1ca9d13",
+                            "passes": 15,
+                            "fails": 0
+                        }
+                    }
+            }
+        },
+        "checks": {},
+        "name": ""
+    }
+}
