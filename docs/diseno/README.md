@@ -4,7 +4,7 @@ Todas las pantallas de la web con el estilo "framed-sheet" (tokens en `web/src/s
 Hay dos tipos de cuenta y cada una ve solo lo suyo:
 
 - **Personal del hotel** (Administrador, Recepcionista, Almacenero, Programador): entra con correo y contraseña.
-  Sus cuentas las crean el Administrador y el Programador (el Programador no puede crear Programadores).
+  Sus cuentas las crean el Administrador y el Programador (ninguno crea Programadores: el hotel tiene uno solo).
 - **Cliente**: entra solo con Google. La primera vez completa su DNI y teléfono; después reserva por tipo de habitación,
   ve lo que incluye cada tipo, cuántas quedan libres y el total, y puede cancelar sus reservas antes del día de llegada.
 

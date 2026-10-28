@@ -43,12 +43,13 @@ export function StaffPage() {
 
 function StaffForm({ value, onClose }: { value: Staff | 'new' | null; onClose: () => void }) {
   const current = value && value !== 'new' ? value : null
-  const blank = { name: '', email: '', password: '', role: 'receptionist', position: 'Recepcionista', shift: 'morning', hired_at: new Date().toISOString().slice(0, 10) }
+  const isDeveloper = !!current?.user.roles.some((r) => r.name === 'developer')
+  const blank ={ name: '', email: '', password: '', role: 'receptionist', position: 'Recepcionista', shift: 'morning', hired_at: new Date().toISOString().slice(0, 10) }
   const [form, setForm] = useState(() => (current ? {
     name: current.user.name,
     email: current.user.email,
     password: '',
-    role: current.user.roles[0]?.name ?? 'receptionist',
+    role: current.user.roles.some((r) => r.name === 'developer') ? 'developer' : current.user.roles[0]?.name ?? 'receptionist',
     position: current.position,
     shift: current.shift,
     hired_at: current.hired_at.slice(0, 10),
@@ -76,8 +77,14 @@ function StaffForm({ value, onClose }: { value: Staff | 'new' | null; onClose: (
         <Field label="Correo" type="email" required value={form.email} onChange={set('email')} error={err('email')} />
         <Field label={current ? 'Nueva contraseña (opcional)' : 'Contraseña'} type="password" autoComplete="new-password" value={form.password} onChange={set('password')}
           error={err('password')} hint="Mínimo 8 caracteres, con letras y números." />
-        <SelectField label="Rol" value={form.role} onChange={set('role')} error={err('role')}
-          options={[{ value: 'receptionist', label: 'Recepcionista' }, { value: 'storekeeper', label: 'Almacenero' }, { value: 'developer', label: 'Programador' }, { value: 'admin', label: 'Administrador' }]} />
+        {isDeveloper ? (
+          // El Programador es único: su ficha se edita, pero su rol no cambia.
+          <SelectField label="Rol" value="developer" onChange={set('role')} disabled options={[{ value: 'developer', label: 'Programador' }]}
+            hint="El rol de Programador no se cambia." />
+        ) : (
+          <SelectField label="Rol" value={form.role} onChange={set('role')} error={err('role')}
+            options={[{ value: 'receptionist', label: 'Recepcionista' }, { value: 'storekeeper', label: 'Almacenero' }, { value: 'admin', label: 'Administrador' }]} />
+        )}
         <Field label="Cargo" required value={form.position} onChange={set('position')} error={err('position')} />
         <SelectField label="Turno" value={form.shift} onChange={set('shift')} options={Object.entries(SHIFT_LABEL).map(([value, label]) => ({ value, label }))} />
         <Field label="Fecha de ingreso" type="date" required value={form.hired_at} onChange={set('hired_at')} error={err('hired_at')} />

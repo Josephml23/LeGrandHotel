@@ -73,6 +73,8 @@ class UserController extends Controller
             throw ApiException::conflict('CANNOT_REMOVE_OWN_ADMIN', 'No puedes quitarte tu propio rol de administrador.');
         }
 
+        Role::guardDeveloper($user, $roles);
+
         $user->roles()->sync(Role::whereIn('name', $roles)->pluck('id'));
         $user->tokens()->delete();
 
@@ -83,6 +85,9 @@ class UserController extends Controller
     {
         if ($user->is($request->user())) {
             throw ApiException::conflict('CANNOT_DELETE_SELF', 'No puedes eliminar tu propia cuenta.');
+        }
+        if ($user->hasRole(Role::DEVELOPER)) {
+            throw ApiException::conflict('DEVELOPER_LOCKED', 'La cuenta del Programador no se puede eliminar: es la única cuenta de soporte técnico.');
         }
 
         $user->tokens()->delete();

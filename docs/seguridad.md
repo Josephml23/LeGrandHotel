@@ -7,7 +7,7 @@ Cada requisito de seguridad tiene una implementación concreta y una prueba que 
 | Cifrado de contraseñas | bcrypt (12 rondas) con el cast `hashed` del modelo `User` | `AuthTest` verifica `$2y$…`; captura de la tabla `users` |
 | Variables de entorno | `.env` en `.gitignore`; `.env.example` sin secretos; en AWS, SSM Parameter Store | el repositorio no contiene claves |
 | Rate limits | `AppServiceProvider`: login 5/min por IP+correo, registro 3/min por IP, API 60/min por usuario | `AuthTest`, `ApiBehaviourTest`, `tests/k6/rate-limit.js` (429 + `Retry-After`) |
-| Registro y login diferenciados | Rutas, FormRequests y pantallas separadas. El registro es **interno**: solo el Administrador crea cuentas del personal (`POST /auth/register` con `role:admin`) | `AuthTest`, `forms.test.tsx` |
+| Registro y login diferenciados | Rutas, FormRequests y pantallas separadas. El registro es **interno**: el Administrador y el Programador crean cuentas del personal (`POST /auth/register` con `role:admin,developer`); el Programador es único (`DEVELOPER_UNIQUE`, `DEVELOPER_LOCKED`) | `AuthTest`, `forms.test.tsx` |
 | Solo personal del hotel | Sin registro público; el login rechaza cuentas sin rol interno (403 `ACCOUNT_WITHOUT_ACCESS`); Google solo entra con cuentas ya registradas | `AuthTest` |
 | Autenticación | Sanctum, tokens Bearer | sin token → 401 |
 | Autorización y múltiples usuarios | Roles (Administrador, Recepcionista, Almacenero, Programador) + middleware `role:` + `ReservationPolicy` | `AuthorizationTest`: recepcionista → `/staff` = 403 |

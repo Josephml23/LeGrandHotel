@@ -84,11 +84,12 @@ describe('registro de personal', () => {
     expect(options).toEqual(['Recepcionista', 'Almacenero', 'Administrador'])
   })
 
-  it('el administrador también puede crear Programadores', async () => {
+  it('el administrador tampoco crea Programadores: solo existe uno', async () => {
     loginAs(['admin'])
     renderApp(<App />, '/registro')
 
     const role = await screen.findByLabelText('Rol')
-    expect(within(role).getByRole('option', { name: 'Programador' })).toBeInTheDocument()
+    const options = within(role).getAllByRole('option').map((o) => o.textContent)
+    expect(options).toEqual(['Recepcionista', 'Almacenero', 'Administrador'])
   })
 })

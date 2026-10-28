@@ -96,10 +96,12 @@ function UserForm({ value, onClose }: { value: UserRow | 'new' | null; onClose: 
           <div className="actions">
             {STAFF_ROLES.map((r) => (
               <label key={r} className="btn btn-sm" style={{ background: form.roles.includes(r) ? 'var(--active)' : undefined }}>
-                <input type="checkbox" checked={form.roles.includes(r)} onChange={() => toggle(r)} /> {ROLE_LABELS[r]}
+                {/* El Programador es único: no se da ni se quita desde aquí. */}
+                <input type="checkbox" checked={form.roles.includes(r)} disabled={r === 'developer'} onChange={() => toggle(r)} /> {ROLE_LABELS[r]}
               </label>
             ))}
           </div>
+          <span className="muted small">El rol de Programador no se asigna ni se quita: el hotel tiene un solo Programador.</span>
           {fieldError(save.error, 'roles') && <span className="error">{fieldError(save.error, 'roles')}</span>}
         </fieldset>}
       </form>

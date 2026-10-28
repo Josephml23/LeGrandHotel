@@ -65,6 +65,10 @@ class StaffController extends Controller
     {
         $data = $request->validated();
 
+        if (isset($data['role'])) {
+            Role::guardDeveloper($staff->user, [$data['role']]);
+        }
+
         DB::transaction(function () use ($data, $staff) {
             $staff->update(array_intersect_key($data, array_flip(['position', 'shift', 'hired_at'])));
             $staff->user->update(array_intersect_key($data, array_flip(['name', 'email', 'password'])));
@@ -83,6 +87,9 @@ class StaffController extends Controller
     {
         if ($staff->user_id === $request->user()->id) {
             throw ApiException::conflict('CANNOT_DELETE_SELF', 'No puedes eliminar tu propia ficha de personal.');
+        }
+        if ($staff->user->hasRole(Role::DEVELOPER)) {
+            throw ApiException::conflict('DEVELOPER_LOCKED', 'La cuenta del Programador no se puede eliminar: es la única cuenta de soporte técnico.');
         }
 
         // Al eliminar la cuenta se elimina la ficha (cascade) y se revocan sus tokens.

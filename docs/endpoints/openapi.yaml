@@ -40,7 +40,7 @@ paths:
   /auth/register:
     post:
       tags: [Auth]
-      summary: Registro de una cuenta del personal. Administrador o Programador (este no puede crear Programadores). Rate limit 3/min.
+      summary: Registro de una cuenta del personal. Administrador o Programador; ninguno crea Programadores (hay uno solo). Rate limit 3/min.
       requestBody:
         required: true
         content:

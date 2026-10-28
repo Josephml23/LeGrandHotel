@@ -9,7 +9,7 @@ use Illuminate\Validation\Rules\Password;
 
 /**
  * Registro de una cuenta del personal. Lo usan el Administrador y el Programador (ver routes/api.php);
- * el Programador no puede crear cuentas de Programador. Los clientes no se registran aquí: entran con Google.
+ * ninguno crea Programadores (solo existe uno). Los clientes no se registran aquí: entran con Google.
  */
 class RegisterRequest extends FormRequest
 {
@@ -19,7 +19,7 @@ class RegisterRequest extends FormRequest
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
-            'role' => ['required', Rule::in(Role::creatableBy($this->user()))],
+            'role' => ['required', Rule::in(Role::ASSIGNABLE)],
         ];
     }
 

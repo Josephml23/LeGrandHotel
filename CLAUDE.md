@@ -3,7 +3,7 @@
 Monorepo: `api/` (Laravel 12, Pest), `web/` (React 18 + TS + Vite), `infra/` (Terraform, Docker), `tests/k6/`, `docs/`.
 El plan técnico y el estado de cada requisito están en `docs/entregas.md`. Escribe la UI y la documentación en español.
 Dos tipos de cuenta: el **personal** (admin, receptionist, storekeeper, developer) entra con correo y contraseña y lo
-registran el Administrador o el Programador (`/auth/register`; solo el Administrador crea Programadores); los **clientes**
+registran el Administrador o el Programador (`/auth/register`; hay un solo Programador: nadie crea otro ni le quita el rol); los **clientes**
 (`client`) entran solo con Google, completan DNI y teléfono (`clients.user_id`) y reservan desde `/api/v1/portal/*`.
 
 ## Reglas del proyecto

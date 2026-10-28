@@ -222,10 +222,13 @@ describe('registro de personal por Administrador y Programador', function () {
             ->assertJsonValidationErrors(['role'], 'error.details');
     });
 
-    it('el Administrador sí puede crear un Programador, pero nadie crea clientes', function () use ($payload) {
+    it('el Administrador tampoco crea Programadores ni clientes', function () use ($payload) {
         actingAsRole(Role::ADMIN);
 
-        $this->postJson('/api/v1/auth/register', $payload(Role::DEVELOPER))->assertCreated();
+        $this->postJson('/api/v1/auth/register', $payload(Role::RECEPTIONIST))->assertCreated();
+        $this->postJson('/api/v1/auth/register', $payload(Role::DEVELOPER))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['role'], 'error.details');
         $this->postJson('/api/v1/auth/register', $payload(Role::CLIENT))->assertUnprocessable();
     });
 });

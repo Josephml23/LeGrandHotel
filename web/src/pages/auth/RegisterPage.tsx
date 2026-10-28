@@ -10,13 +10,14 @@ import { ROLE_LABELS, type AuthUser, type RoleName } from '../../types'
 const EMPTY = { name: '', email: '', password: '', password_confirmation: '', role: 'receptionist' as RoleName }
 
 /**
- * Registro de personal: el Administrador y el Programador crean cuentas de Recepción, Administración y Almacén;
- * solo el Administrador crea Programadores. Los clientes no se registran aquí: entran con Google.
+ * Registro de personal: el Administrador y el Programador crean cuentas de Recepción, Administración y Almacén.
+ * No se crean Programadores (solo existe uno) ni clientes (entran con Google).
  */
+const ROLES: RoleName[] = ['receptionist', 'storekeeper', 'admin']
+
 export function RegisterPage() {
   const { hasRole } = useAuth()
   const isAdmin = hasRole('admin')
-  const roles: RoleName[] = isAdmin ? ['receptionist', 'storekeeper', 'admin', 'developer'] : ['receptionist', 'storekeeper', 'admin']
   const toast = useToast()
   const [form, setForm] = useState(EMPTY)
   const set = (key: keyof typeof EMPTY) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value })
@@ -49,8 +50,8 @@ export function RegisterPage() {
         <Field label="Repite la contraseña" type="password" autoComplete="new-password" required value={form.password_confirmation}
           onChange={set('password_confirmation')} />
         <SelectField className="full" label="Rol" value={form.role} onChange={set('role')} error={err('role')}
-          options={roles.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
-          hint={isAdmin ? undefined : 'Las cuentas de Programador solo las crea el Administrador.'} />
+          options={ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
+          hint="El hotel tiene un solo Programador: no se crean cuentas nuevas con ese rol." />
         <div className="full">
           <button className="btn btn-primary" type="submit" disabled={register.isPending}>
             {register.isPending ? 'Registrando…' : 'Registrar cuenta'}

@@ -15,7 +15,8 @@ class UserRequest extends ApiFormRequest
             'email' => [$this->required(), 'email', 'max:255', Rule::unique('users')->ignore($this->routeId('user'))],
             'password' => [$this->isMethod('POST') ? 'required' : 'sometimes', Password::min(8)->letters()->numbers()],
             'roles' => [$this->isMethod('POST') ? 'required' : 'prohibited', 'array', 'min:1'],
-            'roles.*' => [Rule::in(Role::INTERNAL)], // las cuentas de cliente solo se crean con Google
+            // Ni clientes (entran con Google) ni otro Programador (solo existe uno).
+            'roles.*' => [Rule::in(Role::ASSIGNABLE)],
         ];
     }
 }
