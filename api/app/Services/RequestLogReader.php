@@ -78,14 +78,17 @@ class RequestLogReader
             if (($entry['level'] ?? 0) < 400) {
                 continue;
             }
+            // Laravel a veces guarda la excepción como objeto {class, message, file}: se devuelve siempre como texto.
+            $exception = $entry['context']['exception'] ?? null;
+            $file = $entry['context']['file'] ?? (is_array($exception) ? ($exception['file'] ?? null) : null);
             $rows[] = [
                 'time' => $entry['datetime'] ?? null,
                 'level' => $entry['level_name'] ?? 'ERROR',
                 'message' => mb_strimwidth((string) ($entry['message'] ?? ''), 0, 300, '…'),
                 'incident_id' => $entry['context']['incident_id'] ?? null,
                 'request_id' => $entry['context']['request_id'] ?? null,
-                'exception' => $entry['context']['exception'] ?? null,
-                'file' => $entry['context']['file'] ?? null,
+                'exception' => is_array($exception) ? ($exception['class'] ?? null) : $exception,
+                'file' => is_string($file) ? $file : null,
             ];
         }
 

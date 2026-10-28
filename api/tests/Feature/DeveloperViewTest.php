@@ -15,6 +15,11 @@ beforeEach(function () {
         $line(['route' => 'api/v1/reservations', 'method' => 'POST', 'status' => 409, 'duration_ms' => 50]),
         $line(['route' => 'api/v1/reservations', 'method' => 'POST', 'status' => 500, 'duration_ms' => 400]),
         $line(['incident_id' => 'ABC123XYZ0', 'exception' => 'RuntimeException'], 'boom', 400),
+        // Laravel registra algunas excepciones como objeto (clase, mensaje, archivo), no como texto.
+        $line(['incident_id' => 'OBJ0000001', 'exception' => [
+            'class' => 'Illuminate\\Database\\QueryException', 'message' => 'Access denied', 'code' => 1045,
+            'file' => 'vendor/laravel/framework/src/Illuminate/Database/Connection.php:838',
+        ]], 'sql', 400),
     ])."\n");
     $this->app->instance(RequestLogReader::class, new RequestLogReader($this->log));
 });
@@ -75,6 +80,15 @@ it('encuentra un error por su código de incidente', function () {
         ->assertOk()
         ->assertJsonPath('meta.total', 1)
         ->assertJsonPath('data.0.exception', 'RuntimeException');
+});
+
+it('devuelve la excepción como texto aunque el log la guarde como objeto', function () {
+    actingAsRole(Role::DEVELOPER);
+
+    $this->getJson('/api/v1/dev/errors?incident=obj0000001')
+        ->assertOk()
+        ->assertJsonPath('data.0.exception', 'Illuminate\\Database\\QueryException')
+        ->assertJsonPath('data.0.file', 'vendor/laravel/framework/src/Illuminate/Database/Connection.php:838');
 });
 
 it('calcula percentiles por rango más cercano', function () {
