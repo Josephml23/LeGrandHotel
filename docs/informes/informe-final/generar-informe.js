@@ -14,7 +14,7 @@ const BASE = path.join(ROOT, 'docs/informes/informe-final')
 const CAPS = path.join(BASE, 'capturas')
 const K6 = path.join(ROOT, 'docs/pruebas/informe-k6')
 const LOGO = process.argv[2]
-const OUT = path.join(BASE, 'LeGrandHotel_Informe_del_proyecto.docx')
+const OUT = path.join(BASE, 'LeGrandHotel_Informe_del_proyecto_v2.docx')
 
 const FONT = 'Times New Roman'
 const CODE = 'Consolas'
@@ -172,13 +172,17 @@ const s1 = [
   gap(),
   p([b('Nota: '), t('el servidor donde se publicará el sistema todavía no está definido. Todo lo de este informe se ejecutó en el entorno local del equipo.')]),
   h2('1.4 Cómo se conectan las partes'),
-  p('La página web y la app móvil no guardan datos: le piden todo a la API en formato JSON con el token de la sesión. La API valida cada petición (FormRequest), revisa el rol (middleware role:) y las reglas por registro (policies), y responde siempre con el mismo formato, sea éxito o error. La base de datos MySQL tiene 16 tablas del sistema relacionadas por 13 claves foráneas; el diagrama de la página siguiente se generó leyendo el esquema real de la base.'),
+  p('La página web y la app móvil no guardan datos: le piden todo a la API en formato JSON con el token de la sesión. La API valida cada petición (FormRequest), revisa el rol (middleware role:) y las reglas por registro (policies), y responde siempre con el mismo formato, sea éxito o error. La base de datos MySQL tiene 16 tablas del sistema relacionadas por 13 claves foráneas; el diagrama de la sección 1.5 se generó leyendo el esquema real de la base.'),
 ]
 
+const DIAG = path.join(ROOT, 'docs/diagramas/bd')
 const sDiagrama = [
-  // PNG de alta resolución: Word dibuja mal el texto del SVG de matplotlib.
-  ...img(path.join(ROOT, 'docs/diagramas/bd/diagrama-bd.png'),
-    'Diagrama de la base de datos (MySQL), generado desde information_schema: tablas, columnas, claves y regla ON DELETE de cada relación. Versión ampliable en docs/diagramas/bd/diagrama-bd.pdf.', 24.5, 17),
+  pageBreak(),
+  h2('1.5 Diagrama de la base de datos'),
+  p('El diagrama se divide en tres partes para que se lea bien. Cuando una tabla se relaciona con otra de una parte distinta, esa tabla aparece en un recuadro punteado solo con su id. Cada línea muestra la columna de la clave foránea y qué hace MySQL al borrar el registro padre (CASCADE, SET NULL o RESTRICT).'),
+  ...img(path.join(DIAG, 'diagrama-bd-parte1.png'), 'Diagrama de la base de datos, parte 1: cuentas, permisos y auditoría.', 16, 21.5),
+  ...img(path.join(DIAG, 'diagrama-bd-parte2.png'), 'Diagrama de la base de datos, parte 2: huéspedes, reservas y habitaciones.', 16, 21.5),
+  ...img(path.join(DIAG, 'diagrama-bd-parte3.png'), 'Diagrama de la base de datos, parte 3: cochera e inventario.', 16, 21.5),
 ]
 
 // ── 2. Endpoints ─────────────────────────────────────────
@@ -287,17 +291,32 @@ const s3 = [
     '}',
   ]),
   h2('3.2 Pantallas de registro'),
-  ...screen('35-admin-registrar-personal', 'Registrar personal (Administrador).', 'Crea la cuenta de una persona del hotel con su contraseña inicial. Solo ofrece Recepcionista, Almacenero y Administrador; el aviso recuerda que el hotel tiene un solo Programador. La nueva cuenta recibe un correo para verificarse.'),
-  ...screen('50-cliente-completar-registro', 'Completar registro del cliente después de Google.', 'El nombre y el correo vienen de Google y no se editan. El huésped escribe su DNI y su teléfono una sola vez; si su DNI ya estaba registrado en recepción, se vincula esa ficha en vez de crear otra.'),
+  p('Las pantallas «Registrar personal» y «Completar registro» del cliente se muestran con su descripción en las secciones 4.3 y 4.5.'),
 ]
 
 // ── 4. Roles ─────────────────────────────────────────────
+const ROLES_DIR = path.join(BASE, 'capturas-roles')
 const Y = '✓'
 const N = '—'
+/** Título y descripción arriba; debajo la captura (vista sin menú o ventana emergente). */
+function vista(name, titulo, texto, widthCm = 15.5) {
+  return [
+    new Paragraph({ keepNext: true, spacing: { before: 200, after: 60 }, children: [b(titulo)] }),
+    p(texto, { keepNext: true }),
+    ...img(path.join(ROLES_DIR, `${name}.png`), titulo, widthCm, 19),
+  ]
+}
+const emergente = (name, titulo, texto) => vista(name, `Ventana emergente: ${titulo}`, texto, 11)
+const menuRol = (name, rol, texto, widthCm = 5.5) => [
+  new Paragraph({ keepNext: true, spacing: { before: 120, after: 60 }, children: [b(`Menú del ${rol}`)] }),
+  p(texto, { keepNext: true }),
+  ...img(path.join(ROLES_DIR, `${name}.png`), `Menú del ${rol}.`, widthCm, 15),
+]
+
 const s4 = [
   h1('4. Qué puede hacer cada rol'),
-  p('Cada rol ve en el menú solo sus pestañas. Las capturas de esta sección se tomaron el 27 de octubre de 2026 con la página funcionando sobre la base MySQL del proyecto, con los datos de demostración (70 habitaciones, 1000 huéspedes y 5000 reservas).'),
-  table(['Pestaña', 'Admin.', 'Recep.', 'Almacén', 'Program.', 'Cliente'], [
+  p('Cada rol ve en el menú solo sus opciones. Para cada rol se muestra primero su menú y después cada vista del menú por separado, sin la barra lateral, con la descripción de para qué sirve arriba de cada captura. Cuando una vista abre una ventana emergente (formulario), se muestra solo esa ventana. Las capturas se tomaron el 27 de octubre de 2026 con la página funcionando sobre la base MySQL del proyecto (70 habitaciones, 1000 huéspedes y 5000 reservas de demostración).'),
+  table(['Opción del menú', 'Admin.', 'Recep.', 'Almacén', 'Program.', 'Cliente'], [
     ['Panel', Y, Y, Y, N, N],
     ['Reservas, Estadías, Habitaciones, Clientes, Cochera', Y, Y, N, N, N],
     ['Tipos de habitación', 'edita', 've', N, N, N],
@@ -305,57 +324,77 @@ const s4 = [
     ['Personal, Usuarios y roles, Reportes, Auditoría, Facturación', Y, N, N, N, N],
     ['Registrar personal', Y, N, N, Y, N],
     ['Vista del programador', Y, N, N, Y, N],
-    ['Completar registro, Reservar, Mis reservas', N, N, N, N, Y],
+    ['Reservar, Mis reservas', N, N, N, N, Y],
   ], [5, 1.3, 1.3, 1.3, 1.4, 1.3]),
+  gap(),
+  p('Si alguien escribe a mano la dirección de una opción que no está en su menú, ve la pantalla 403 (sección 5) y la API también responde 403.'),
 
+  pageBreak(),
   h2('4.1 Recepcionista'),
   p('Atiende a los huéspedes en el día a día: reserva por ellos, hace el check-in y el check-out, controla la cochera y el estado de las habitaciones.'),
-  ...screen('10-recepcion-panel', 'Panel de Recepción.', 'Resumen del día: ocupación, llegadas y salidas de hoy con su botón de check-in, ingresos del mes y el tablero de habitaciones por piso con su estado (libre, ocupada, limpieza o mantenimiento).'),
-  ...screen('11-recepcion-reservas', 'Reservas.', 'Lista paginada en el servidor con filtros por estado (confirmadas, hospedados, finalizadas, canceladas) y búsqueda por huésped o documento. Desde aquí se hace el check-in o se cancela una reserva.'),
-  ...screen('12-recepcion-nueva-reserva', 'Nueva reserva.', 'Se busca al huésped, se eligen las fechas y solo aparecen las habitaciones libres para esas fechas y esa cantidad de personas. El total lo calcula el servidor (noches × precio); si otra persona toma la misma habitación al mismo tiempo, la API responde 409.'),
-  ...screen('13-recepcion-estadias', 'Estadías.', 'Huéspedes que están dentro del hotel y su historial. El check-out cierra la estadía, pasa la habitación a limpieza y libera su espacio de cochera.'),
-  ...screen('14-recepcion-habitaciones', 'Habitaciones.', 'Habitaciones por estado y tipo. Recepción marca como «lista» una habitación después de la limpieza.'),
-  ...screen('15-recepcion-tipos', 'Tipos de habitación (solo lectura para Recepción).', 'Recepción consulta el precio por noche, la capacidad y lo que incluye cada tipo para informar al huésped, pero no puede cambiarlos.'),
-  ...screen('16-recepcion-clientes', 'Clientes (huéspedes).', 'Fichas de huéspedes con documento, teléfono, si tienen cuenta web y cuántas reservas tienen. Solo se puede eliminar un huésped sin reservas.'),
-  ...screen('17-recepcion-nuevo-cliente', 'Nuevo cliente.', 'Registro de un huésped que llega o llama: tipo y número de documento (único), nombre, teléfono y nacionalidad.'),
-  ...screen('18-recepcion-cochera', 'Cochera.', 'Vehículos dentro y espacios libres. Cada entrada puede asociarse a una estadía.'),
-  ...screen('19-recepcion-entrada-cochera', 'Registrar entrada a cochera.', 'Se anota la placa y el espacio; si el espacio ya está ocupado, la API responde 409 PARKING_SPOT_NOT_FREE.'),
-  ...screen('19b-recepcion-403', 'Recepción intentando abrir Inventario.', 'Si alguien escribe a mano la dirección de una pestaña que no le corresponde, ve la pantalla 403. La API también responde 403, así que no hay forma de saltarse el permiso.'),
+  ...menuRol('rec-00-menu', 'Recepcionista', 'Tiene el grupo «Inicio» con el Panel y el grupo «Recepción» con sus seis vistas de trabajo. No ve Inventario ni las opciones de Administración.'),
+  ...vista('rec-01-panel', 'Panel de Recepción', 'Resumen del día: ocupación, habitaciones libres, llegadas y salidas de hoy y habitaciones en limpieza. A la derecha, las llegadas del día con su botón de check-in y los insumos bajo el mínimo; abajo, el tablero de habitaciones por piso con su estado.'),
+  ...vista('rec-02-reservas', 'Reservas', 'Lista de reservas paginada en el servidor, con pestañas por estado (confirmadas, por confirmar, hospedados, finalizadas y canceladas) y búsqueda por huésped o documento. Desde cada fila se hace el check-in o se cancela la reserva.'),
+  ...emergente('rec-02b-nueva-reserva', 'Nueva reserva', 'Se busca al huésped, se eligen las fechas y la cantidad de huéspedes, y solo aparecen las habitaciones libres para esas fechas. El total lo calcula el servidor; si otra persona toma la misma habitación al mismo tiempo, la API responde 409.'),
+  ...vista('rec-03-estadias', 'Estadías', 'Huéspedes que están dentro del hotel y el historial de estadías. El check-out cierra la estadía, pasa la habitación a limpieza y libera su espacio de cochera.'),
+  ...vista('rec-04-habitaciones', 'Habitaciones', 'Habitaciones con su piso, tipo, capacidad, precio y estado, filtrables por estado. Recepción las marca como «lista» después de la limpieza.'),
+  ...vista('rec-05-tipos', 'Tipos de habitación (solo lectura)', 'Recepción consulta el precio por noche, la capacidad y lo que incluye cada tipo para informar al huésped, pero no puede crearlos ni cambiarlos.'),
+  ...vista('rec-06-clientes', 'Clientes', 'Fichas de los huéspedes con su documento, teléfono, si tienen cuenta web y cuántas reservas tienen. Solo se puede eliminar un huésped sin reservas.'),
+  ...emergente('rec-06b-nuevo-cliente', 'Nuevo cliente', 'Registro de un huésped que llega o llama: nombre, tipo y número de documento (no se puede repetir), teléfono y nacionalidad.'),
+  ...vista('rec-07-cochera', 'Cochera', 'Vehículos que están dentro y los espacios de la cochera, con su estado.'),
+  ...emergente('rec-07b-entrada', 'Registrar entrada a cochera', 'Se anota la placa, el espacio libre y, si corresponde, la estadía del huésped. Si el espacio ya está ocupado, la API responde 409 PARKING_SPOT_NOT_FREE.'),
 
+  pageBreak(),
   h2('4.2 Almacenero'),
   p('Controla los insumos del hotel: lo que entra, lo que sale y lo que hay que reponer.'),
-  ...screen('20-almacen-panel', 'Panel del Almacén.', 'Muestra los insumos que están por debajo del mínimo para reponerlos a tiempo.'),
-  ...screen('21-almacen-inventario', 'Inventario.', 'Cada insumo con su stock, el mínimo y una barra de nivel. Se puede filtrar solo los que están bajo el mínimo.'),
-  ...screen('22-almacen-movimiento', 'Registrar movimiento.', 'Entrada o salida con cantidad y motivo; abajo se ven los últimos movimientos. La API no deja sacar más de lo que hay (409 INSUFFICIENT_STOCK).'),
-  ...screen('23-almacen-nuevo-insumo', 'Nuevo insumo.', 'Nombre, unidad, stock inicial y mínimo. Después el stock solo cambia con movimientos, para que todo quede registrado.'),
+  ...menuRol('alm-00-menu', 'Almacenero', 'Tiene solo dos opciones: el Panel y el Inventario.'),
+  ...vista('alm-01-panel', 'Panel del Almacén', 'Muestra los insumos que están por debajo del mínimo, para reponerlos a tiempo, y el botón para registrar un movimiento.'),
+  ...vista('alm-02-inventario', 'Inventario', 'Cada insumo con su unidad, stock, mínimo y una barra de nivel; se pueden ver solo los que están bajo el mínimo. Desde cada fila se registra un movimiento o se edita el insumo.'),
+  ...emergente('alm-02b-movimiento', 'Registrar movimiento', 'Entrada o salida con cantidad y motivo; abajo aparecen los últimos movimientos del insumo. La API no deja sacar más de lo que hay (409 INSUFFICIENT_STOCK).'),
+  ...emergente('alm-02c-nuevo-insumo', 'Nuevo insumo', 'Nombre, unidad, stock inicial y mínimo. Después el stock solo cambia con movimientos, para que todo quede registrado.'),
 
+  pageBreak(),
   h2('4.3 Administrador'),
-  p('Es el responsable del sistema: tiene todas las pestañas del personal, define tipos y precios, gestiona al personal y sus cuentas, y revisa reportes y auditoría.'),
-  ...screen('30-admin-panel', 'Panel del Administrador con el menú completo.', 'El mismo resumen del día, con todos los grupos del menú: Inicio, Recepción, Almacén, Administración y Programador.'),
-  ...screen('31-admin-tipos', 'Tipos de habitación (Administrador).', 'A diferencia de Recepción, el Administrador puede crear, editar y eliminar tipos.'),
-  ...screen('32-admin-nuevo-tipo', 'Nuevo tipo de habitación.', 'Nombre, capacidad, precio por noche, descripción y lo que incluye (separado por comas). Eso es lo que verá el cliente al reservar.'),
-  ...screen('33-admin-personal', 'Personal.', 'Fichas del personal con cargo, turno y fecha de ingreso, cada una ligada a su cuenta.'),
-  ...screen('34-admin-agregar-persona', 'Agregar persona del personal.', 'Crea la ficha y la cuenta en un solo paso. El rol Programador no aparece porque el hotel tiene uno solo.'),
-  ...screen('36-admin-usuarios', 'Usuarios y roles.', 'Todas las cuentas con su rol y si verificaron el correo; se filtran por rol y se busca por nombre o correo.'),
-  ...screen('37-admin-usuario-programador', 'Editar la cuenta del Programador.', 'La casilla Programador está bloqueada: no se puede dar ese rol a otra cuenta ni quitárselo al Programador. Sí se pueden editar su nombre, su correo y su contraseña.'),
-  ...screen('38-admin-reportes', 'Reportes.', 'Ocupación de un rango de fechas e ingresos de los últimos 6 meses en un gráfico de barras.'),
-  ...screen('39-admin-auditoria', 'Auditoría.', 'Quién creó, editó o eliminó cada registro, cuándo y desde qué IP, con los valores antes y después del cambio.'),
-  ...screen('39b-admin-facturacion', 'Facturación.', 'Módulo previsto que todavía no está construido: muestra la pantalla «En construcción» en vez de un error.'),
+  p('Es el responsable del sistema: tiene todas las opciones del personal, define tipos y precios, gestiona al personal y sus cuentas, y revisa reportes y auditoría.'),
+  ...menuRol('adm-00-menu', 'Administrador', 'Es el menú completo: Inicio, Recepción, Almacén, Administración y Programador.', 4.6),
+  ...vista('adm-01-panel', 'Panel del Administrador', 'El mismo resumen del día que Recepción, más los ingresos del mes.'),
+  ...vista('adm-02-reservas', 'Reservas', 'Las mismas reservas que gestiona Recepción: el Administrador también puede crear, hacer check-in y cancelar.'),
+  ...vista('adm-03-estadias', 'Estadías', 'Huéspedes dentro del hotel y el historial, con el check-out.'),
+  ...vista('adm-04-habitaciones', 'Habitaciones', 'Habitaciones por estado; el Administrador además crea y edita habitaciones.'),
+  ...emergente('adm-04b-nueva-habitacion', 'Nueva habitación', 'Número (único), piso, tipo y estado inicial de la habitación.'),
+  ...vista('adm-05-tipos', 'Tipos de habitación', 'A diferencia de Recepción, el Administrador crea, edita y elimina tipos.'),
+  ...emergente('adm-05b-nuevo-tipo', 'Nuevo tipo de habitación', 'Nombre, capacidad, precio por noche, descripción y lo que incluye, separado por comas. Es lo que verá el cliente al reservar.'),
+  ...vista('adm-06-clientes', 'Clientes', 'Las fichas de huéspedes, igual que en Recepción.'),
+  ...vista('adm-07-cochera', 'Cochera', 'Vehículos y espacios; el Administrador también agrega espacios.'),
+  ...vista('adm-08-inventario', 'Inventario', 'El mismo inventario del Almacenero, con los mismos permisos.'),
+  ...vista('adm-09-personal', 'Personal', 'Fichas del personal con su cargo, turno y fecha de ingreso, cada una ligada a su cuenta.'),
+  ...emergente('adm-09b-agregar-persona', 'Agregar persona', 'Crea la ficha y la cuenta en un solo paso. El rol Programador no aparece porque el hotel tiene uno solo.'),
+  ...vista('adm-10-registrar', 'Registrar personal', 'Crea la cuenta de una persona del hotel con su contraseña inicial. Solo ofrece Recepcionista, Almacenero y Administrador; la cuenta nueva recibe un correo para verificarse.'),
+  ...vista('adm-11-usuarios', 'Usuarios y roles', 'Todas las cuentas con su rol y si verificaron el correo, con filtros por rol y búsqueda por nombre o correo.'),
+  ...emergente('adm-11b-usuario-programador', 'Editar la cuenta del Programador', 'La casilla Programador está bloqueada: no se puede dar ese rol a otra cuenta ni quitárselo al Programador. Sí se pueden cambiar su nombre, su correo y su contraseña.'),
+  ...vista('adm-12-reportes', 'Reportes', 'Ocupación de un rango de fechas e ingresos de los últimos 6 meses en un gráfico de barras.'),
+  ...vista('adm-13-auditoria', 'Auditoría', 'Quién creó, editó o eliminó cada registro, cuándo y desde qué IP, con los valores antes y después del cambio.'),
+  ...vista('adm-14-facturacion', 'Facturación', 'Módulo previsto que todavía no está construido: muestra «En construcción» en vez de un error.'),
+  ...vista('adm-15-programador', 'Vista del programador', 'El Administrador también ve el diagnóstico de la API (detalle en la sección 4.4).'),
 
+  pageBreak(),
   h2('4.4 Programador'),
-  p('Da soporte técnico: ve el estado de la API sin entrar al servidor y registra cuentas del personal cuando hace falta.'),
-  ...screen('40-dev-resumen', 'Vista del programador · Resumen.', 'Estado de la API, latencias p50, p95 y p99, porcentaje de errores 5xx y respuestas 4xx, y la configuración (sin mostrar secretos).'),
-  ...screen('41-dev-peticiones', 'Vista del programador · Peticiones.', 'Últimas peticiones con su código y duración, y las rutas más lentas por p95.'),
-  ...screen('42-dev-errores', 'Vista del programador · Errores.', 'Errores del servidor, buscables por el código de incidente que ve el usuario en la pantalla 500. Aquí aparece el incidente real JJA05WR4CG de la sección 6.'),
-  ...screen('43-dev-rutas', 'Vista del programador · Rutas de la API.', 'Las rutas de la API con su método, si piden sesión, los roles que la pueden usar y su límite de peticiones.'),
-  ...screen('44-dev-registrar-personal', 'Registrar personal (Programador).', 'El Programador también crea cuentas de Recepción, Almacén y Administración, pero no de Programador.'),
+  p('Da soporte técnico: revisa el estado de la API sin entrar al servidor y registra cuentas del personal cuando hace falta.'),
+  ...menuRol('dev-00-menu', 'Programador', 'Tiene dos opciones: Registrar personal y la Vista del programador.'),
+  ...vista('dev-01-registrar', 'Registrar personal', 'Igual que el Administrador, crea cuentas de Recepción, Almacén y Administración, pero no de Programador.'),
+  ...vista('dev-02-resumen', 'Vista del programador · Resumen', 'Estado de la API, latencias p50, p95 y p99, porcentaje de errores 5xx y respuestas 4xx, y la configuración sin mostrar secretos. Se actualiza sola cada 10 a 15 segundos.'),
+  ...vista('dev-03-peticiones', 'Vista del programador · Peticiones', 'Las rutas más lentas por p95 y las últimas peticiones con su código y su duración (se muestra la parte superior).'),
+  ...vista('dev-04-errores', 'Vista del programador · Errores', 'Errores del servidor, buscables por el código de incidente que el usuario ve en la pantalla 500. Aparece el incidente real JJA05WR4CG de la sección 6.'),
+  ...vista('dev-05-rutas', 'Vista del programador · Rutas de la API', 'Las 77 rutas con su método, si piden sesión, los roles que pueden usarlas y su límite de peticiones (se muestra la parte superior).'),
 
+  pageBreak(),
   h2('4.5 Cliente'),
-  p('Es el huésped con cuenta propia: entra con Google, completa su DNI y teléfono una vez y reserva en línea. No ve nada del panel interno.'),
-  ...screen('51-cliente-reservar', 'Reservar una habitación.', 'Elige llegada, salida y personas. Ve cada tipo con lo que incluye, cuántas habitaciones quedan libres y el total de su estadía. Los tipos que no alcanzan para esa cantidad de personas no aparecen.'),
-  ...screen('52-cliente-confirmar-reserva', 'Confirmar la reserva.', 'Resumen con fechas, noches y total antes de confirmar. Al confirmar, el hotel le asigna una habitación libre de ese tipo; si otra persona la toma en ese instante, el sistema prueba con la siguiente.'),
-  ...screen('53-cliente-mis-reservas', 'Mis reservas.', 'Sus reservas con habitación, fechas, total y estado. Puede cancelar una reserva confirmada mientras falte al menos un día para la llegada.'),
-  ...screen('54-cliente-403', 'Cliente intentando abrir el panel del personal.', 'Un cliente no puede entrar a ninguna pestaña del personal: ve la pantalla 403 y la API responde 403.'),
+  p('Es el huésped con cuenta propia: entra con Google, completa su DNI y teléfono una vez y reserva en línea. No ve nada del panel del personal.'),
+  ...vista('cli-00-completar-registro', 'Completar registro (antes del menú)', 'La primera vez que entra con Google aparece esta pantalla, todavía sin menú. El nombre y el correo vienen de Google; el huésped escribe su DNI (8 dígitos) y su teléfono (9 dígitos). Si su DNI ya estaba registrado en recepción, se vincula esa ficha.'),
+  ...menuRol('cli-01-menu', 'Cliente', 'Su menú «Mi cuenta» tiene dos opciones: Reservar y Mis reservas.'),
+  ...vista('cli-02-reservar', 'Reservar', 'Elige llegada, salida y personas; ve cada tipo de habitación con lo que incluye, cuántas quedan libres y el total de su estadía. Los tipos que no alcanzan para esa cantidad de personas no aparecen.'),
+  ...emergente('cli-02b-confirmar', 'Confirmar reserva', 'Resumen con el tipo, las fechas, las noches y el total antes de confirmar. Al confirmar, el hotel le asigna una habitación libre de ese tipo.'),
+  ...vista('cli-03-mis-reservas', 'Mis reservas', 'Sus reservas con habitación, fechas, noches, total y estado. Puede cancelar una reserva confirmada mientras falte al menos un día para la llegada.'),
 ]
 
 // ── 5. Errores ───────────────────────────────────────────
@@ -479,12 +518,11 @@ const s9 = [
 
 const s10 = [
   h1('9. Conclusiones'),
-  bullet('LeGrandHotel cubre la operación completa del hotel para cuatro roles del personal y la reserva en línea para los huéspedes, con 77 endpoints REST que responden siempre con el mismo formato.'),
-  bullet('El registro y el login están separados: el personal entra con correo y contraseña y lo registran el Administrador o el Programador; los clientes entran solo con Google. Hay un solo Programador y la API lo hace cumplir.'),
-  bullet('Los permisos se revisan dos veces: la web oculta lo que no corresponde y la API responde 403 aunque alguien escriba la dirección a mano.'),
-  bullet('El registro de incidentes y el código de incidente permitieron encontrar y corregir cada falla el mismo día.'),
-  bullet('Las pruebas k6 muestran una API correcta y sin errores bajo carga; su velocidad en la laptop está limitada por el servidor de desarrollo, y se medirá de nuevo cuando se defina el servidor.'),
-  bullet('La app móvil reutilizará la API y las tecnologías de la web, y se construirá por etapas empezando por el login y el flujo del cliente.'),
+  p([b('1. El sistema cubre la operación completa del hotel. '), t('Con 77 endpoints REST y un formato único de respuesta, LeGrandHotel atiende reservas, estadías, habitaciones, huéspedes, cochera, inventario, personal, reportes y auditoría, y además la reserva en línea del huésped.')]),
+  p([b('2. El acceso está separado y protegido. '), t('El personal entra con correo y contraseña y lo registran el Administrador o el Programador; los clientes entran solo con Google. Cada rol ve solo su menú, la API responde 403 aunque alguien escriba la dirección a mano y existe un solo Programador.')]),
+  p([b('3. Las reglas del negocio las cuida el servidor. '), t('La API impide la doble reserva, dos huéspedes en la misma habitación, el stock negativo y la cochera ocupada (409), calcula los totales y deja cada cambio en la auditoría.')]),
+  p([b('4. Las fallas se registran y se corrigen con evidencia. '), t('El registro de incidentes y el código de incidente que ve el usuario permitieron encontrar la causa de cada falla en el registro de la API y corregirla el mismo día, con una prueba automática nueva cuando correspondía.')]),
+  p([b('5. La API es estable bajo carga y el siguiente paso está claro. '), t('En las pruebas k6 no hubo ni un error con hasta 50 usuarios a la vez; la velocidad en la laptop la limita el servidor de desarrollo y se medirá de nuevo cuando se defina el servidor. La app Android e iOS reutilizará esta misma API.')]),
 ]
 
 // ── documento ────────────────────────────────────────────
@@ -506,9 +544,7 @@ const doc = new Document({
   numbering: { config: [{ reference: 'bullets', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 540, hanging: 270 } } } }] }] },
   features: { updateFields: true },
   sections: [
-    portrait([...caratula, ...s1]),
-    landscape(sDiagrama),
-    portrait([...s2, ...s3, ...s4, ...s5, ...s6, ...s7, ...s8]),
+    portrait([...caratula, ...s1, ...sDiagrama, pageBreak(), ...s2, ...s3, ...s4, ...s5, ...s6, ...s7, ...s8]),
     landscape(sMaquetas),
     portrait([...s9, ...s10]),
   ],

@@ -63,14 +63,16 @@ AREAS = [  # recuadros de fondo: título y vértices (x, y)
 
 
 class Caja:
-    def __init__(self, nombre):
+    def __init__(self, nombre, pos=None, ref=None):
+        """ref: texto como «parte 1» si la tabla pertenece a otra parte y solo se muestra su id."""
         self.nombre = nombre
-        self.filas = columnas[nombre]
-        self.x, self.y = POS[nombre]
+        self.ref = ref
+        self.filas = columnas[nombre] if not ref else [f for f in columnas[nombre] if f["col"] == "id"]
+        self.x, self.y = (pos or POS)[nombre]
         w_col = max(len(f["col"]) for f in self.filas) * CHAR + 0.25
         w_tipo = max(len(f["tipo"]) for f in self.filas) * CHAR + 0.2
         self.w_key, self.w_col, self.w_tipo, self.w_nulo = 0.62, w_col, w_tipo, 0.42
-        self.w = max(self.w_key + w_col + w_tipo + self.w_nulo, len(nombre) * 0.11 + 0.4)
+        self.w = max(self.w_key + w_col + w_tipo + self.w_nulo, len(nombre) * 0.11 + 0.4 + (1.3 if ref else 0))
         self.h = ROW * (len(self.filas) + 1)
 
     def fila_y(self, col):
@@ -78,9 +80,11 @@ class Caja:
         return self.y + ROW * (i + 1.5)
 
     def dibujar(self, ax):
-        ax.add_patch(Rectangle((self.x, self.y), self.w, self.h, fc="white", ec=INK, lw=1.2, zorder=3))
-        ax.add_patch(Rectangle((self.x, self.y), self.w, ROW, fc=HEAD, ec=INK, lw=1.2, zorder=3))
-        ax.text(self.x + self.w / 2, self.y + ROW / 2, self.nombre, ha="center", va="center", fontsize=FS_HEAD, weight="bold", color=INK, zorder=4)
+        borde = dict(ec=MID, lw=1.1, ls=(0, (4, 3))) if self.ref else dict(ec=INK, lw=1.2)
+        ax.add_patch(Rectangle((self.x, self.y), self.w, self.h, fc="white", zorder=3, **borde))
+        ax.add_patch(Rectangle((self.x, self.y), self.w, ROW, fc="#eeeeee" if self.ref else HEAD, zorder=3, **borde))
+        titulo = f"{self.nombre}  ({self.ref})" if self.ref else self.nombre
+        ax.text(self.x + self.w / 2, self.y + ROW / 2, titulo, ha="center", va="center", fontsize=FS_HEAD, weight="bold", color=MID if self.ref else INK, zorder=4)
         for i, f in enumerate(self.filas):
             yc = self.y + ROW * (i + 1.5)
             if i % 2:
@@ -142,9 +146,10 @@ def marca(ax, x, y, direccion, tipo):
             ax.plot([x - d * 0.22, x], [y, y + dy], color=LINE, lw=1.2, zorder=2)
 
 
-def conectar(ax, hijo, col, padre, regla, logica=False):
-    lp, lh, canal, dy = RUTAS[(hijo, col)]
-    cp, ch = cajas[padre], cajas[hijo]
+def conectar(ax, hijo, col, padre, regla, logica=False, cajas_=None, rutas=None):
+    cajas_ = cajas_ or cajas
+    lp, lh, canal, dy = (rutas or RUTAS)[(hijo, col)]
+    cp, ch = cajas_[padre], cajas_[hijo]
     nulo = next(f["nulo"] for f in ch.filas if f["col"] == col)
     x1, y1 = cp.lado(lp), cp.fila_y("id") + dy
     x2, y2 = ch.lado(lh), ch.fila_y(col)
@@ -181,23 +186,85 @@ for hijo, col, padre in LOGICAS:
 for c in cajas.values():
     c.dibujar(ax)
 
-# leyenda
-ly = 13.45
-ax.text(0.1, ly, "Cómo leerlo", fontsize=11, weight="bold", color=INK)
-items = [("uno", "exactamente uno"), ("cero_uno", "cero o uno"), ("cero_muchos", "cero o muchos")]
-x = 0.1
-for tipo, txt in items:
-    ax.plot([x, x + 0.9], [ly + 0.55, ly + 0.55], color=LINE, lw=1.2)
-    marca(ax, x + 0.9, ly + 0.55, 1, tipo)
-    ax.text(x + 1.05, ly + 0.55, txt, va="center", fontsize=9.5, color=INK)
-    x += 3.0
-ax.plot([x, x + 0.9], [ly + 0.55, ly + 0.55], color=LINE, lw=1.2, ls=(0, (4, 3)))
-ax.text(x + 1.05, ly + 0.55, "relación sin clave foránea (la maneja Laravel)", va="center", fontsize=9.5, color=INK)
-ax.text(0.1, ly + 1.15, "PK clave primaria · FK clave foránea · UK valor único · NULL la columna acepta vacío · "
+def leyenda(ax, x0, ly, fs=9.5):
+    ax.text(x0, ly, "Cómo leerlo", fontsize=fs + 1.5, weight="bold", color=INK)
+    x = x0
+    for tipo, txt in [("uno", "exactamente uno"), ("cero_uno", "cero o uno"), ("cero_muchos", "cero o muchos")]:
+        ax.plot([x, x + 0.9], [ly + 0.55, ly + 0.55], color=LINE, lw=1.2)
+        marca(ax, x + 0.9, ly + 0.55, 1, tipo)
+        ax.text(x + 1.05, ly + 0.55, txt, va="center", fontsize=fs, color=INK)
+        x += 2.6
+    ax.plot([x, x + 0.9], [ly + 0.55, ly + 0.55], color=LINE, lw=1.2, ls=(0, (4, 3)))
+    ax.text(x + 1.05, ly + 0.55, "sin clave foránea", va="center", fontsize=fs, color=INK)
+
+
+leyenda(ax, 0.1, 13.45)
+ax.text(0.1, 13.45 + 1.15, "PK clave primaria · FK clave foránea · UK valor único · NULL la columna acepta vacío · "
         "junto a cada línea: la columna FK y qué hace MySQL al borrar el registro padre, su regla ON DELETE (CASCADE borra los hijos, SET NULL los deja sin padre, RESTRICT impide borrar).",
         fontsize=9.5, color=INK)
-ax.text(0.1, ly + 1.65, "Tablas internas de Laravel, sin relaciones (no dibujadas): " + ", ".join(sorted(INTERNAS)) + ".", fontsize=9.5, color=MID)
+ax.text(0.1, 13.45 + 1.65, "Tablas internas de Laravel, sin relaciones (no dibujadas): " + ", ".join(sorted(INTERNAS)) + ".", fontsize=9.5, color=MID)
 
 for ext in ("svg", "pdf", "png"):
     fig.savefig(BASE / f"diagrama-bd.{ext}", dpi=170 if ext == "png" else None)
+plt.close(fig)
+
+# ── el mismo diagrama en 3 partes, para leerlo en una página cada una ──
+PARTES = [
+    ("1", "Cuentas, permisos y auditoría", (13.50, 12.2), {
+        "roles": (2.00, 0.9), "role_user": (2.00, 3.3), "personal_access_tokens": (2.00, 4.8), "sessions": (2.00, 8.8),
+        "users": (8.10, 0.9), "staff": (8.10, 4.7), "audit_logs": (8.10, 7.9),
+    }, {}, {
+        ("role_user", "user_id"): ("L", "R", 7.00, 0.1),
+        ("role_user", "role_id"): ("L", "L", 1.55, 0),
+        ("personal_access_tokens", "tokenable_id"): ("L", "R", 7.30, 0.9),
+        ("sessions", "user_id"): ("L", "R", 7.60, 1.8),
+        ("staff", "user_id"): ("R", "R", 12.55, 0.6),
+        ("audit_logs", "user_id"): ("R", "R", 12.85, 1.2),
+    }, "users también es padre de clients (parte 2) e inventory_movements (parte 3)."),
+    ("2", "Huéspedes, reservas y habitaciones", (13.70, 12.2), {
+        "users": (2.00, 0.9), "clients": (2.00, 2.4), "room_types": (2.00, 6.6),
+        "reservations": (8.00, 0.9), "rooms": (8.00, 5.6), "stays": (8.00, 8.8),
+    }, {"users": "parte 1"}, {
+        ("clients", "user_id"): ("L", "L", 1.55, 0),
+        ("reservations", "client_id"): ("R", "L", None, 0),
+        ("rooms", "room_type_id"): ("R", "L", None, 0),
+        ("reservations", "room_id"): ("R", "R", 12.70, 0),
+        ("stays", "reservation_id"): ("R", "R", 13.00, 0.3),
+    }, "stays también es padre de parking_assignments (parte 3)."),
+    ("3", "Cochera e inventario", (12.4, 10.6), {
+        "parking_spots": (0.9, 0.9), "stays": (0.9, 3.3),
+        "inventory_items": (0.9, 5.4), "users": (0.9, 8.5),
+        "parking_assignments": (7.0, 0.9), "inventory_movements": (7.0, 5.4),
+    }, {"stays": "parte 2", "users": "parte 1"}, {
+        ("parking_assignments", "parking_spot_id"): ("R", "L", 6.3, 0),
+        ("parking_assignments", "stay_id"): ("R", "L", 5.9, 0),
+        ("inventory_movements", "inventory_item_id"): ("R", "L", 6.3, 0),
+        ("inventory_movements", "user_id"): ("R", "L", 5.9, 0),
+    }, ""),
+]
+
+for num, titulo, (ancho, alto), pos, refs, rutas, nota in PARTES:
+    cj = {n: Caja(n, pos, refs.get(n)) for n in pos}
+    fig = plt.figure(figsize=(ancho, alto + 2.2))
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.set_xlim(0, ancho)
+    ax.set_ylim(alto + 1.6, -0.6)
+    ax.axis("off")
+    ax.text(0.15, -0.2, f"Parte {num}. {titulo}", fontsize=16, weight="bold", color=INK, va="center")
+    for f in fks:
+        if f["hijo"] in cj and f["padre"] in cj:
+            conectar(ax, f["hijo"], f["col"], f["padre"], f["regla"], cajas_=cj, rutas=rutas)
+    for hijo, col, padre in LOGICAS:
+        if hijo in cj and padre in cj:
+            conectar(ax, hijo, col, padre, "", logica=True, cajas_=cj, rutas=rutas)
+    for c in cj.values():
+        c.dibujar(ax)
+    ancho_real = max(c.x + c.w for c in cj.values())
+    assert ancho_real < ancho - 0.2, f"parte {num}: las tablas pasan el ancho ({ancho_real:.1f})"
+    leyenda(ax, 0.15, alto + 0.05, fs=9)
+    if nota:
+        ax.text(0.15, alto + 1.15, "Recuadro punteado = tabla de otra parte (solo su id). " + nota, fontsize=9, color=MID)
+    for ext in ("pdf", "png"):
+        fig.savefig(BASE / f"diagrama-bd-parte{num}.{ext}", dpi=220 if ext == "png" else None)
+    plt.close(fig)
 print("ok")
