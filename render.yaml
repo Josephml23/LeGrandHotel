@@ -3,8 +3,8 @@
 #
 # Después del primer despliegue hay que completar a mano, en el panel de cada servicio, las variables
 # marcadas con `sync: false` (son secretos o direcciones que recién se conocen al crearse los servicios):
-#   legrandhotel-api  → APP_KEY, FRONTEND_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, DEMO_PASSWORD
-#   legrandhotel-web  → VITE_API_URL
+#   legrandhotel-api  → APP_KEY, FRONTEND_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, DEMO_PASSWORD
+# La web no necesita ninguna: arma sola la dirección de la API.
 # La guía paso a paso está en docs/despliegue-render.md.
 
 databases:
@@ -89,9 +89,9 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
-      # https://legrandhotel-api.onrender.com/api/v1/auth/google/callback
-      - key: GOOGLE_REDIRECT_URI
-        sync: false
+      # GOOGLE_REDIRECT_URI no hace falta: sale de APP_URL, que start.sh toma de Render
+      # (https://legrandhotel-api.onrender.com/api/v1/auth/google/callback). Eso sí, hay que
+      # registrar esa misma dirección en Google Cloud Console.
       # Contraseña de las cuentas de demostración (solo si vas a sembrar datos de ejemplo).
       - key: DEMO_PASSWORD
         sync: false
@@ -101,12 +101,18 @@ services:
     name: legrandhotel-web
     runtime: static
     rootDir: web
-    buildCommand: npm ci && npm run build
+    # VITE_API_URL se arma sola con la dirección real de la API; si defines la variable a mano, manda la tuya.
+    buildCommand: npm ci && VITE_API_URL="${VITE_API_URL:-https://$API_HOST/api/v1}" npm run build
     staticPublishPath: dist
     envVars:
-      # Dirección de la API, sin barra final: https://legrandhotel-api.onrender.com/api/v1
-      - key: VITE_API_URL
-        sync: false
+      # Vite 8 necesita Node 20.19+ o 22.12+; sin fijarlo, Render podría construir con una versión vieja.
+      - key: NODE_VERSION
+        value: "22"
+      - key: API_HOST
+        fromService:
+          type: web
+          name: legrandhotel-api
+          property: host
       - key: VITE_OBFUSCATE
         value: "true"
     routes:

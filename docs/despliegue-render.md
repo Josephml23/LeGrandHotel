@@ -45,22 +45,24 @@ En **legrandhotel-api → Environment**:
 | `FRONTEND_URL` | `https://legrandhotel-web.onrender.com` |
 | `GOOGLE_CLIENT_ID` | el de Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET` | el de Google Cloud Console |
-| `GOOGLE_REDIRECT_URI` | `https://legrandhotel-api.onrender.com/api/v1/auth/google/callback` |
 | `DEMO_PASSWORD` | solo si vas a sembrar datos de ejemplo |
 
-En **legrandhotel-web → Environment**:
+**La web no necesita ninguna variable:** arma sola la dirección de la API con la que Render le asigna.
+Tampoco hace falta `GOOGLE_REDIRECT_URI`: sale de la dirección del propio servicio.
 
-| Variable | Valor |
-| --- | --- |
-| `VITE_API_URL` | `https://legrandhotel-api.onrender.com/api/v1` (sin barra final) |
-
-Las direcciones exactas las da Render al crear cada servicio; si cambiaste los nombres, úsalas tal cual aparecen.
-Guarda los cambios: Render vuelve a desplegar solo.
+La dirección exacta de la web la da Render al crearla; si cambiaste los nombres de los servicios, usa la que
+aparezca en el panel. Guarda los cambios: Render vuelve a desplegar solo.
 
 ### 4. Autorizar la dirección en Google
 
 En Google Cloud Console → Credenciales → tu ID de cliente OAuth, agrega en **URIs de redireccionamiento
-autorizados** exactamente el mismo valor de `GOOGLE_REDIRECT_URI`. Sin esto, el ingreso con Google falla.
+autorizados** la dirección de regreso de la API:
+
+```
+https://legrandhotel-api.onrender.com/api/v1/auth/google/callback
+```
+
+Sin esto, el ingreso con Google falla. Es el único dato que hay que copiar a mano en los dos lados.
 
 ### 5. Comprobar
 
@@ -100,6 +102,11 @@ El proyecto corre con MySQL (local y AWS), PostgreSQL (Render) y SQLite (pruebas
 Comprobado el 2026-11-10 contra un PostgreSQL 16 real, con la imagen de Render: las 8 migraciones corrieron,
 `/health` respondió `ok` con base y caché, el ingreso con contraseña funcionó, el reporte de ingresos agrupó por
 mes (`2026-11` y `2026-12`) y la búsqueda de «ana» encontró a «Ana María Torres».
+
+## Versión de Node
+
+El sitio estático se construye con **Node 22** (`NODE_VERSION` en `render.yaml`), porque Vite 8 exige
+20.19 o superior. Si Render usara su versión por defecto, el build podría fallar.
 
 ## Lo que hay que tener en cuenta del plan gratuito
 
