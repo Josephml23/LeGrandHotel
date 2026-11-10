@@ -75,13 +75,12 @@ Debe responder `200` con `"status":"ok"` y la base en `ok`. Las migraciones corr
 
 ### 6. Datos de ejemplo (opcional)
 
-Desde **legrandhotel-api → Shell** en el panel de Render:
+El plan gratuito **no da consola**, así que se siembra con una variable: en
+**legrandhotel-api → Environment**, pon `RUN_SEED` en `true`, guarda, espera a que termine el despliegue
+y vuelve a ponerlo en `false`.
 
-```bash
-php artisan db:seed --force
-```
-
-Crea los roles y las cuentas de demostración con la contraseña de `DEMO_PASSWORD`.
+Crea los roles, las cuentas de demostración (con la contraseña de `DEMO_PASSWORD`), las habitaciones, la
+cochera y el inventario. `DemoSeeder` es idempotente: repetirlo no duplica nada.
 
 > `MassiveDataSeeder` **no funciona en Render**: usa Faker, que es una dependencia de desarrollo y la imagen
 > se construye con `--no-dev`. Los datos masivos son solo para las pruebas de carga en local.

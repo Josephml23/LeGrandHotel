@@ -81,6 +81,10 @@ services:
       # levanta una sola instancia, así que no hay carrera entre contenedores.
       - key: RUN_MIGRATIONS
         value: "true"
+      # Datos de demostración: ponlo en "true" una vez, espera el despliegue y vuelve a "false".
+      # Es la única forma de sembrar en el plan gratuito, que no da consola.
+      - key: RUN_SEED
+        value: "false"
 
       # Dirección de la web (para CORS y para el regreso de Google): https://legrandhotel-web.onrender.com
       - key: FRONTEND_URL

@@ -22,6 +22,13 @@ if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
   php artisan migrate --force
 fi
 
+# Datos de demostración (roles, cuentas, habitaciones, cochera e inventario). El plan gratuito de Render
+# no da consola, así que la única forma de sembrarlos es desde aquí: pon RUN_SEED=true, espera el
+# despliegue y vuelve a ponerlo en false. DemoSeeder es idempotente: repetirlo no duplica nada.
+if [ "${RUN_SEED:-false}" = "true" ]; then
+  php artisan db:seed --force
+fi
+
 php-fpm -y /tmp/php-fpm.conf -D
 # -p fija el prefijo (rutas relativas de Nginx) y -e manda a la salida estándar los errores de arranque,
 # que ocurren antes de leer el error_log de la configuración.
