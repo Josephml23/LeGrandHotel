@@ -118,6 +118,45 @@ Nginx corta (504/503) y aparecen los errores (78% en la corrida de 1000). No es 
 respondiendo y al terminar la prueba todo volvió a la normalidad. **Corrección:** más CPU y varias instancias detrás del
 balanceador (Auto Scaling en AWS), RDS y Redis; se repite allí con `PROFILE=bloques VUS=1000` y `VUS=5000`.
 
+**Inicio de sesión y creación de reservas, un usuario por usuario virtual** (`tests/k6/inicio-reserva.js`,
+2026-11-10, misma laptop con Nginx + PHP-FPM + OPcache + caché de Laravel). Cada usuario inicia sesión **una sola
+vez** y luego reserva cada 10 s; la prueba dura 1 minuto. Metas del 80%: p95 < 800 ms y menos de 1% de errores.
+
+| Usuarios | Errores | p95 del login | p95 de la reserva | Reservas creadas | ¿Cumple? |
+| ---: | ---: | ---: | ---: | ---: | :--- |
+| 20 | 0% | 637 ms | 361 ms | 294 | sí |
+| **150** | **0%** | **697 ms** | **569 ms** | **592** | **sí** |
+| 200 | 0% | 1,02 s | 757 ms | 727 | no (el login) |
+| 300 | 0% | 3,54 s | 3,82 s | 1 173 | no |
+| 500 | 20,2% | 10 s | 10 s | 845 | no |
+| 1000 | 84,0% | 10 s | 10 s | 121 | no |
+
+**Lectura:** con el escenario realista la laptop sostiene **150 usuarios cumpliendo las dos metas**, y hasta 300
+**sin un solo error** aunque lento. El primero que falla es el **inicio de sesión**, no la reserva: cifrar la
+contraseña con bcrypt cuesta CPU y en la prueba los usuarios entran todos en los primeros 15 s. Bajar el costo de
+bcrypt de 12 a 10 mejoró el p95 del login de 3,5 s a 2,2 s con 300 usuarios (medición aproximada: la tabla de
+reservas fue creciendo entre corridas). Es un cambio de seguridad, así que queda a decisión del equipo.
+
+Comparación con el escenario sin pausas (`reservas.js`): allí 1000 usuarios exigen ~1100 peticiones por segundo y
+se quiebra en 700; aquí, con pausas realistas de 10 s, exigen ~100 y el límite está en 150–300. La diferencia no es
+el servidor, es cuánto pide cada usuario.
+
+**50 clientes del portal registran 1000 reservas** (`tests/k6/clientes-1000-reservas.js`, 2026-11-10, misma
+laptop). El trabajo es fijo: la prueba termina al completar las 1000 reservas. Cambia solo la pausa que hace cada
+cliente entre una reserva y la siguiente.
+
+| Pausa por cliente | Duración | Reservas creadas | Errores | p95 de la búsqueda | p95 de la reserva | ¿Cumple el 80%? |
+| ---: | ---: | ---: | ---: | ---: | ---: | :--- |
+| 0 s (a toda velocidad) | 58 s | 1 000 | 0% | 1,81 s | 1,83 s | no, por el tiempo |
+| 3 s | 1 min 23 s | 1 000 | 0% | 775 ms | 995 ms | casi |
+| **6 s (cliente real)** | **2 min 19 s** | **1 000** | **0%** | **467 ms** | **604 ms** | **sí** |
+
+**Lectura:** en los tres casos se registran **las 1000 reservas sin un solo error**; lo único que cambia es cuánto
+tarda y qué tan rápido responde. A toda velocidad el sistema sostiene **17 reservas por segundo**. Con clientes
+que se toman 6 segundos entre una reserva y otra —lo normal al elegir fechas y habitación— cumple las dos metas
+del 80%: p95 por debajo de 800 ms y 0% de errores. Ninguna reserva se perdió ni se duplicó: el bloqueo por
+habitación (`lockForUpdate`) hizo su trabajo con 50 clientes a la vez.
+
 ## Carga y estrés (k6)
 
 Los scripts están en `tests/k6/` (ver su README). Cada corrida genera un HTML con gráficos en esta carpeta:

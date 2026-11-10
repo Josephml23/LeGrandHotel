@@ -16,7 +16,7 @@ class ParkingSpotController extends Controller
     {
         $spots = ParkingSpot::query()
             ->when($request->query('status'), fn ($q, $v) => $q->where('status', $v))
-            ->when($request->query('search'), fn ($q, $s) => $q->where('code', 'like', $this->like($s)))
+            ->when($request->query('search'), fn ($q, $s) => $q->where('code', $this->likeOperator(), $this->like($s)))
             ->orderBy('code')
             ->paginate($this->perPage($request));
 

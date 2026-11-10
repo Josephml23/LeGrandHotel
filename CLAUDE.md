@@ -20,6 +20,8 @@ y reservan desde `/api/v1/portal/*`.
   los mensajes de la API usan `__()` con su inglés en `api/lang/en.json`. La web envía `Accept-Language`.
   Formularios: estado inicial desde props y `key` para remontar (la regla `react-hooks/set-state-in-effect` está activa).
 - Estilo visual: skill `design-taste-frontend`, estilo "framed-sheet" (`.taste-skill/direction.json`), tokens en `web/src/styles.css`.
+- La API corre con MySQL (local y AWS), PostgreSQL (Render) y SQLite (pruebas): usa `$this->likeOperator()`
+  para las búsquedas y ramifica por `DB::connection()->getDriverName()` si necesitas SQL propio de un motor.
 - Registra cualquier caída (incluso local) en `docs/incidentes.md`.
 - Antes de crear recursos en AWS, avisa y da el costo (ver `infra/README.md`).
 

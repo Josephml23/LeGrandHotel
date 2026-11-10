@@ -24,8 +24,8 @@ class StaffController extends Controller
             ->with('user:id,name,email', 'user.roles:id,name')
             ->when($request->query('shift'), fn ($q, $v) => $q->where('shift', $v))
             ->when($request->query('search'), fn ($q, $s) => $q->whereHas('user', fn ($u) => $u
-                ->where('name', 'like', $this->like($s))
-                ->orWhere('email', 'like', $this->like($s))))
+                ->where('name', $this->likeOperator(), $this->like($s))
+                ->orWhere('email', $this->likeOperator(), $this->like($s))))
             ->latest('id')
             ->paginate($this->perPage($request));
 

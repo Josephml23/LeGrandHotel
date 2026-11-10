@@ -35,7 +35,7 @@ Leyenda: ✅ hecho y probado en código · ☁️ código listo, falta crear el 
 | CRUD completo en todos los módulos | ✅ | clientes, reservas, estadías, cochera, personal, inventario, usuarios |
 | Paginación rápida + índices | ✅ | `per_page` ≤ 50, índices del plan; listado de 5000 reservas < 500 ms en `MassiveDataTest` |
 | Múltiples tipos de usuario | ✅ | Administrador, Recepcionista, Almacenero, Programador (correo y contraseña) y Cliente (solo Google: reserva por tipo de habitación y ve sus reservas) |
-| Proyecto en el servidor y pruebas revisadas | ☁️ | pipeline `deploy.yml` listo |
+| Proyecto en el servidor y pruebas revisadas | ☁️ | **Render listo para desplegar**: `render.yaml` (API en Docker, web estática y PostgreSQL gratis), `api/Dockerfile.render` y la guía `docs/despliegue-render.md`; probado contra un PostgreSQL real. Falta crear los servicios en Render. Para carga real sigue el pipeline `deploy.yml` a AWS |
 | CORS solo para el frontend | ✅ | `config/cors.php` + prueba |
 | Smoke test antes de cada despliegue | ✅ | `tests/k6/smoke.js` en `deploy.yml` |
 | Autenticación y autorización | ✅ | Sanctum + roles + policies |

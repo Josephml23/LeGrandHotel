@@ -21,8 +21,8 @@ class UserController extends Controller
             ->with('roles:id,name')
             ->when($request->query('role'), fn ($q, $r) => $q->whereHas('roles', fn ($w) => $w->where('name', $r)))
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($w) => $w
-                ->where('name', 'like', $this->like($s))
-                ->orWhere('email', 'like', $this->like($s))))
+                ->where('name', $this->likeOperator(), $this->like($s))
+                ->orWhere('email', $this->likeOperator(), $this->like($s))))
             ->latest('id')
             ->paginate($this->perPage($request));
 

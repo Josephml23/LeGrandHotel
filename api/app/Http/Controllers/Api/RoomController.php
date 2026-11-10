@@ -26,7 +26,7 @@ class RoomController extends Controller
             ->when($request->query('status'), fn ($q, $v) => $q->where('status', $v))
             ->when($request->query('room_type_id'), fn ($q, $v) => $q->where('room_type_id', $v))
             ->when($request->filled('floor'), fn ($q) => $q->where('floor', $request->integer('floor')))
-            ->when($request->query('search'), fn ($q, $s) => $q->where('number', 'like', $this->like($s)))
+            ->when($request->query('search'), fn ($q, $s) => $q->where('number', $this->likeOperator(), $this->like($s)))
             ->orderBy('number')
             ->paginate($this->perPage($request));
 

@@ -59,9 +59,11 @@ class ReportController extends Controller
     public function income(Request $request): JsonResponse
     {
         [$from, $to] = $this->range($request, months: 6);
-        $month = DB::connection()->getDriverName() === 'sqlite'
-            ? "strftime('%Y-%m', check_in)"
-            : "DATE_FORMAT(check_in, '%Y-%m')";
+        $month = match (DB::connection()->getDriverName()) {
+            'sqlite' => "strftime('%Y-%m', check_in)",
+            'pgsql' => "to_char(check_in, 'YYYY-MM')",
+            default => "DATE_FORMAT(check_in, '%Y-%m')",
+        };
 
         $data = Cache::remember("report:income:{$from}:{$to}", 60, function () use ($from, $to, $month) {
             $rows = DB::table('reservations')

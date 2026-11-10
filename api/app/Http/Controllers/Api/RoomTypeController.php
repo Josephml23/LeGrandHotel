@@ -16,7 +16,7 @@ class RoomTypeController extends Controller
     {
         $types = RoomType::query()
             ->withCount('rooms')
-            ->when($request->query('search'), fn ($q, $s) => $q->where('name', 'like', $this->like($s)))
+            ->when($request->query('search'), fn ($q, $s) => $q->where('name', $this->likeOperator(), $this->like($s)))
             ->orderBy('name')
             ->paginate($this->perPage($request));
 

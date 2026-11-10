@@ -19,8 +19,8 @@ class ClientController extends Controller
         $clients = Client::query()
             ->withCount('reservations')
             ->when($search, fn ($q) => $q->where(fn ($w) => $w
-                ->where('document_number', 'like', addcslashes($search, '%_\\').'%')
-                ->orWhere('full_name', 'like', $this->like($search))))
+                ->where('document_number', $this->likeOperator(), addcslashes($search, '%_\\').'%')
+                ->orWhere('full_name', $this->likeOperator(), $this->like($search))))
             ->latest('id')
             ->paginate($this->perPage($request));
 

@@ -38,8 +38,8 @@ class ReservationController extends Controller
             ->when($request->query('from'), fn ($q, $v) => $q->where('check_out', '>', $v))
             ->when($request->query('to'), fn ($q, $v) => $q->where('check_in', '<', $v))
             ->when($request->query('search'), fn ($q, $s) => $q->whereHas('client', fn ($c) => $c
-                ->where('full_name', 'like', $this->like($s))
-                ->orWhere('document_number', 'like', addcslashes($s, '%_\\').'%')))
+                ->where('full_name', $this->likeOperator(), $this->like($s))
+                ->orWhere('document_number', $this->likeOperator(), addcslashes($s, '%_\\').'%')))
             ->orderByDesc('check_in')
             ->orderByDesc('id')
             ->paginate($this->perPage($request));

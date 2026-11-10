@@ -6,6 +6,8 @@
 | `rate-limit.js` | Demuestra la espera del login (401 y luego 429 `LOGIN_LOCKED`) | 25% / 80% |
 | `reservas.js` `PROFILE=carga-25` | 50 → 100 VU, p95 < 500 ms, 0% errores | 25% |
 | `reservas.js` `PROFILE=carga-80 VUS=1000/3000/5000` | carga a 1000, 3000 y 5000 VU | 80% |
+| `inicio-reserva.js` | **Un usuario por usuario virtual**: inicia sesión UNA vez (como en la vida real) y luego registra reservas con pausa de 10 s. Dura 1 minuto exacto | 80% |
+| `clientes-1000-reservas.js` | **50 clientes del portal registran 1000 reservas** (trabajo fijo): mide cuánto tardan y si cumplen los tiempos | 80% |
 | `correr-bloques.sh 1000` / `5000` | `PROFILE=bloques`: sube de 100 en 100 usuarios; guarda HTML, resumen y cada petición (CSV) y detiene k6 si queda poca RAM | 80% |
 | `reservas.js` `PROFILE=estres / pico / resistencia` | punto de quiebre, picos y 30 min | 100% |
 | `portal.js` `VUS=100` | **Clientes** en el portal: 60% buscan habitaciones, 25% ven sus reservas, 15% reservan | extra |
@@ -24,6 +26,33 @@ k6 run -e BASE_URL=http://127.0.0.1:8000/api/v1 -e VUS=100 tests/k6/portal.js
 cd api; php artisan k6:limpiar          # borra cuentas de carga (recepcionistas y clientes) y sus reservas
 php artisan k6:limpiar --masivos         # además, los huéspedes de MassiveDataSeeder y sus reservas
 ```
+
+### Inicio de sesión y reservas, por usuario (1 minuto)
+
+Cada usuario virtual usa su propia cuenta (`k6-0`, `k6-1`, …), inicia sesión una sola vez y después registra
+reservas. Es el escenario realista: un recepcionista entra una vez por turno, no en cada clic.
+
+```powershell
+cd api; docker exec -e K6_USERS=1000 legrandhotel-app-1 php artisan db:seed --class=LoadTestUsersSeeder --force; cd ..
+k6 run -e BASE_URL=http://localhost:8000/api/v1 -e VUS=150 -e PAUSA=10 tests/k6/inicio-reserva.js
+```
+
+`VUS` son los usuarios y `PAUSA` los segundos entre una reserva y la siguiente (10 s es lo realista).
+La prueba dura 60 s: 15 s subiendo, 40 s sostenidos y 5 s bajando. Mide por separado `login_ms` y `reserva_ms`,
+y cuenta las reservas creadas y las que encontraron la habitación ocupada (409, que es la respuesta correcta).
+
+### 50 clientes registrando 1000 reservas
+
+Trabajo fijo: la prueba termina cuando se completan las 1000 reservas, no a los X segundos. Cada iteración es
+una reserva completa del portal (buscar tipos libres y reservar uno).
+
+```powershell
+cd api; $env:K6_CLIENTS="50"; php artisan db:seed --class=LoadTestClientsSeeder --force; cd ..
+k6 run -e BASE_URL=http://localhost:8000/api/v1 -e PAUSA=6 tests/k6/clientes-1000-reservas.js
+```
+
+`CLIENTES` (50), `RESERVAS` (1000) y `PAUSA` (segundos entre una reserva y la siguiente) se cambian con `-e`.
+Con `PAUSA=0` mide la velocidad máxima; con `PAUSA=6` imita a clientes reales y cumple las metas del 80%.
 
 ## Cómo correrlas
 

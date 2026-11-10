@@ -18,7 +18,7 @@ class InventoryItemController extends Controller
     public function index(Request $request): JsonResponse
     {
         $items = InventoryItem::query()
-            ->when($request->query('search'), fn ($q, $s) => $q->where('name', 'like', $this->like($s)))
+            ->when($request->query('search'), fn ($q, $s) => $q->where('name', $this->likeOperator(), $this->like($s)))
             ->when($request->boolean('low_stock'), fn ($q) => $q->whereColumn('stock', '<=', 'min_stock'))
             ->orderBy('name')
             ->paginate($this->perPage($request));

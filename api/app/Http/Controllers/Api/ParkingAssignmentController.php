@@ -20,7 +20,7 @@ class ParkingAssignmentController extends Controller
         $assignments = ParkingAssignment::query()
             ->with(['parkingSpot:id,code', 'stay.reservation.client:id,full_name', 'stay.reservation.room:id,number'])
             ->when($request->boolean('active'), fn ($q) => $q->whereNull('left_at'))
-            ->when($request->query('search'), fn ($q, $s) => $q->where('plate', 'like', $this->like(Str::upper($s))))
+            ->when($request->query('search'), fn ($q, $s) => $q->where('plate', $this->likeOperator(), $this->like(Str::upper($s))))
             ->latest('entered_at')
             ->paginate($this->perPage($request));
 
