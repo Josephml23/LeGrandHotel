@@ -103,6 +103,15 @@ Hasta 600 usuarios no hay errores, pero el p95 sube de 3,7 s a 9,1 s porque la l
 700 usuarios las peticiones esperan más de 10 s en la cola y Nginx las corta: ese es el **punto de quiebre en local**.
 (Desde 700 las «pet./s» suben porque los cortes de Nginx responden rápido, no porque se atienda más.)
 
+**Aguante: 1000 usuarios en 1 minuto y sostenidos 3 minutos** (`bash tests/k6/correr-aguante.sh 1000`, tramos de
+10 s con `python docs/pruebas/aguante.py 1000`, gráfico `graficos/aguante-1000vu.png`, reporte `local-aguante-1000vu.html`):
+30 916 peticiones, 102,8 pet./s, p95 12,0 s y 95,3% de errores. Respondió **sin ningún error los primeros 35 s** (hasta
+~500 usuarios); desde unos 700 usuarios todo falla y con los 1000 sostenidos los 19 tramos tienen 100% de errores, porque la
+cola supera los 10 s y Nginx corta cada petición antes de responderla. Al terminar, `/health` siguió en 503 unos 75 s
+(la cola se vaciaba) y luego respondió 200 en menos de 0,2 s: no se cae ni pierde datos. Además de más capacidad, conviene
+limitar la cola (Nginx `limit_conn`, PHP-FPM `listen.backlog`) para responder 503 al instante a lo que no se puede atender.
+Informe con todo esto: `docs/informes/informe-1000/LeGrandHotel_Pruebas_1000.pdf`.
+
 **Lectura:** la laptop atiende un techo de ~40–60 peticiones por segundo (20 procesos PHP-FPM, el login usa bcrypt).
 Desde 100 usuarios ya no cumple la meta de p95 < 800 ms, y al seguir subiendo las peticiones esperan más de 10 s,
 Nginx corta (504/503) y aparecen los errores (78% en la corrida de 1000). No es una caída de la base: `/health` siguió

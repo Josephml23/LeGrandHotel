@@ -10,6 +10,7 @@ Deja: docs/pruebas/graficos/bloques-<VUS>vu[-60s].png
 """
 import csv
 import gzip
+import json
 import math
 import sys
 from collections import defaultdict
@@ -102,5 +103,6 @@ if __name__ == "__main__":
         vus, secs = int(vus), int(secs or 30)
         suffix = "" if secs == 30 else f"-{secs}s"
         data = blocks(vus, secs, suffix)
+        (DATA / f"local-bloques-{vus}vu{suffix}-bloques.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
         table(vus, data, secs)
         chart(vus, data, secs, suffix)

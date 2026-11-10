@@ -8,10 +8,11 @@ return [
     // FRONTEND_URL admite varios separados por coma (para CORS); usa App\Support\Frontend::url() para redirigir.
     'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
 
+    // «?:» y no el valor por defecto de env(): una línea vacía (RATE_LIMIT_API=) daría límite 0 y todo respondería 429.
     'rate_limits' => [
-        'login' => (int) env('RATE_LIMIT_LOGIN', 5),
-        'register' => (int) env('RATE_LIMIT_REGISTER', 3),
-        'api' => (int) env('RATE_LIMIT_API', 60),
+        'login' => (int) (env('RATE_LIMIT_LOGIN') ?: 5),
+        'register' => (int) (env('RATE_LIMIT_REGISTER') ?: 3),
+        'api' => (int) (env('RATE_LIMIT_API') ?: 60),
     ],
 
     'pagination' => [

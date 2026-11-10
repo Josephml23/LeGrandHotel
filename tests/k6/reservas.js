@@ -36,6 +36,19 @@ const blockStages = () => {
 }
 
 const profiles = {
+  // Aguante: llega a VUS en 1 minuto (bloques de BLOCK) y los sostiene HOLD (3 min) para medir cuánto resiste.
+  aguante: {
+    stages: (() => {
+      const stages = []
+      const blocks = Math.max(1, Math.floor((VUS || 1000) / BLOCK))
+      const each = Math.max(2, Math.round(60 / blocks))
+      for (let target = BLOCK; target <= (VUS || 1000); target += BLOCK) {
+        stages.push({ duration: '1s', target }, { duration: `${each - 1}s`, target })
+      }
+      return [...stages, { duration: __ENV.HOLD || '3m', target: VUS || 1000 }, { duration: '10s', target: 0 }]
+    })(),
+    thresholds: { http_req_duration: ['p(95)<800'], http_req_failed: ['rate<0.01'] },
+  },
   // 80% en local: 1000 o 5000 usuarios, de 100 en 100 (VUS=1000 o VUS=5000).
   bloques: {
     stages: blockStages(),
