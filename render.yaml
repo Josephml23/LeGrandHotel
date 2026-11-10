@@ -105,8 +105,9 @@ services:
     name: legrandhotel-web
     runtime: static
     rootDir: web
-    # VITE_API_URL se arma sola con la dirección real de la API; si defines la variable a mano, manda la tuya.
-    buildCommand: npm ci && VITE_API_URL="${VITE_API_URL:-https://$API_HOST/api/v1}" npm run build
+    # VITE_API_URL se arma con la dirección de la API. API_HOST llega vacío si Render construye la web
+    # antes de crear la API (pasa al aplicar el blueprint por primera vez), así que hay un valor de respaldo.
+    buildCommand: npm ci && VITE_API_URL="${VITE_API_URL:-https://${API_HOST:-legrandhotel-api.onrender.com}/api/v1}" npm run build
     staticPublishPath: dist
     envVars:
       # Vite 8 necesita Node 20.19+ o 22.12+; sin fijarlo, Render podría construir con una versión vieja.
