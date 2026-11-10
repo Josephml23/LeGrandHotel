@@ -104,6 +104,25 @@ paths:
       summary: Emite un token nuevo y revoca el anterior
       responses:
         '200': { $ref: '#/components/responses/Session' }
+  /auth/tutorial:
+    post:
+      tags: [Auth]
+      summary: >-
+        El usuario terminó u omitió el tutorial de bienvenida. Desde entonces data.tutorial_seen es true y la web
+        ya no se lo ofrece al entrar (se puede repetir desde Configuración).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [outcome]
+              properties:
+                outcome: { type: string, enum: [completed, skipped] }
+      responses:
+        '200': { description: 'Usuario actualizado (data.tutorial_seen = true)' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '422': { description: VALIDATION_FAILED }
   /auth/google/redirect:
     get:
       tags: [Auth]

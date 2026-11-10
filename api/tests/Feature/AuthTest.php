@@ -195,3 +195,27 @@ describe('verificación de correo', function () {
         expect($this->getJson("/api/v1/email/verify/{$user->id}/".sha1($user->email)))->toBeApiError(403);
     });
 });
+
+describe('tutorial de bienvenida', function () {
+    it('se ofrece a una cuenta nueva hasta que lo termina u omite, de cualquier rol', function (string $role) {
+        actingAsRole($role);
+
+        $this->getJson('/api/v1/auth/me')->assertJsonPath('data.tutorial_seen', false);
+        $this->postJson('/api/v1/auth/tutorial', ['outcome' => 'skipped'])->assertOk()->assertJsonPath('data.tutorial_seen', true);
+        $this->getJson('/api/v1/auth/me')->assertJsonPath('data.tutorial_seen', true);
+    })->with([Role::RECEPTIONIST, Role::STOREKEEPER, Role::CLIENT]);
+
+    it('guarda si lo terminó y valida la respuesta', function () {
+        $user = actingAsRole(Role::ADMIN);
+
+        expect($this->postJson('/api/v1/auth/tutorial', ['outcome' => 'quizas']))->toBeApiError(422, 'VALIDATION_FAILED');
+        $this->postJson('/api/v1/auth/tutorial', ['outcome' => 'completed'])->assertOk();
+
+        expect($user->fresh()->tutorial_outcome)->toBe('completed')
+            ->and($user->fresh()->tutorial_seen_at)->not->toBeNull();
+    });
+
+    it('sin sesión no se puede marcar', function () {
+        expect($this->postJson('/api/v1/auth/tutorial', ['outcome' => 'skipped']))->toBeApiError(401, 'UNAUTHENTICATED');
+    });
+});

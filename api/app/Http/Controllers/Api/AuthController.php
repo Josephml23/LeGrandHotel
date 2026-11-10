@@ -6,6 +6,7 @@ use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\TutorialRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\LoginLockout;
@@ -73,6 +74,19 @@ class AuthController extends Controller
         return ApiResponse::success($this->userPayload($request->user()));
     }
 
+    /** POST /auth/tutorial: terminó u omitió el tutorial de bienvenida; ya no se le ofrece al entrar. */
+    public function tutorial(TutorialRequest $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $user->forceFill([
+            'tutorial_seen_at' => now(),
+            'tutorial_outcome' => $request->validated('outcome'),
+        ])->save();
+
+        return ApiResponse::success($this->userPayload($user));
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
@@ -118,6 +132,8 @@ class AuthController extends Controller
             'email' => $user->email,
             'email_verified' => $user->hasVerifiedEmail(),
             'roles' => $user->roles->pluck('name')->values(),
+            // Se le ofrece el tutorial de bienvenida hasta que lo termine u omita.
+            'tutorial_seen' => $user->tutorial_seen_at !== null,
         ];
 
         // Perfil del cliente: el nombre, el DNI y el celular son opcionales hasta que reserva.

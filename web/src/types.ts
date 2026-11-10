@@ -20,6 +20,8 @@ export interface AuthUser {
   email: string
   email_verified: boolean
   roles: RoleName[]
+  /** false hasta que termina u omite el tutorial de bienvenida (se le ofrece al entrar). */
+  tutorial_seen?: boolean
   /**
    * Solo en cuentas de cliente: null hasta que guarda su perfil. El nombre, el DNI y el celular son
    * opcionales hasta que reserva; `complete` indica que ya tiene DNI y celular.

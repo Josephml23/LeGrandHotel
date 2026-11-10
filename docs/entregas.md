@@ -23,6 +23,7 @@ Leyenda: ✅ hecho y probado en código · ☁️ código listo, falta crear el 
 | --- | --- | --- |
 | Rate limits | ✅ | login: espera de 30 s tras cada contraseña incorrecta que se duplica hasta 15 min (`LoginLockout`, cuenta regresiva en el login) más 5/min; registro 3/min, API 60/min; 429 con `Retry-After` en pruebas y `tests/k6/rate-limit.js` |
 | Configuración: modo oscuro e idioma | ✅ | `/configuracion` para todos los roles (tema claro, oscuro o del sistema; español o inglés). La API responde en el idioma de `Accept-Language` (`SetLocale`, `lang/en.json`); `i18n.test.tsx` revisa que cada texto tenga traducción |
+| Tutorial de bienvenida | ✅ | Al primer ingreso (cliente o personal) se pregunta «¿Quieres hacer el tutorial?» con Omitir. El recorrido oscurece la pantalla y resalta cada sección que ese rol puede usar (flechas y Esc). Terminar u omitir se guarda en la cuenta (`POST /auth/tutorial`, `users.tutorial_seen_at`); se repite desde Configuración. Pruebas: `AuthTest`, `tour.test.tsx` |
 | Vista 404 y "En construcción" | ✅ | `web/src/pages/errors/ErrorPages.tsx` (ruta `*` y `/facturacion`) |
 | Control de respuestas HTTP | ✅ | formato único + tabla de códigos en `docs/endpoints/README.md` |
 | CRUD estructurado | ✅ | todos los módulos con CRUD completo |

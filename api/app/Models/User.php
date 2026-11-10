@@ -44,6 +44,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'tutorial_seen_at' => 'datetime',
             // bcrypt automático: nunca se guarda una contraseña en texto plano.
             'password' => 'hashed',
         ];

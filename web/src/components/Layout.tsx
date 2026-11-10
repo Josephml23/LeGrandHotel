@@ -3,7 +3,9 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { ROLE_LABELS, type RoleName } from '../types'
 import { Mark } from './ui'
+import { Tour, TourPrompt } from './Tour'
 import { t } from '../lib/i18n'
+import { useTourActive } from '../lib/tour'
 
 interface NavItem {
   to: string
@@ -62,14 +64,17 @@ const NAV: { group: string; items: NavItem[] }[] = [
 
 export function Layout() {
   const { user, hasRole, logout } = useAuth()
-  const [open, setOpen] = useState(false)
+  const [menuOpen, setOpen] = useState(false)
+  // Durante el tutorial el menú del teléfono queda abierto para poder resaltarlo.
+  const touring = useTourActive()
+  const open = menuOpen || touring
   const location = useLocation()
   const [lastPath, setLastPath] = useState(location.pathname)
 
   // Cierra el menú del teléfono al navegar.
   if (lastPath !== location.pathname) {
     setLastPath(location.pathname)
-    if (open) setOpen(false)
+    if (menuOpen) setOpen(false)
   }
 
   if (!user) return null
@@ -86,11 +91,11 @@ export function Layout() {
         <button className="btn btn-ghost menu-button" aria-expanded={open} aria-controls="sidebar" onClick={() => setOpen((v) => !v)}>
           {t('Menú')}
         </button>
-        <div className="who">
+        <div className="who" data-tour="cuenta">
           <strong>{user.name}</strong>
           <span className="small muted">{roles}</span>
         </div>
-        <button className="btn btn-sm" onClick={() => logout()}>{t('Cerrar sesión')}</button>
+        <button className="btn btn-sm" data-tour="cuenta" onClick={() => logout()}>{t('Cerrar sesión')}</button>
       </header>
 
       <nav id="sidebar" className={`sidebar ${open ? 'open' : ''}`} aria-label={t('Principal')}>
@@ -101,7 +106,7 @@ export function Layout() {
             <div key={group} style={{ display: 'contents' }}>
               <span className="group">{t(group)}</span>
               {visible.map((item) => (
-                <NavLink key={item.to} to={item.to} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <NavLink key={item.to} to={item.to} data-tour={item.to} data-tour-group={group} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                   {t(item.label)}
                 </NavLink>
               ))}
@@ -113,6 +118,8 @@ export function Layout() {
       <main className="sheet">
         <Outlet />
       </main>
+      <TourPrompt />
+      <Tour />
     </div>
   )
 }

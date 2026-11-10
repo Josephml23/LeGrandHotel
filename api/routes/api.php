@@ -45,6 +45,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::post('logout', [AuthController::class, 'logout']);
         Route::post('refresh', [AuthController::class, 'refresh']);
+        Route::post('tutorial', [AuthController::class, 'tutorial']);
         // Registro interno de personal: Administrador y Programador (3 por minuto). El rol permitido lo valida RegisterRequest.
         Route::post('register', [AuthController::class, 'register'])->middleware(['role:admin,developer', 'throttle:register']);
     });

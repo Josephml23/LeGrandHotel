@@ -1,8 +1,9 @@
 import { LANGUAGES, Segmented, themeOptions } from '../components/Preferences'
 import { TitleRow } from '../components/ui'
 import { prefsStore, t, usePrefs } from '../lib/i18n'
+import { tourStore } from '../lib/tour'
 
-/** Configuración de la interfaz para todos los roles: tema e idioma, guardados en este navegador. */
+/** Configuración de la interfaz para todos los roles: tema e idioma (en este navegador) y el tutorial. */
 export function SettingsPage() {
   const { lang, theme } = usePrefs()
 
@@ -23,6 +24,13 @@ export function SettingsPage() {
             <p className="muted small">{t('Cambia los textos de la aplicación y los mensajes del servidor.')}</p>
           </div>
           <Segmented label={t('Idioma')} value={lang} options={LANGUAGES} onChange={(next) => prefsStore.set({ lang: next })} />
+        </section>
+        <section className="setting">
+          <div>
+            <h2 className="section-title">{t('Tutorial')}</h2>
+            <p className="muted small">{t('Un recorrido corto que resalta cada sección que puedes usar.')}</p>
+          </div>
+          <button className="btn" onClick={() => tourStore.start()}>{t('Ver el tutorial')}</button>
         </section>
       </div>
     </>

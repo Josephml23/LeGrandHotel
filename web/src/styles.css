@@ -31,6 +31,7 @@
   --row-hover: #fafaf8;
   --auth-aside: var(--accent-ink);
   --shadow: rgba(19, 20, 22, 0.18);
+  --tour-dim: rgba(19, 20, 22, 0.62);
   --chart-1: #00809d; /* validado con dataviz: croma >= 0.1, contraste >= 3:1 */
   --chart-2: #2f70bb;
   --chart-3: #a86f0c;
@@ -99,6 +100,7 @@
   --pill-accent-bg: #173840; --pill-accent-ink: #a9e1ec;
   --auth-aside: #0c2d35;
   --shadow: rgba(0, 0, 0, 0.5);
+  --tour-dim: rgba(0, 0, 0, 0.72);
   color-scheme: dark;
 }
 
@@ -241,6 +243,23 @@ table.data .row-actions { text-align: right; white-space: nowrap; }
 .rack-room.maintenance { background: repeating-linear-gradient(135deg, var(--stripe-a) 0 6px, var(--stripe-b) 6px 7px); color: var(--stripe-ink); }
 .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-size: var(--fs-small); color: var(--muted); }
 .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -2px; border: 1px solid var(--border); }
+
+/* ── Tutorial: oscurece todo menos lo resaltado ──────────── */
+.tour { position: fixed; inset: 0; z-index: 200; }
+.tour-dim { position: fixed; inset: 0; background: var(--tour-dim); animation: fade 200ms var(--ease); }
+.tour-spotlight { position: fixed; border-radius: 8px; box-shadow: 0 0 0 9999px var(--tour-dim); outline: 2px solid var(--accent); outline-offset: 2px; pointer-events: none; transition: top 260ms var(--ease), left 260ms var(--ease), width 260ms var(--ease), height 260ms var(--ease); }
+.tour-bubble { position: fixed; width: min(320px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 10px; background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: 0 12px 40px var(--shadow); transition: top 260ms var(--ease), left 260ms var(--ease); }
+.tour-bubble h2 { margin: 0; font-size: 17px; font-weight: 600; }
+.tour-bubble p { margin: 0; line-height: 1.5; }
+.tour-progress { display: flex; gap: 4px; margin-top: 4px; }
+.tour-progress i { width: 6px; height: 6px; border-radius: 3px; background: var(--border); transition: width 200ms var(--ease), background-color 200ms var(--ease); }
+.tour-progress i.on { width: 18px; background: var(--accent); }
+.tour-actions { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+@keyframes fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .tour-spotlight, .tour-bubble, .tour-progress i { transition: none; }
+  .tour-dim { animation: none; }
+}
 
 /* ── Diálogo ─────────────────────────────────────────────── */
 dialog.modal { width: min(640px, calc(100vw - 32px)); border: 1px solid var(--border); border-radius: 12px; padding: 0; background: var(--surface); color: var(--text); box-shadow: 0 12px 40px var(--shadow); }
