@@ -1,0 +1,38 @@
+Corrida completa del 2026-11-10 09:14–09:20 (k6 run -e PROFILE=bloques -e VUS=1000 tests/k6/reservas.js), resumen final:
+  █ THRESHOLDS 
+    http_req_duration
+    ✗ 'p(95)<800' p(95)=11.01s
+      {tipo:lectura}
+      ✗ 'p(95)<800' p(95)=11.02s
+    http_req_failed
+    ✗ 'rate<0.01' rate=77.66%
+  █ TOTAL RESULTS 
+    checks_total.......: 21981  58.026541/s
+    checks_succeeded...: 21.50% 4728 out of 21981
+    checks_failed......: 78.49% 17253 out of 21981
+    ✗ login: 2xx
+      ↳  22% — ✓ 436 / ✗ 1488
+    ✗ disponibles: 2xx
+      ↳  22% — ✓ 1530 / ✗ 5162
+    ✗ reservas: 2xx
+      ↳  21% — ✓ 1433 / ✗ 5259
+    ✗ tipos: 2xx
+      ↳  19% — ✓ 1329 / ✗ 5344
+    CUSTOM
+    reserva_creada_ms..............: avg=5.61s  min=625.26ms med=5.95s p(90)=9.57s  p(95)=9.96s  p(99)=10s    max=10s   
+    HTTP
+    http_req_duration..............: avg=7.45s  min=82.55ms  med=10s   p(90)=10s    p(95)=11.01s p(99)=12.05s max=12.07s
+      { expected_response:true }...: avg=5.1s   min=82.55ms  med=4.71s p(90)=9.43s  p(95)=9.59s  p(99)=9.86s  max=10s   
+      { tipo:lectura }.............: avg=7.49s  min=275.01ms med=10s   p(90)=10s    p(95)=11.02s p(99)=12.05s max=12.07s
+    http_req_failed................: 77.66% 17970 out of 23137
+    http_reqs......................: 23137  61.078207/s
+    EXECUTION
+    iteration_duration.............: avg=19.58s min=1.48s    med=18.3s p(90)=31.74s p(95)=31.92s p(99)=33.61s max=36.69s
+    iterations.....................: 9479   25.023137/s
+    vus............................: 5      min=0              max=1000
+    vus_max........................: 1000   min=1000           max=1000
+    NETWORK
+    data_received..................: 29 MB  76 kB/s
+    data_sent......................: 5.6 MB 15 kB/s
+running (6m18.8s), 0000/1000 VUs, 9479 complete and 43 interrupted iterations
+time="2026-11-10T09:20:39-05:00" level=error msg="thresholds on metrics 'http_req_duration, http_req_duration{tipo:lectura}, http_req_failed' have been crossed"

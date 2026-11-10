@@ -6,6 +6,7 @@
 | `rate-limit.js` | Demuestra la espera del login (401 y luego 429 `LOGIN_LOCKED`) | 25% / 80% |
 | `reservas.js` `PROFILE=carga-25` | 50 → 100 VU, p95 < 500 ms, 0% errores | 25% |
 | `reservas.js` `PROFILE=carga-80 VUS=1000/3000/5000` | carga a 1000, 3000 y 5000 VU | 80% |
+| `correr-bloques.sh 1000` / `5000` | `PROFILE=bloques`: sube de 100 en 100 usuarios; guarda HTML, resumen y cada petición (CSV) y detiene k6 si queda poca RAM | 80% |
 | `reservas.js` `PROFILE=estres / pico / resistencia` | punto de quiebre, picos y 30 min | 100% |
 | `portal.js` `VUS=100` | **Clientes** en el portal: 60% buscan habitaciones, 25% ven sus reservas, 15% reservan | extra |
 

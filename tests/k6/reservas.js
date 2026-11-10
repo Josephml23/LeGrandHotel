@@ -4,6 +4,7 @@
  * Perfiles (variable PROFILE):
  *   carga-25    50 → 100 usuarios virtuales (entrega 25%)       p95 < 500 ms, 0% errores
  *   carga-80    1000 / 3000 / 5000 (VUS=...) (entrega 80%)       p95 < 800 ms, < 1% errores
+ *   bloques     de 100 en 100 hasta VUS (1000 o 5000): 10 s subiendo y 20 s sostenido por bloque
  *   estres      sube hasta encontrar el punto de quiebre (100%)
  *   pico        salto brusco de 0 a VUS en 10 s
  *   resistencia VUS constantes durante 30 min
@@ -24,7 +25,22 @@ const PROFILE = __ENV.PROFILE || 'carga-25'
 const VUS = Number(__ENV.VUS || 0)
 const USERS = Number(__ENV.USERS || 50)
 
+// Bloques de BLOCK usuarios (100 por defecto): sube un bloque, lo sostiene y sube el siguiente hasta llegar a VUS.
+const BLOCK = Number(__ENV.BLOCK || 100)
+const blockStages = () => {
+  const stages = []
+  for (let target = BLOCK; target <= (VUS || 1000); target += BLOCK) {
+    stages.push({ duration: __ENV.BLOCK_RAMP || '10s', target }, { duration: __ENV.BLOCK_HOLD || '20s', target })
+  }
+  return [...stages, { duration: '30s', target: 0 }]
+}
+
 const profiles = {
+  // 80% en local: 1000 o 5000 usuarios, de 100 en 100 (VUS=1000 o VUS=5000).
+  bloques: {
+    stages: blockStages(),
+    thresholds: { http_req_duration: ['p(95)<800'], http_req_failed: ['rate<0.01'] },
+  },
   // Un escalón de VUS constantes (para comparar varias corridas cortas: 5, 10, 25, 50 VU…).
   escalon: {
     stages: [

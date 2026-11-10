@@ -39,11 +39,11 @@ Leyenda: ✅ hecho y probado en código · ☁️ código listo, falta crear el 
 | CORS solo para el frontend | ✅ | `config/cors.php` + prueba |
 | Smoke test antes de cada despliegue | ✅ | `tests/k6/smoke.js` en `deploy.yml` |
 | Autenticación y autorización | ✅ | Sanctum + roles + policies |
-| Ingreso con cuenta de correo | ✅ | Google (Socialite) + verificación de correo; faltan credenciales OAuth de Google en SSM |
+| Ingreso con cuenta de correo | ✅ | Google (Socialite) + verificación de correo. Revisado el 2026-11-10: credenciales definidas en `api/.env`, `/auth/google/redirect` lleva a Google y el callback inválido vuelve a `/login?error=google`. Para el servidor faltan las credenciales en SSM y registrar la URL de callback de producción en Google Cloud |
 | Tokens expirados y rutas protegidas | ✅ | 60 min, refresh, prune diario, `ProtectedRoute` |
 | Pantallas de errores previstos | ✅ | 500, 503 (reintento cada 30 s), sin conexión, sesión expirada, 429 con cuenta regresiva, 403 |
-| Pruebas con 1000–5000 usuarios | ☁️ | `PROFILE=carga-80 VUS=1000/3000/5000` |
-| Backups | ☁️ | snapshots RDS 7 días + `backup-mysql-to-s3.sh` + `restore-test.sh` |
+| Pruebas con 1000–5000 usuarios | ☁️ | Local (2026-11-10, bloques de 100): 1000 VU completa (`docs/pruebas/local-bloques-1000vu.html`): la laptop se satura en ~40–60 pet./s, p95 11 s y 78% de errores (timeout de 10 s de Nginx). 5000 VU cancelada. Falta repetir en AWS (`PROFILE=bloques VUS=1000/5000`) |
+| Backups | ✅/☁️ | Local: respaldo cifrado (AES-256) en el repositorio **privado** de GitHub `LeGrandHotel-backup` con `infra/scripts/backup-mysql-to-github.sh`, restauración probada con `restore-from-github.sh` (5 tablas iguales). En AWS: snapshots RDS 7 días + `backup-mysql-to-s3.sh` + `restore-test.sh` |
 | EXTRA: Redis (caché, colas) | ☁️ | ElastiCache en Terraform, worker y scheduler en Docker |
 
 ## Entrega 100% (semana 13)

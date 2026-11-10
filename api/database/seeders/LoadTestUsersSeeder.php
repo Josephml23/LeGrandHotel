@@ -24,14 +24,15 @@ class LoadTestUsersSeeder extends Seeder
         $now = now();
 
         foreach (array_chunk(range(0, $count - 1), 250) as $chunk) {
-            DB::table('users')->insertOrIgnore(array_map(fn ($i) => [
+            // Si la cuenta ya existe, se le vuelve a poner la clave de la prueba (pudo crearse con otra).
+            DB::table('users')->upsert(array_map(fn ($i) => [
                 'name' => "Recepción de carga {$i}",
                 'email' => "k6-{$i}@carga.legrandhotel.test",
                 'password' => $password,
                 'email_verified_at' => $now,
                 'created_at' => $now,
                 'updated_at' => $now,
-            ], $chunk));
+            ], $chunk), ['email'], ['password', 'email_verified_at', 'updated_at']);
 
             $users = DB::table('users')->whereIn('email', array_map(fn ($i) => "k6-{$i}@carga.legrandhotel.test", $chunk))->pluck('id', 'email');
 

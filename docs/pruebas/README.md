@@ -65,6 +65,29 @@ la latencia crece con la cola (todas las operaciones tienen el mismo p95). Sin e
 Gráficos (escala de grises): `docs/pruebas/graficos/` — se regeneran con `python docs/pruebas/graficos.py`.
 Datos crudos (resúmenes JSON y CSV por petición): `docs/pruebas/datos/`.
 
+**Bloques de 100 usuarios en la laptop (2026-11-10, Nginx + PHP-FPM 20 procesos + OPcache + caché de Laravel, en Docker):**
+`bash tests/k6/correr-bloques.sh 1000` sube de 100 en 100 usuarios (10 s subiendo y 20 s sostenido por bloque).
+
+| Corrida | Peticiones | Pet./s | p95 | Errores | Archivo |
+| --- | --- | --- | --- | --- | --- |
+| 1000 VU completa (6 min) | 23 137 | 61 | 11,0 s | 77,7% | `local-bloques-1000vu.html`, `datos/local-bloques-1000vu.json` y `.txt` |
+| 5000 VU | — | — | — | — | cancelada a pedido del equipo (con 1 GB de RAM libre, k6 no cabía en la laptop) |
+
+Detalle por bloque de una repetición que se canceló a los 300 usuarios (`datos/local-bloques-parcial-300vu.csv.gz`,
+se tabula con `python docs/pruebas/bloques.py`):
+
+| Usuarios | Peticiones en el bloque (30 s) | Pet./s | p95 | Errores |
+| ---: | ---: | ---: | ---: | ---: |
+| 100 | 1 159 | 38,6 | 2,04 s | 0% |
+| 200 | 1 223 | 40,8 | 4,51 s | 0% |
+| 300 | (bloque incompleto) | — | 5,02 s | 0% |
+
+**Lectura:** la laptop atiende un techo de ~40–60 peticiones por segundo (20 procesos PHP-FPM, el login usa bcrypt).
+Desde 100 usuarios ya no cumple la meta de p95 < 800 ms, y al seguir subiendo las peticiones esperan más de 10 s,
+Nginx corta (504/503) y aparecen los errores (78% en la corrida de 1000). No es una caída de la base: `/health` siguió
+respondiendo y al terminar la prueba todo volvió a la normalidad. **Corrección:** más CPU y varias instancias detrás del
+balanceador (Auto Scaling en AWS), RDS y Redis; se repite allí con `PROFILE=bloques VUS=1000` y `VUS=5000`.
+
 ## Carga y estrés (k6)
 
 Los scripts están en `tests/k6/` (ver su README). Cada corrida genera un HTML con gráficos en esta carpeta:
@@ -72,7 +95,7 @@ Los scripts están en `tests/k6/` (ver su README). Cada corrida genera un HTML c
 | Entrega | Usuarios virtuales | Archivo esperado | Meta | Estado |
 | --- | --- | --- | --- | --- |
 | 25% | 50 → 100 | `carga-25-100vu.html` | p95 < 500 ms, 0% errores | pendiente: requiere el servidor en AWS |
-| 80% | 1000 / 3000 / 5000 | `carga-80-1000vu.html`, `-3000vu`, `-5000vu` | p95 < 800 ms, < 1% errores | pendiente |
+| 80% | 1000 / 3000 / 5000 | `carga-80-1000vu.html`, `-3000vu`, `-5000vu` | p95 < 800 ms, < 1% errores | local 1000 VU hecha (no cumple, ver abajo); falta AWS |
 | 100% | 10 000 / 25 000 / 50 000 | `estres-*.html`, `pico-*.html`, `resistencia-30min.html` | punto de quiebre y mejora | pendiente |
 
 > Las corridas deben hacerse desde EC2 generadoras en us-east-1, nunca desde la laptop, y con los rate limits
