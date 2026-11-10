@@ -32,7 +32,7 @@ const blockStages = () => {
   for (let target = BLOCK; target <= (VUS || 1000); target += BLOCK) {
     stages.push({ duration: __ENV.BLOCK_RAMP || '10s', target }, { duration: __ENV.BLOCK_HOLD || '20s', target })
   }
-  return [...stages, { duration: '30s', target: 0 }]
+  return [...stages, { duration: __ENV.RAMP_DOWN || '30s', target: 0 }]
 }
 
 const profiles = {

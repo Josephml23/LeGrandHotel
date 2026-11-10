@@ -1,0 +1,322 @@
+{
+    "metrics": {
+        "vus_max": {
+            "value": 1000,
+            "min": 1000,
+            "max": 1000
+        },
+        "group_duration": {
+            "p(90)": 30011.29335,
+            "p(95)": 30012.2788,
+            "p(99)": 30014.52343,
+            "max": 30029.4052,
+            "avg": 21897.144760821662,
+            "min": 412.89,
+            "med": 28660.36335
+        },
+        "http_req_duration{tipo:lectura}": {
+            "avg": 9067.69875659818,
+            "min": 274.7742,
+            "med": 10002.637299999999,
+            "p(90)": 10004.15916,
+            "p(95)": 10004.613730000001,
+            "p(99)": 10005.922864999999,
+            "max": 10021.6228,
+            "thresholds": {
+                "p(95)<800": true
+            }
+        },
+        "http_req_tls_handshaking": {
+            "max": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0
+        },
+        "http_req_receiving": {
+            "p(90)": 0.51198,
+            "p(95)": 0.5558899999999999,
+            "p(99)": 0.7922399999999987,
+            "max": 1.7077,
+            "avg": 0.07214024066897828,
+            "min": 0,
+            "med": 0
+        },
+        "vus": {
+            "value": 3,
+            "min": 0,
+            "max": 1000
+        },
+        "http_req_waiting": {
+            "p(90)": 10004.05982,
+            "p(95)": 10004.55495,
+            "p(99)": 10005.862764000001,
+            "max": 10021.1059,
+            "avg": 8922.011866122784,
+            "min": 129.5575,
+            "med": 10002.5302
+        },
+        "reserva_creada_ms": {
+            "avg": 7108.685563636366,
+            "min": 3088.7234,
+            "med": 7420.6095,
+            "p(90)": 10003.4109,
+            "p(95)": 10004.53811,
+            "p(99)": 10006.8277,
+            "max": 10006.8277
+        },
+        "http_req_duration{expected_response:true}": {
+            "max": 9989.6284,
+            "avg": 5680.0495951876,
+            "min": 130.0688,
+            "med": 5967.10765,
+            "p(90)": 8766.73555,
+            "p(95)": 9005.999425,
+            "p(99)": 9786.2275
+        },
+        "iteration_duration": {
+            "p(95)": 31908.12972,
+            "p(99)": 31985.976047999997,
+            "max": 32010.4682,
+            "avg": 23301.554678307166,
+            "min": 1438.7647,
+            "med": 30077.4862,
+            "p(90)": 31812.22976
+        },
+        "iterations": {
+            "count": 1973,
+            "rate": 17.962250096383222
+        },
+        "http_req_duration": {
+            "p(90)": 10004.1578,
+            "p(95)": 10004.61012,
+            "p(99)": 10005.895454000001,
+            "max": 10021.6228,
+            "avg": 8922.109961227814,
+            "min": 130.0688,
+            "med": 10002.6024,
+            "thresholds": {
+                "p(95)<800": true
+            }
+        },
+        "http_reqs": {
+            "count": 4903,
+            "rate": 44.63705637230965
+        },
+        "http_req_blocked": {
+            "min": 0,
+            "med": 0,
+            "p(90)": 0.5588,
+            "p(95)": 0.886709999999999,
+            "p(99)": 1.1167839999999998,
+            "max": 13.3907,
+            "avg": 0.1421446053436672
+        },
+        "data_sent": {
+            "count": 1193154,
+            "rate": 10862.509149265092
+        },
+        "http_req_failed": {
+            "passes": 3677,
+            "fails": 1226,
+            "thresholds": {
+                "rate<0.01": true
+            },
+            "value": 0.7499490108097083
+        },
+        "http_req_connecting": {
+            "p(99)": 1.0986879999999997,
+            "max": 1.6347,
+            "avg": 0.12326039159698143,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0.54738,
+            "p(95)": 0.5815399999999998
+        },
+        "checks": {
+            "passes": 1081,
+            "fails": 3534,
+            "value": 0.2342361863488624
+        },
+        "data_received": {
+            "count": 6628901,
+            "rate": 60349.7098966877
+        },
+        "http_req_sending": {
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0.5649499999999988,
+            "max": 1.5147,
+            "avg": 0.025954864368753827
+        }
+    },
+    "setup_data": {
+        "clientIds": [
+            3214,
+            3213,
+            3212,
+            3211,
+            3210,
+            3209,
+            3208,
+            3207,
+            3206,
+            3205,
+            3204,
+            3203,
+            3202,
+            3201,
+            3200,
+            3199,
+            3198,
+            3197,
+            3196,
+            3195,
+            3194,
+            3193,
+            3192,
+            3191,
+            3190,
+            3189,
+            3188,
+            3187,
+            3186,
+            3185,
+            3184,
+            3183,
+            3182,
+            3181,
+            3180,
+            3179,
+            3178,
+            3177,
+            3176,
+            3175,
+            3174,
+            3173,
+            3172,
+            3171,
+            3170,
+            3169,
+            3168,
+            3167,
+            3166,
+            3165
+        ],
+        "tokens": [
+            "2310|qLuw6sli25KhA3wph6vnhdjAV22Fd1M4FA8FQUqadee6e853",
+            "2311|ttNZJQoo3FQCxCRcEasSGbzB3cY8JQxO7c7TMyEWe809bf6a",
+            "2312|HG7q2lRpAgjUsuaZ6o7iwKYPqKj3Wsr2hw1XBh3R64fcc299",
+            "2313|sC3lHgrQliXtUR7u7HFxosMQHl9oL3dVXE5vg9HG41e1f8f4",
+            "2314|7XsyR8C3bIY3IdDsHsb0vxDfC6WTKNcXFg8pMR9G22e5a290",
+            "2315|ARgOOv6S9VkSsDnSWl6W0JSEjzMedXCbZJt08HSx71dc5c9a",
+            "2316|zCMSAmPzCXWJuDe6NDw8Eqyt84LBeAmn0E3p8PK1c47dd68b",
+            "2317|i8mTEH2IzOPxeLUGp3AHTZVnZXOHcMsygjldfsCB10ba2c5b",
+            "2318|HdU6BQsDuzS0jcMGvbYjbxcWKQ2if8niKhg3D7qH713a638c",
+            "2319|sEZdgTJpsCxptG4c4bE3TXnmPxlW6o9L43Or19Pw41f950e1",
+            "2320|yWHWfBOV67QS5OmLX44faTXBZtva0QTKNPJvT6WY58f41c23",
+            "2321|fFFGP1YFynnM8U1E5xI35kD4inoQ4MHbPQmmZcH1e0ae8da1",
+            "2322|FGLlPABWswx1I0GFYKdF1qndAzWFKiPHQozhxrcR17686e14",
+            "2323|AziylcNfwKHhlACfKBniX86kLdkHkUEw5A5qAKZm7ec25f96",
+            "2324|GREv84k4TUWgewPyqvxp5lbqc5j8RpnjYWz0SGPh2dc4d3da",
+            "2325|M06QpM3QiHv2k1O13AiCMwlbEsPXPDOnqYd2pYp4c517c79d",
+            "2326|Mwen8powILFJvRZDk18JWObsQAaT62BVAhfzfqEXe5fcac61",
+            "2327|rGpBnUI3tfHp4dawbJTtAu90JGFWKkeFRaoXyipy88496d2a",
+            "2328|ulyUOZE0QJQ0nNTRIDYhyASkZd3CtEx5bTvrt5wLda83dfac",
+            "2329|LzA7kbLHJGmDHdmrdnaqCUSjEWK5cMtTMK7bvm6o9fd588dd",
+            "2330|aEtfa7qZ5s6rhaDdCg5Npgn1zrMeDeaRca4ihUjR972dc16b",
+            "2331|joy1uOAbduy4w0BO0eoMqKUja2FY8zx3Vrvl5Bgh2a0909cc",
+            "2332|rTosBGBW0qSvd54oVemCOZHcQKmAYIWSjDUTLCkzcba86b53",
+            "2333|KDrTP2EyHY7Gtcds2ENbtg9n25YuVOMspgGJZJDHd1a0f540",
+            "2334|Bl4ohdQVttFVS0sjF9nus9l004vbHC8WcXmAk8gKe3065657",
+            "2335|gA6d7EGjN5ua1n3W73IhpjrmDZ28529obxdo6gCq9a0a24ec",
+            "2336|7mwnqEGZ9RfQ7oQi1zBaW7HXU0HVZj6XI4Uoakqgddb046b1",
+            "2337|kUgKFsuSwvk76lCbqQLNy5wcNRts2Ve7Z0yLaG8y40d9f4ed",
+            "2338|6fMvWefYgX66kvJcOvVGsklST23cdiM81720gmtE1c79b472",
+            "2339|m1bY2aX0yMSJ2wSmDCPguUrXEVh38KP38eHeLHH7368126e2",
+            "2340|AKH33w1oF2hxT3NfzUUlQT5Ro0fvD7PkU7qSFDSHe39978e8",
+            "2341|z9ZmsJfFoagXaCIFQuGwl5o0egdXYto05SwQ3rQn9a09e67e",
+            "2342|qbk173VCclvhuq9Ek6av1LCWSJuTLBe3l51rJJtD01895f10",
+            "2343|oI9XYgSLONgbXL9H2UQVoaJNVjzEChlTcQX5iJOZf965cd10",
+            "2344|Fm0tPEXcyOTQqnNVTGz0wQIiHXhh7nQLp7ZakA31854f600b",
+            "2345|0D9Ae3jMUfMIvbsNgqXBtd3lltwPm8XXh4MuIEJQb89c9653",
+            "2346|8dElgc71NclHTXdGPG1RbI1EVEJ1VeJifaoMFs6We113267d",
+            "2347|c341YIoBkxCavAudZlFoJsEjksryqRGViKYu03INd36589f1",
+            "2348|QE3hgR7MHzA09tEhiJEnkDCeJnuRp1o1sIkrjZZ101a325a8",
+            "2349|0qYJaf9c5R5Ekh2l0Xzq0SNoe6UlpfhTHlpO0GHN1be5e0d3",
+            "2350|YWLWMqJFm5zlHZhuxyzhiCABc62Y9L4Gyu6APvcy576c4ecf",
+            "2351|bVnRKF1zd9ckKurTWXXYXeLa84fv94qQQAz6dIpba81dd24e",
+            "2352|51T4Gd9CKUGxv8eX8o99Rlx4i2ydE9bM4bqqG55z193e22f9",
+            "2353|f80hFHxZbG7EEr4SdXrns296gauqSMYaHANs3GJr001b22d2",
+            "2354|UpVbWJIBDyNZ2jY5l12MujyFa27OIIsxcyrdtJm8b3d02fcb",
+            "2355|8l0jY6vVWwaDfFcwGwPLriZWb3sc0UoadLDt5A6W965c0f66",
+            "2356|IGISjziS45yiLtRujc3dAXL3bWcKZ2caVxWYqMlZ07160820",
+            "2357|fX3E8V5xq0SfvOwJfek4beQ6ooLr4Mqj3MesBOL5b0af5189",
+            "2358|VuxNgtletIhf64RIngctu1gkn2HgXefqAZNPHiXX329e0d21",
+            "2359|gHUaIX01jk9nMYIY9JRl9ZTgm3oJzmTWhGLoTrDz8006d33c"
+        ]
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "lecturas": {
+                "groups": {},
+                "checks": {
+                        "disponibles: 2xx": {
+                            "name": "disponibles: 2xx",
+                            "path": "::lecturas::disponibles: 2xx",
+                            "id": "7dfb620e772091d960a031e6f8204df5",
+                            "passes": 466,
+                            "fails": 934
+                        },
+                        "reservas: 2xx": {
+                            "name": "reservas: 2xx",
+                            "path": "::lecturas::reservas: 2xx",
+                            "id": "0a63a2965ec06101f7b3243aaede33e2",
+                            "passes": 296,
+                            "fails": 1104
+                        },
+                        "tipos: 2xx": {
+                            "name": "tipos: 2xx",
+                            "path": "::lecturas::tipos: 2xx",
+                            "id": "df9e2c55a2e0d99e3a8e1ab842961304",
+                            "passes": 171,
+                            "fails": 1228
+                        }
+                    },
+                "name": "lecturas",
+                "path": "::lecturas",
+                "id": "58f39b6a385e26b9eebe05c9df666621"
+            },
+            "login": {
+                "name": "login",
+                "path": "::login",
+                "id": "a7d10b3a6c9a385ee254f0dbc7f9c8c9",
+                "groups": {},
+                "checks": {
+                        "login: 2xx": {
+                            "name": "login: 2xx",
+                            "path": "::login::login: 2xx",
+                            "id": "f11eb4e1ae1d2e346d813a2458b62b12",
+                            "passes": 148,
+                            "fails": 268
+                        }
+                    }
+            },
+            "crear reserva": {
+                "name": "crear reserva",
+                "path": "::crear reserva",
+                "id": "3db5e319f0f638e1c6da369e7004a683",
+                "groups": {},
+                "checks": {}
+            }
+        },
+        "checks": {}
+    }
+}

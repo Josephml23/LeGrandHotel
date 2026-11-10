@@ -72,6 +72,7 @@ Datos crudos (resúmenes JSON y CSV por petición): `docs/pruebas/datos/`.
 | --- | --- | --- | --- | --- | --- |
 | 1000 VU completa (6 min) | 23 137 | 61 | 11,0 s | 77,7% | `local-bloques-1000vu.html`, `datos/local-bloques-1000vu.json` y `.txt` |
 | 5000 VU | — | — | — | — | cancelada a pedido del equipo (con 1 GB de RAM libre, k6 no cabía en la laptop) |
+| 1000 VU en **1 minuto en total** (bloques de 100 cada 5 s) | 4 903 | 44,6 | 10,0 s | 75,0% | `local-bloques-1000vu-5s.html`, `datos/local-bloques-1000vu-5s.*`, `graficos/bloques-1000vu-5s.png` |
 
 Detalle por bloque de una repetición que se canceló a los 300 usuarios (`datos/local-bloques-parcial-300vu.csv.gz`,
 se tabula con `python docs/pruebas/bloques.py`):
@@ -81,6 +82,26 @@ se tabula con `python docs/pruebas/bloques.py`):
 | 100 | 1 159 | 38,6 | 2,04 s | 0% |
 | 200 | 1 223 | 40,8 | 4,51 s | 0% |
 | 300 | (bloque incompleto) | — | 5,02 s | 0% |
+
+**1000 usuarios en 1 minuto, por bloque** (`bash tests/k6/correr-bloques.sh 1000 5`, tabla con
+`python docs/pruebas/bloques.py 1000:5`; cada bloque dura 5 s: 1 s subiendo y 4 s sostenido):
+
+| Usuarios | Peticiones en el bloque (5 s) | Pet./s | p95 | Errores |
+| ---: | ---: | ---: | ---: | ---: |
+| 100 | 102 | 20,4 | 3,69 s | 0% |
+| 200 | 175 | 35,0 | 4,10 s | 0% |
+| 300 | 200 | 40,0 | 4,97 s | 0% |
+| 400 | 218 | 43,6 | 6,63 s | 0% |
+| 500 | 225 | 45,0 | 8,64 s | 0% |
+| 600 | 214 | 42,8 | 9,13 s | 0% |
+| 700 | 268 | 53,6 | 10,01 s | 85,1% |
+| 800 | 322 | 64,4 | 10,01 s | 100% |
+| 900 | 355 | 71,0 | 10,00 s | 100% |
+| 1000 | 428 | 85,6 | 10,00 s | 100% |
+
+Hasta 600 usuarios no hay errores, pero el p95 sube de 3,7 s a 9,1 s porque la laptop no pasa de ~45 pet./s. Desde
+700 usuarios las peticiones esperan más de 10 s en la cola y Nginx las corta: ese es el **punto de quiebre en local**.
+(Desde 700 las «pet./s» suben porque los cortes de Nginx responden rápido, no porque se atienda más.)
 
 **Lectura:** la laptop atiende un techo de ~40–60 peticiones por segundo (20 procesos PHP-FPM, el login usa bcrypt).
 Desde 100 usuarios ya no cumple la meta de p95 < 800 ms, y al seguir subiendo las peticiones esperan más de 10 s,

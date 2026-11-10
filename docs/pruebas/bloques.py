@@ -3,9 +3,10 @@ Resultados de las pruebas por bloques de 100 usuarios (tests/k6/correr-bloques.s
 peticiones por segundo, p95 y porcentaje de errores. Imprime la tabla en Markdown y genera un gráfico
 en escala de grises (legible impreso sin color).
 
-Uso:  python docs/pruebas/bloques.py 1000 5000
-Lee:  docs/pruebas/datos/local-bloques-<VUS>vu.csv.gz
-Deja: docs/pruebas/graficos/bloques-<VUS>vu.png
+Uso:  python docs/pruebas/bloques.py 1000            (bloques de 30 s)
+      python docs/pruebas/bloques.py 1000:60         (bloques de 1 minuto)
+Lee:  docs/pruebas/datos/local-bloques-<VUS>vu[-60s].csv.gz
+Deja: docs/pruebas/graficos/bloques-<VUS>vu[-60s].png
 """
 import csv
 import gzip
@@ -25,7 +26,6 @@ OUT = BASE / "graficos"
 OUT.mkdir(exist_ok=True)
 
 BLOCK = 100
-BLOCK_SECONDS = 30  # 10 s subiendo + 20 s sostenido (perfil «bloques» de reservas.js)
 
 
 def p95(values):
@@ -33,11 +33,11 @@ def p95(values):
     return values[max(0, math.ceil(0.95 * len(values)) - 1)] if values else 0.0
 
 
-def blocks(vus):
+def blocks(vus, block_seconds=30, suffix=""):
     """Agrupa cada petición del escenario por el bloque en que ocurrió."""
     durations, failed = defaultdict(list), defaultdict(list)
     start = None
-    with gzip.open(DATA / f"local-bloques-{vus}vu.csv.gz", "rt", encoding="utf-8") as fh:
+    with gzip.open(DATA / f"local-bloques-{vus}vu{suffix}.csv.gz", "rt", encoding="utf-8") as fh:
         try:
             for row in csv.DictReader(fh):
                 if row.get("scenario") != "default" or row["metric_name"] not in ("http_req_duration", "http_req_failed"):
@@ -50,7 +50,7 @@ def blocks(vus):
     total_blocks = vus // BLOCK
     rows = []
     for i in range(total_blocks):
-        lo, hi = start + i * BLOCK_SECONDS, start + (i + 1) * BLOCK_SECONDS
+        lo, hi = start + i * block_seconds, start + (i + 1) * block_seconds
         d = [v for ts, vals in durations.items() if lo <= ts < hi for v in vals]
         f = [v for ts, vals in failed.items() if lo <= ts < hi for v in vals]
         if not d:
@@ -58,22 +58,22 @@ def blocks(vus):
         rows.append({
             "vus": (i + 1) * BLOCK,
             "reqs": len(d),
-            "rps": len(d) / BLOCK_SECONDS,
+            "rps": len(d) / block_seconds,
             "p95": p95(d) / 1000,
             "errors": 100 * sum(f) / len(f) if f else 0.0,
         })
     return rows
 
 
-def table(vus, rows):
-    print(f"\n### {vus} usuarios, bloques de {BLOCK}\n")
+def table(vus, rows, block_seconds=30):
+    print(f"\n### {vus} usuarios, bloques de {BLOCK} ({block_seconds} s cada uno)\n")
     print("| Usuarios | Peticiones | Pet./s | p95 | Errores |")
     print("| ---: | ---: | ---: | ---: | ---: |")
     for r in rows:
         print(f"| {r['vus']} | {r['reqs']} | {r['rps']:.1f} | {r['p95']:.2f} s | {r['errors']:.1f}% |")
 
 
-def chart(vus, rows):
+def chart(vus, rows, block_seconds=30, suffix=""):
     x = [r["vus"] for r in rows]
     fig, ax = plt.subplots(figsize=(8, 4.2))
     ax.plot(x, [r["p95"] for r in rows], color="#111111", marker="o", markersize=3, label="p95 (s)")
@@ -89,16 +89,18 @@ def chart(vus, rows):
     lines = ax.get_legend_handles_labels()
     bars = ax2.get_legend_handles_labels()
     ax.legend(lines[0] + bars[0], lines[1] + bars[1], loc="upper left", frameon=False)
-    ax.set_title(f"Prueba local por bloques: hasta {vus} usuarios")
+    ax.set_title(f"Prueba local por bloques de {BLOCK} ({block_seconds} s): hasta {vus} usuarios")
     fig.tight_layout()
-    path = OUT / f"bloques-{vus}vu.png"
+    path = OUT / f"bloques-{vus}vu{suffix}.png"
     fig.savefig(path, dpi=160)
     print(f"\nGráfico: {path.relative_to(BASE.parent.parent)}")
 
 
 if __name__ == "__main__":
-    for arg in sys.argv[1:] or ["1000", "5000"]:
-        vus = int(arg)
-        data = blocks(vus)
-        table(vus, data)
-        chart(vus, data)
+    for arg in sys.argv[1:] or ["1000"]:
+        vus, _, secs = arg.partition(":")
+        vus, secs = int(vus), int(secs or 30)
+        suffix = "" if secs == 30 else f"-{secs}s"
+        data = blocks(vus, secs, suffix)
+        table(vus, data, secs)
+        chart(vus, data, secs, suffix)
