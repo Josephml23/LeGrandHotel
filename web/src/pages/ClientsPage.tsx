@@ -46,12 +46,12 @@ export function ClientFields({ form, setForm, error }: { form: ClientFormState; 
   const set = (key: keyof ClientFormState) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value })
   return (
     <>
-      <Field className="full" label={t('Nombre completo')} required value={form.full_name} onChange={set('full_name')} error={fieldError(error, 'full_name')} />
-      <SelectField label={t('Tipo de documento')} value={form.document_type} onChange={set('document_type')}
+      <Field className="full" label={t('Nombre completo')} hint={t('Obligatorio. Hasta 120 caracteres.')} required value={form.full_name} onChange={set('full_name')} error={fieldError(error, 'full_name')} />
+      <SelectField label={t('Tipo de documento')} hint={t('Obligatorio.')} value={form.document_type} onChange={set('document_type')}
         options={[{ value: 'DNI', label: 'DNI' }, { value: 'PASAPORTE', label: t('Pasaporte') }, { value: 'CE', label: t('Carné de extranjería') }]} />
-      <Field label={t('Número de documento')} required value={form.document_number} onChange={set('document_number')} error={fieldError(error, 'document_number')} />
-      <Field label={t('Teléfono')} type="tel" value={form.phone} onChange={set('phone')} error={fieldError(error, 'phone')} />
-      <Field label={t('Nacionalidad')} value={form.nationality} onChange={set('nationality')} error={fieldError(error, 'nationality')} />
+      <Field label={t('Número de documento')} hint={t('Obligatorio. Hasta 20 caracteres, sin repetir.')} required value={form.document_number} onChange={set('document_number')} error={fieldError(error, 'document_number')} />
+      <Field label={t('Teléfono')} hint={t('Opcional. Hasta 30 caracteres.')} type="tel" value={form.phone} onChange={set('phone')} error={fieldError(error, 'phone')} />
+      <Field label={t('Nacionalidad')} hint={t('Opcional. Hasta 60 caracteres.')} value={form.nationality} onChange={set('nationality')} error={fieldError(error, 'nationality')} />
     </>
   )
 }

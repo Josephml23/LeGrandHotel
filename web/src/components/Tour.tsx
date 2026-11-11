@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { send } from '../lib/api'
 import { t } from '../lib/i18n'
-import { tourStore, useTourActive } from '../lib/tour'
+import { tourStore, useTourActive, useTourModo } from '../lib/tour'
+import { tutorialDe } from '../lib/tutoriales'
 import type { AuthUser } from '../types'
 import { Modal } from './ui'
 
@@ -93,19 +95,22 @@ function bubblePosition(box: Box | null, bubbleHeight: number): { top: number; l
   return { top: clampY(box.top - GAP - bubbleHeight), left: clampX(box.left) }
 }
 
-/** Guarda en la cuenta que terminó u omitió el tutorial (ya no se le ofrece al entrar). */
-function useFinishTutorial() {
+/**
+ * Cierra el recorrido. Si era el tutorial general, además guarda en la cuenta que ya lo vio
+ * (el de cada pantalla se puede repetir siempre, así que ese no se guarda).
+ */
+function useFinishTutorial(general = true) {
   const { user, updateUser } = useAuth()
   return useCallback(
     (outcome: 'completed' | 'skipped') => {
       tourStore.stop()
-      if (!user) return
+      if (!user || !general) return
       updateUser({ ...user, tutorial_seen: true })
       send<AuthUser>('post', '/auth/tutorial', { outcome }).then(updateUser).catch(() => {
         /* si falla, se le volverá a ofrecer la próxima vez que entre */
       })
     },
-    [user, updateUser],
+    [user, updateUser, general],
   )
 }
 
@@ -139,15 +144,19 @@ export function TourPrompt() {
  * que explica para qué sirve. Teclado: flechas para avanzar o volver, Esc para salir.
  */
 export function Tour() {
-  const active = useTourActive()
+  const modo = useTourModo()
   const { user } = useAuth()
-  if (!active || !user) return null
-  return createPortal(<TourSteps user={user} />, document.body)
+  const { pathname } = useLocation()
+  if (!modo || !user) return null
+  // El tutorial general recorre las secciones del menú; el de la pantalla, sus propios botones.
+  const steps = modo === 'general' ? stepsFor(user) : (tutorialDe(pathname) ?? []).filter((s) => !s.target || document.querySelector(s.target))
+  if (steps.length === 0) return null
+  return createPortal(<TourSteps steps={steps} general={modo === 'general'} />, document.body)
 }
 
-function TourSteps({ user }: { user: AuthUser }) {
-  const finish = useFinishTutorial()
-  const [steps] = useState(() => stepsFor(user))
+function TourSteps({ steps: pasos, general }: { steps: Step[]; general: boolean }) {
+  const finish = useFinishTutorial(general)
+  const [steps] = useState(() => pasos)
   const [index, setIndex] = useState(0)
   const [box, setBox] = useState<Box | null>(null)
   const [bubbleHeight, setBubbleHeight] = useState(180)

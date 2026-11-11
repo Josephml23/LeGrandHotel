@@ -115,11 +115,11 @@ function RoomForm({ room, types, onClose }: { room: Room | 'new' | null; types: 
       footer={<><button className="btn" onClick={onClose}>{t('Cancelar')}</button><button className="btn btn-primary" form="room-form" disabled={save.isPending}>{t('Guardar')}</button></>}>
       <FormError error={save.error} />
       <form id="room-form" className="form-grid" onSubmit={submit}>
-        <Field label={t('Número')} required value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} error={fieldError(save.error, 'number')} />
-        <Field label={t('Piso')} type="number" min={0} required value={form.floor} onChange={(e) => setForm({ ...form, floor: e.target.value })} error={fieldError(save.error, 'floor')} />
-        <SelectField label={t('Tipo')} value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })} error={fieldError(save.error, 'room_type_id')}
+        <Field label={t('Número')} hint={t('Obligatorio. Hasta 10 caracteres, sin repetir.')} required value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} error={fieldError(save.error, 'number')} />
+        <Field label={t('Piso')} hint={t('Obligatorio. Entre 0 y 200.')} type="number" min={0} required value={form.floor} onChange={(e) => setForm({ ...form, floor: e.target.value })} error={fieldError(save.error, 'floor')} />
+        <SelectField label={t('Tipo')} hint={t('Obligatorio.')} value={form.room_type_id} onChange={(e) => setForm({ ...form, room_type_id: e.target.value })} error={fieldError(save.error, 'room_type_id')}
           options={types.map((rt) => ({ value: rt.id, label: `${rt.name} · ${t('{n} pers.', { n: rt.capacity })} · S/ ${rt.price_per_night}` }))} />
-        <SelectField label={t('Estado')} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as RoomStatus })}
+        <SelectField label={t('Estado')} hint={t('Obligatorio.')} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as RoomStatus })}
           options={Object.entries(ROOM_STATUS).map(([value, s]) => ({ value, label: s.label }))} />
       </form>
     </Modal>

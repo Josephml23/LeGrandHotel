@@ -44,11 +44,11 @@ export function RegisterPage() {
       </TitleRow>
       <form onSubmit={submit} className="form-grid" style={{ maxWidth: 640 }} noValidate>
         <div className="full"><FormError error={register.error} /></div>
-        <Field className="full" label={t('Nombre completo')} autoComplete="off" required value={form.name} onChange={set('name')} error={err('name')} />
-        <Field className="full" label={t('Correo')} type="email" autoComplete="off" required value={form.email} onChange={set('email')} error={err('email')} />
+        <Field className="full" label={t('Nombre completo')} hint={t('Obligatorio. Hasta 120 caracteres.')} autoComplete="off" required value={form.name} onChange={set('name')} error={err('name')} />
+        <Field className="full" label={t('Correo')} hint={t('Obligatorio. Correo válido, sin repetir.')} type="email" autoComplete="off" required value={form.email} onChange={set('email')} error={err('email')} />
         <Field label={t('Contraseña inicial')} type="password" autoComplete="new-password" required value={form.password} onChange={set('password')}
           error={err('password')} hint={t('Mínimo 8 caracteres, con letras y números.')} />
-        <Field label={t('Repite la contraseña')} type="password" autoComplete="new-password" required value={form.password_confirmation}
+        <Field label={t('Repite la contraseña')} hint={t('Debe coincidir con la anterior.')} type="password" autoComplete="new-password" required value={form.password_confirmation}
           onChange={set('password_confirmation')} />
         <SelectField className="full" label={t('Rol')} value={form.role} onChange={set('role')} error={err('role')}
           options={ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}

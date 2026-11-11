@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
@@ -65,5 +65,41 @@ describe('tutorial de bienvenida', () => {
 
     await userEvent.keyboard('{Escape}')
     expect(screen.queryByText(/Paso \d de 7/)).not.toBeInTheDocument()
+  })
+})
+
+describe('tutorial de cada pestaña', () => {
+  it('el botón «¿Qué hago aquí?» recorre los botones de esa pantalla', async () => {
+    loginAs(['admin'], true, { tutorial_seen: true })
+    // Con una habitación en la tabla aparecen también los botones de cada fila.
+    vi.mocked(api.getList).mockResolvedValue({
+      data: [{ id: 1, number: '101', floor: 1, status: 'cleaning', room_type_id: 1, room_type: { id: 1, name: 'Simple', capacity: 1, price_per_night: '120.00' } }],
+      meta: { page: 1, per_page: 15, total: 1, last_page: 1 },
+    } as never)
+    renderApp(<App />, '/habitaciones')
+
+    await userEvent.click(await screen.findByRole('button', { name: '¿Qué hago aquí?' }))
+
+    const titulos: string[] = []
+    for (;;) {
+      // Dentro de la burbuja: fuera también hay un «Siguiente», el del paginado.
+      const burbuja = within(await screen.findByRole('dialog', { name: /.+/ }))
+      titulos.push(burbuja.getByRole('heading').textContent!)
+      const terminar = burbuja.queryByRole('button', { name: 'Terminar' })
+      await userEvent.click(terminar ?? burbuja.getByRole('button', { name: 'Siguiente' }))
+      if (terminar) break
+    }
+
+    expect(titulos).toEqual(['Habitaciones', 'Nueva habitación', 'Filtros por estado', 'Botones de cada habitación'])
+    // El tutorial de una pantalla se puede repetir: no marca la cuenta como «ya lo vio».
+    expect(sendMock).not.toHaveBeenCalledWith('post', '/auth/tutorial', expect.anything())
+  })
+
+  it('las pantallas sin tutorial no muestran el botón', async () => {
+    loginAs(['admin'], true, { tutorial_seen: true })
+    renderApp(<App />, '/facturacion')
+
+    expect(await screen.findByRole('heading', { name: /Facturación/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '¿Qué hago aquí?' })).not.toBeInTheDocument()
   })
 })

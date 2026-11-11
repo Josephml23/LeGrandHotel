@@ -144,18 +144,18 @@ export function NewReservation({ open, onClose }: { open: boolean; onClose: () =
       <form id="reservation-form" className="form-grid" onSubmit={submit}>
         <>
             <Field className="full" label={t('Buscar huésped')} type="search" value={clientSearch} onChange={(e) => setClientSearch(e.target.value)} hint={t('Nombre o número de documento.')} />
-            <SelectField className="full" label={t('Huésped')} required value={form.client_id} onChange={(e) => setForm({ ...form, client_id: e.target.value })} error={fieldError(save.error, 'client_id')}
+            <SelectField className="full" label={t('Huésped')} hint={t('Obligatorio.')} required value={form.client_id} onChange={(e) => setForm({ ...form, client_id: e.target.value })} error={fieldError(save.error, 'client_id')}
               options={[{ value: '', label: clients.isLoading ? t('Cargando…') : t('Selecciona un huésped') }, ...(clients.data?.data ?? []).map((c) => ({ value: c.id, label: `${c.full_name} · ${c.document_type} ${c.document_number}` }))]} />
         </>
-        <Field label={t('Entrada')} type="date" min={todayISO()} required value={form.check_in} onChange={(e) => setForm({ ...form, check_in: e.target.value, room_id: '' })} error={fieldError(save.error, 'check_in')} />
-        <Field label={t('Salida')} type="date" min={addDaysISO(form.check_in, 1)} required value={form.check_out} onChange={(e) => setForm({ ...form, check_out: e.target.value, room_id: '' })} error={fieldError(save.error, 'check_out')} />
-        <Field label={t('Huéspedes')} type="number" min={1} max={8} value={form.guests} onChange={(e) => setForm({ ...form, guests: e.target.value, room_id: '' })} error={fieldError(save.error, 'guests')} />
-        <SelectField label={t('Habitación disponible')} required value={form.room_id} onChange={(e) => setForm({ ...form, room_id: e.target.value })} error={fieldError(save.error, 'room_id')}
+        <Field label={t('Entrada')} hint={t('Obligatorio. Hoy o después.')} type="date" min={todayISO()} required value={form.check_in} onChange={(e) => setForm({ ...form, check_in: e.target.value, room_id: '' })} error={fieldError(save.error, 'check_in')} />
+        <Field label={t('Salida')} hint={t('Obligatorio. Después de la entrada.')} type="date" min={addDaysISO(form.check_in, 1)} required value={form.check_out} onChange={(e) => setForm({ ...form, check_out: e.target.value, room_id: '' })} error={fieldError(save.error, 'check_out')} />
+        <Field label={t('Huéspedes')} hint={t('Entre 1 y 20.')} type="number" min={1} max={8} value={form.guests} onChange={(e) => setForm({ ...form, guests: e.target.value, room_id: '' })} error={fieldError(save.error, 'guests')} />
+        <SelectField label={t('Habitación disponible')} hint={t('Obligatorio.')} required value={form.room_id} onChange={(e) => setForm({ ...form, room_id: e.target.value })} error={fieldError(save.error, 'room_id')}
           options={[
             { value: '', label: !validRange ? t('La salida debe ser después de la entrada') : available.isLoading ? t('Buscando…') : t('{n} disponibles', { n: available.data?.meta.total ?? 0 }) },
             ...(available.data?.data ?? []).map((r) => ({ value: r.id, label: `${r.number} · ${r.room_type?.name} · ${t('S/ {price}/noche', { price: r.room_type?.price_per_night ?? '' })}` })),
           ]} />
-        <Field className="full" label={t('Notas')} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+        <Field className="full" label={t('Notas')} hint={t('Opcional. Hasta 1000 caracteres.')} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
       </form>
     </Modal>
   )

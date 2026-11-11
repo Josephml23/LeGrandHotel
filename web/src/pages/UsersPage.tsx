@@ -85,8 +85,8 @@ function UserForm({ value, onClose }: { value: UserRow | 'new' | null; onClose: 
       footer={<><button className="btn" onClick={onClose}>{t('Cancelar')}</button><button className="btn btn-primary" form="user-form" disabled={save.isPending || (!isClient && form.roles.length === 0)}>{t('Guardar')}</button></>}>
       <FormError error={save.error} />
       <form id="user-form" className="form-grid" onSubmit={submit}>
-        <Field className="full" label={t('Nombre')} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} error={fieldError(save.error, 'name')} />
-        <Field label={t('Correo')} type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} error={fieldError(save.error, 'email')} />
+        <Field className="full" label={t('Nombre')} hint={t('Obligatorio. Hasta 120 caracteres.')} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} error={fieldError(save.error, 'name')} />
+        <Field label={t('Correo')} hint={t('Obligatorio. Correo válido, sin repetir.')} type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} error={fieldError(save.error, 'email')} />
         {isClient ? (
           <p className="full muted small" style={{ margin: 0 }}>{t('Cuenta de cliente: entra con Google, no tiene contraseña y sus roles no se cambian desde aquí.')}</p>
         ) : (

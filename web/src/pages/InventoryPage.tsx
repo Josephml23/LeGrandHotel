@@ -80,10 +80,10 @@ function ItemForm({ value, onClose }: { value: InventoryItem | 'new' | null; onC
       footer={<><button className="btn" onClick={onClose}>{t('Cancelar')}</button><button className="btn btn-primary" form="item-form" disabled={save.isPending}>{t('Guardar')}</button></>}>
       <FormError error={save.error} />
       <form id="item-form" className="form-grid" onSubmit={submit}>
-        <Field className="full" label={t('Nombre')} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} error={fieldError(save.error, 'name')} />
-        <Field label={t('Unidad')} required value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} error={fieldError(save.error, 'unit')} />
-        <Field label={t('Stock mínimo')} type="number" min={0} required value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} error={fieldError(save.error, 'min_stock')} />
-        {!current && <Field label={t('Stock inicial')} type="number" min={0} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} error={fieldError(save.error, 'stock')} hint={t('Después cambia solo con movimientos.')} />}
+        <Field className="full" label={t('Nombre')} hint={t('Obligatorio. Hasta 120 caracteres.')} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} error={fieldError(save.error, 'name')} />
+        <Field label={t('Unidad')} hint={t('Obligatorio. Hasta 20 caracteres.')} required value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} error={fieldError(save.error, 'unit')} />
+        <Field label={t('Stock mínimo')} hint={t('Obligatorio. Entero, 0 o más.')} type="number" min={0} required value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} error={fieldError(save.error, 'min_stock')} />
+        {!current && <Field label={t('Stock inicial')} type="number" min={0} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} error={fieldError(save.error, 'stock')} hint={t('Entero, 0 o más. Después cambia solo con movimientos.')} />}
       </form>
     </Modal>
   )
@@ -111,10 +111,10 @@ function MovementForm({ item, onClose }: { item: InventoryItem | null; onClose: 
       footer={<><button className="btn" onClick={onClose}>{t('Cancelar')}</button><button className="btn btn-primary" form="move-form" disabled={save.isPending}>{t('Registrar')}</button></>}>
       <FormError error={save.error} />
       <form id="move-form" className="form-grid" onSubmit={submit}>
-        <SelectField label={t('Tipo')} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}
+        <SelectField label={t('Tipo')} hint={t('Obligatorio.')} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}
           options={[{ value: 'out', label: t('Salida (uso en habitaciones)') }, { value: 'in', label: t('Entrada (compra o devolución)') }]} />
-        <Field label={t('Cantidad')} type="number" min={1} required value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} error={fieldError(save.error, 'quantity')} />
-        <Field className="full" label={t('Motivo')} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
+        <Field label={t('Cantidad')} hint={t('Obligatorio. Entre 1 y 100 000.')} type="number" min={1} required value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} error={fieldError(save.error, 'quantity')} />
+        <Field className="full" label={t('Motivo')} hint={t('Opcional. Hasta 255 caracteres.')} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
       </form>
       <div>
         <h3 className="section-title">{t('Últimos movimientos')}</h3>

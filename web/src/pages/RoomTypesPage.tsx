@@ -75,12 +75,12 @@ function RoomTypeForm({ value, onClose }: { value: RoomType | 'new' | null; onCl
       footer={<><button className="btn" onClick={onClose}>{t('Cancelar')}</button><button className="btn btn-primary" form="type-form" disabled={save.isPending}>{t('Guardar')}</button></>}>
       <FormError error={save.error} />
       <form id="type-form" className="form-grid" onSubmit={submit}>
-        <Field className="full" label={t('Nombre')} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} error={fieldError(save.error, 'name')} />
-        <Field label={t('Capacidad (personas)')} type="number" min={1} max={20} required value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} error={fieldError(save.error, 'capacity')} />
-        <Field label={t('Precio por noche (S/)')} type="number" min={0} step="0.01" required value={form.price_per_night} onChange={(e) => setForm({ ...form, price_per_night: e.target.value })} error={fieldError(save.error, 'price_per_night')} />
-        <Field className="full" label={t('Descripción')} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+        <Field className="full" label={t('Nombre')} hint={t('Obligatorio. Hasta 80 caracteres, sin repetir.')} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} error={fieldError(save.error, 'name')} />
+        <Field label={t('Capacidad (personas)')} hint={t('Obligatorio. Entre 1 y 20.')} type="number" min={1} max={20} required value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} error={fieldError(save.error, 'capacity')} />
+        <Field label={t('Precio por noche (S/)')} hint={t('Obligatorio. Entre 0 y 99 999.')} type="number" min={0} step="0.01" required value={form.price_per_night} onChange={(e) => setForm({ ...form, price_per_night: e.target.value })} error={fieldError(save.error, 'price_per_night')} />
+        <Field className="full" label={t('Descripción')} hint={t('Opcional. Hasta 1000 caracteres.')} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
         <Field className="full" label={t('Incluye (servicios)')} value={form.amenities} placeholder={t('Wi-Fi, TV, Baño privado')}
-          hint={t('Separados por comas. El cliente los ve al reservar.')} onChange={(e) => setForm({ ...form, amenities: e.target.value })}
+          hint={t('Separados por comas. Hasta 20, de 40 caracteres cada uno.')} onChange={(e) => setForm({ ...form, amenities: e.target.value })}
           error={fieldError(save.error, 'amenities')} />
       </form>
     </Modal>

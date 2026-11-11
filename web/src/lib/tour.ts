@@ -1,21 +1,24 @@
 import { useSyncExternalStore } from 'react'
 
 /**
- * Estado del tutorial de bienvenida: si está en curso. Se inicia desde el aviso del primer ingreso
- * o desde Configuración; lo dibuja <Tour> dentro del Layout.
+ * Estado del tutorial: ninguno, el general (las secciones del menú, al primer ingreso) o el de la
+ * pantalla en la que está el usuario (sus botones, desde «¿Qué hago aquí?»). Lo dibuja <Tour>.
  */
-let active = false
+export type ModoTour = null | 'general' | 'pagina'
+
+let modo: ModoTour = null
 const listeners = new Set<() => void>()
+const avisar = () => listeners.forEach((listener) => listener())
 
 export const tourStore = {
-  get: () => active,
-  start() {
-    active = true
-    listeners.forEach((listener) => listener())
+  get: () => modo,
+  start(siguiente: Exclude<ModoTour, null> = 'general') {
+    modo = siguiente
+    avisar()
   },
   stop() {
-    active = false
-    listeners.forEach((listener) => listener())
+    modo = null
+    avisar()
   },
   subscribe(listener: () => void) {
     listeners.add(listener)
@@ -23,4 +26,5 @@ export const tourStore = {
   },
 }
 
-export const useTourActive = () => useSyncExternalStore(tourStore.subscribe, tourStore.get, tourStore.get)
+export const useTourModo = () => useSyncExternalStore(tourStore.subscribe, tourStore.get, tourStore.get)
+export const useTourActive = () => useTourModo() !== null

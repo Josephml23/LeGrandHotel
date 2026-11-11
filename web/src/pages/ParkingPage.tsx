@@ -83,10 +83,10 @@ function EntryForm({ open, onClose }: { open: boolean; onClose: () => void }) {
       footer={<><button className="btn" onClick={onClose}>{t('Cancelar')}</button><button className="btn btn-primary" form="entry-form" disabled={save.isPending}>{t('Registrar')}</button></>}>
       <FormError error={save.error} />
       <form id="entry-form" className="form-grid" onSubmit={submit}>
-        <Field label={t('Placa')} required value={form.plate} onChange={(e) => setForm({ ...form, plate: e.target.value.toUpperCase() })} error={fieldError(save.error, 'plate')} hint={t('Letras, números y guion.')} />
-        <SelectField label={t('Espacio libre')} required value={form.parking_spot_id} onChange={(e) => setForm({ ...form, parking_spot_id: e.target.value })} error={fieldError(save.error, 'parking_spot_id')}
+        <Field label={t('Placa')} required value={form.plate} onChange={(e) => setForm({ ...form, plate: e.target.value.toUpperCase() })} error={fieldError(save.error, 'plate')} hint={t('Obligatorio. Hasta 15: letras, números y guion.')} />
+        <SelectField label={t('Espacio libre')} hint={t('Obligatorio.')} required value={form.parking_spot_id} onChange={(e) => setForm({ ...form, parking_spot_id: e.target.value })} error={fieldError(save.error, 'parking_spot_id')}
           options={[{ value: '', label: t('{n} libres', { n: spots.data?.meta.total ?? 0 }) }, ...(spots.data?.data ?? []).map((s) => ({ value: s.id, label: s.code }))]} />
-        <SelectField className="full" label={t('Estadía (opcional)')} value={form.stay_id} onChange={(e) => setForm({ ...form, stay_id: e.target.value })}
+        <SelectField className="full" label={t('Estadía (opcional)')} hint={t('Opcional: enlaza el auto con una estadía.')} value={form.stay_id} onChange={(e) => setForm({ ...form, stay_id: e.target.value })}
           options={[{ value: '', label: t('Sin estadía: visita') }, ...(stays.data?.data ?? []).map((s) => ({ value: s.id, label: `${t('Hab. {number}', { number: s.reservation?.room?.number ?? '—' })} · ${s.reservation?.client?.full_name}` }))]} />
       </form>
     </Modal>

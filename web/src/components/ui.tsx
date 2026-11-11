@@ -1,8 +1,11 @@
 import { useEffect, useId, useRef, useState, type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes } from 'react'
+import { useLocation } from 'react-router-dom'
 import type { PageMeta } from '../types'
 import { ApiError } from '../lib/api'
 import { formatNumber } from '../lib/format'
 import { t } from '../lib/i18n'
+import { tourStore } from '../lib/tour'
+import { tutorialDe } from '../lib/tutoriales'
 
 type Tone = 'positive' | 'negative' | 'warning' | 'neutral' | 'accent'
 
@@ -14,12 +17,31 @@ export function TitleRow({ title, lede, finding, children }: { title: string; le
   return (
     <div className="title-row">
       <div>
-        <h1>{title}</h1>
+        {/* El botón va al lado del título, no dentro: si no, cambiaría el nombre del encabezado. */}
+        <div className="title-head">
+          <h1>{title}</h1>
+          <AyudaDePantalla />
+        </div>
         {lede && <p className="lede">{lede}</p>}
         {finding && <p className="finding">{finding}</p>}
       </div>
       {children && <div className="actions">{children}</div>}
     </div>
+  )
+}
+
+/**
+ * Botón «¿Qué hago aquí?» al lado del título: abre el tutorial de esta pantalla, que resalta
+ * cada botón y explica qué hace. Solo aparece en las pantallas que tienen tutorial.
+ */
+function AyudaDePantalla() {
+  const { pathname } = useLocation()
+  if (!tutorialDe(pathname)) return null
+  return (
+    <button type="button" className="btn btn-sm btn-ghost ayuda" onClick={() => tourStore.start('pagina')}
+      title={t('¿Qué hago aquí?')} aria-label={t('¿Qué hago aquí?')}>
+      ?
+    </button>
   )
 }
 
@@ -144,10 +166,19 @@ export function Field({
   const describedBy = [hint ? `${id}-hint` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined
   return (
     <div className={`field ${className ?? ''}`}>
-      <label htmlFor={id}>{label}</label>
+      <FieldLabel id={id} label={label} hint={hint} />
       <input id={id} className="input" aria-invalid={!!error} aria-describedby={describedBy} {...props} />
-      {hint && <span id={`${id}-hint`} className="hint">{hint}</span>}
       {error && <span id={`${id}-error`} className="error">{error}</span>}
+    </div>
+  )
+}
+
+/** La etiqueta y, al costado, las reglas que debe cumplir el campo (en letra pequeña). */
+function FieldLabel({ id, label, hint }: { id: string; label: string; hint?: string }) {
+  return (
+    <div className="field-head">
+      <label htmlFor={id}>{label}</label>
+      {hint && <span id={`${id}-hint`} className="hint">{hint}</span>}
     </div>
   )
 }
@@ -164,13 +195,12 @@ export function SelectField({
   const describedBy = [hint ? `${id}-hint` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined
   return (
     <div className={`field ${className ?? ''}`}>
-      <label htmlFor={id}>{label}</label>
+      <FieldLabel id={id} label={label} hint={hint} />
       <select id={id} className="select" aria-invalid={!!error} aria-describedby={describedBy} {...props}>
         {options.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </select>
-      {hint && <span id={`${id}-hint`} className="hint">{hint}</span>}
       {error && <span id={`${id}-error`} className="error">{error}</span>}
     </div>
   )

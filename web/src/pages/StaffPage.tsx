@@ -74,8 +74,8 @@ function StaffForm({ value, onClose }: { value: Staff | 'new' | null; onClose: (
       footer={<><button className="btn" onClick={onClose}>{t('Cancelar')}</button><button className="btn btn-primary" form="staff-form" disabled={save.isPending}>{t('Guardar')}</button></>}>
       <FormError error={save.error} />
       <form id="staff-form" className="form-grid" onSubmit={submit}>
-        <Field className="full" label={t('Nombre completo')} required value={form.name} onChange={set('name')} error={err('name')} />
-        <Field label={t('Correo')} type="email" required value={form.email} onChange={set('email')} error={err('email')} />
+        <Field className="full" label={t('Nombre completo')} hint={t('Obligatorio. Hasta 120 caracteres.')} required value={form.name} onChange={set('name')} error={err('name')} />
+        <Field label={t('Correo')} hint={t('Obligatorio. Correo válido, sin repetir.')} type="email" required value={form.email} onChange={set('email')} error={err('email')} />
         <Field label={current ? t('Nueva contraseña (opcional)') : t('Contraseña')} type="password" autoComplete="new-password" value={form.password} onChange={set('password')}
           error={err('password')} hint={t('Mínimo 8 caracteres, con letras y números.')} />
         {isDeveloper ? (
@@ -83,12 +83,12 @@ function StaffForm({ value, onClose }: { value: Staff | 'new' | null; onClose: (
           <SelectField label={t('Rol')} value="developer" onChange={set('role')} disabled options={[{ value: 'developer', label: t('Programador') }]}
             hint={t('El rol de Programador no se cambia.')} />
         ) : (
-          <SelectField label={t('Rol')} value={form.role} onChange={set('role')} error={err('role')}
+          <SelectField label={t('Rol')} value={form.role} hint={t('Obligatorio.')} onChange={set('role')} error={err('role')}
             options={[{ value: 'receptionist', label: t('Recepcionista') }, { value: 'storekeeper', label: t('Almacenero') }, { value: 'admin', label: t('Administrador') }]} />
         )}
-        <Field label={t('Cargo')} required value={form.position} onChange={set('position')} error={err('position')} />
-        <SelectField label={t('Turno')} value={form.shift} onChange={set('shift')} options={Object.entries(SHIFT_LABEL).map(([value, label]) => ({ value, label }))} />
-        <Field label={t('Fecha de ingreso')} type="date" required value={form.hired_at} onChange={set('hired_at')} error={err('hired_at')} />
+        <Field label={t('Cargo')} hint={t('Obligatorio. Hasta 60 caracteres.')} required value={form.position} onChange={set('position')} error={err('position')} />
+        <SelectField label={t('Turno')} hint={t('Obligatorio.')} value={form.shift} onChange={set('shift')} options={Object.entries(SHIFT_LABEL).map(([value, label]) => ({ value, label }))} />
+        <Field label={t('Fecha de ingreso')} hint={t('Obligatorio. Hoy o antes.')} type="date" required value={form.hired_at} onChange={set('hired_at')} error={err('hired_at')} />
       </form>
     </Modal>
   )
