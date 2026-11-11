@@ -167,6 +167,9 @@ const s2 = [
     ['Scripts de preparación', 'preparar.sh deja la API lista (límites, clientes, caché) y restaurar.sh la devuelve a la normalidad', 'tests/k6/preparar.sh, restaurar.sh', 'Extra'],
     ['Límite de peticiones corregido', 'Una variable vacía en el archivo de configuración dejaba el límite en 0 y la API respondía 429 a todo', 'config/hotel.php; RateLimitConfigTest', 'Corrección'],
     ['Respaldos en GitHub', 'Copia de seguridad cifrada de la base en un repositorio aparte', 'infra/scripts/backup-mysql-to-github.sh', 'Evaluado 80%'],
+    ['Cambio de rol de cualquier cuenta', 'El Administrador pasa un cliente a personal y al revés desde «Personal y usuarios»; al promover se pide contraseña, porque hasta entonces esa cuenta entraba con Google', 'UserController::updateRoles, UsersPage.tsx', 'Mejora'],
+    ['Datos de demostración completos', 'Un seeder llena las pantallas que quedaban vacías: estadías en curso y pasadas, reservas en los cinco estados, habitaciones en limpieza y mantenimiento, autos en la cochera y movimientos de inventario', 'DemoActivitySeeder', 'Extra'],
+    ['Historial de estadías corregido', 'La pestaña «Historial» listaba también a los huéspedes que seguían dentro del hotel: el filtro no separaba unos de otros', 'StayController; ReservationModuleTest', 'Corrección'],
     ['Registro de caídas', 'Cada caída, incluso local, con su motivo y su solución (sección 7)', 'docs/incidentes.md', 'Evaluado'],
   ], [1.5, 3.6, 2.1, 1.0]),
 ]
@@ -276,7 +279,7 @@ const PANTALLAS = [
       ['Agregar persona', 'Crea de una vez la ficha de la persona y la cuenta con la que entra; el cargo sale del rol', 'Formulario emergente de personal'],
       ['Todos / Administrador / Recepcionista / Almacenero / Programador / Cliente', 'Filtra por rol', 'El mismo listado, filtrado'],
       ['Buscar nombre o correo', 'Busca por nombre o por correo', 'El mismo listado, filtrado'],
-      ['Editar', 'Cambia nombre, correo, contraseña, roles y fecha de ingreso', 'Formulario emergente'],
+      ['Editar', 'Cambia nombre, correo, contraseña, roles y fecha de ingreso; aquí también se pasa un cliente a personal o al revés', 'Formulario emergente'],
       ['Eliminar', 'Borra la cuenta; el Programador no se puede eliminar', 'El mismo listado, sin esa fila'],
     ],
   },
@@ -355,6 +358,7 @@ const s3 = [
   h1('3. Recorrido por pantalla'),
   p('Esta sección recorre el sistema pantalla por pantalla, como lo ve un administrador. De cada una se muestra la captura, para qué sirve y una tabla con cada botón: qué hace y a qué vista lleva.'),
   p('Todas las pantallas comparten la misma estructura: el título con su botón principal a la derecha, las pestañas de filtro, el buscador, la tabla, los botones de cada fila y el paginado. Al lado de cada título hay un botón «?» que abre el tutorial de esa pantalla.'),
+  p('Las capturas se tomaron con los datos de demostración cargados (DemoActivitySeeder), para que cada pantalla se vea como en uso real: huéspedes alojados, habitaciones en limpieza, autos en la cochera y movimientos de almacén.'),
   ...PANTALLAS.flatMap((s) => [
     h2(`3.${PANTALLAS.indexOf(s) + 1} ${s.titulo}`),
     p([b('Para qué sirve. '), t(s.para)]),
@@ -398,11 +402,30 @@ const s4 = [
 
   h2('5.4 Filtros del tablero de habitaciones'),
   p('El tablero del panel mostraba solo 50 de las 70 habitaciones, porque la API devuelve como máximo 50 por página y el tablero pedía una sola. Ahora pide todas las páginas y muestra las 70. Además se agregaron dos filtros: uno por piso y otro por estado, con el número de habitaciones de cada grupo entre paréntesis.'),
-  ...shot('15-panel-filtros', 'Tablero filtrado por piso 12 y por habitaciones libres'),
+  ...shot('15-panel-filtros', 'Tablero filtrado por piso 12 y por habitaciones ocupadas'),
 
   h2('5.5 Despliegue en Render'),
   p('El proyecto está publicado en Render con tres servicios: una base PostgreSQL, la API en un contenedor Docker y la web como sitio estático. Las migraciones corren al arrancar y los datos de demostración se siembran con una variable, porque el plan gratuito no da consola. La vista del programador muestra ahora el servicio, la rama y el commit desplegados; esos valores se leen desde la configuración y no del entorno, porque en producción la configuración va en caché y de otro modo llegarían vacíos.'),
   p('El despliegue dejó dos lecciones que quedaron anotadas: la web necesita el dominio público de la API, no el nombre interno que Render usa entre servicios, y el build de la web necesita Node 22, porque la versión por defecto es anterior a la que pide Vite.'),
+
+  h2('5.6 Cambiar el rol de una cuenta'),
+  p('Antes los roles solo se editaban en las cuentas del personal. En una de cliente ni siquiera aparecían las casillas, así que un huésped que además trabajaba en el hotel obligaba a crearle una segunda cuenta. Ahora el Administrador cambia el rol de cualquier cuenta desde «Personal y usuarios»: puede pasar un cliente a Administrador, Recepcionista o Almacenero, y también al revés.'),
+  p([b('La parte que no era evidente. '), t('Dar el rol era lo fácil; el problema era lo que pasaba después. El sistema tiene dos puertas de entrada separadas: el personal entra con correo y contraseña, y el cliente solo con Google. Un cliente ascendido a administrador se quedaba sin ninguna de las dos, porque Google lo rechazaba al dejar de ser cliente y contraseña nunca tuvo. La cuenta quedaba encerrada fuera.')]),
+  p('Por eso el cambio no fue solo quitar el bloqueo. Al pasar de cliente a personal la contraseña es obligatoria y viaja en la misma operación, de modo que o se cambia el rol con contraseña o no se cambia; si falta, la API responde PASSWORD_REQUIRED_FOR_STAFF y el formulario lo explica antes de intentarlo. Al volver a cliente se le borra la contraseña, porque desde entonces entra con Google y dejar una credencial que ya no sirve es peor que quitarla.'),
+  p('El rol de Cliente no se combina con los del personal —un huésped no trabaja en el hotel— y siguen en pie las dos reglas anteriores: solo existe un Programador, y nadie puede quitarse a sí mismo el rol de administrador.'),
+  ...shot('22-cambio-de-rol', 'Una cuenta de cliente que pasa a Administrador: aparecen las casillas de rol y se pide la contraseña'),
+
+  h2('5.7 Datos de demostración en todas las pantallas'),
+  p('Las pantallas de Estadías y Cochera salían vacías porque los datos de ejemplo no llegaban a ellas: no había ninguna estadía ni ningún vehículo registrado. Un seeder nuevo (DemoActivitySeeder) completa lo que faltaba, de forma coherente entre sí: los huéspedes alojados tienen su reserva con el check-in hecho y su habitación en ocupada, los autos de la cochera pertenecen a esas estadías, y las habitaciones en limpieza o mantenimiento son solo las que no tienen a nadie por llegar esa semana.'),
+  ...table('Lo que llena el seeder de demostración', ['Pantalla', 'Antes', 'Ahora'], [
+    ['Panel', '1 habitación ocupada', '13 ocupadas, 6 en limpieza y 3 en mantenimiento'],
+    ['Reservas', 'Solo confirmadas y finalizadas', 'Los cinco estados, incluidas por confirmar y canceladas'],
+    ['Estadías', 'Vacía', '12 huéspedes dentro y 80 en el historial'],
+    ['Cochera', 'Vacía', '6 autos dentro y 12 en el historial, sobre 20 espacios'],
+    ['Inventario', '6 insumos, sin movimientos', '14 insumos y 119 movimientos'],
+    ['Personal y usuarios', '8 cuentas', '14, con varios recepcionistas y almaceneros'],
+  ], [1.3, 1.9, 2.4]),
+  p('Al cargar esos datos salió a la luz un error que con la base vacía no se veía: la pestaña «Historial» de Estadías mostraba también a los huéspedes que seguían dentro del hotel, porque el filtro no separaba unos de otros. Quedó corregido y con una prueba que lo cubre.'),
 ]
 
 // ── 5. Pruebas de carga ──────────────────────────────────
