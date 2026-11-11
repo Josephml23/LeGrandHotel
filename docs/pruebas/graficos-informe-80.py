@@ -98,7 +98,7 @@ def g1():
     de.bar_label(barras, labels=es(velocidad, 1), padding=3, color=INK)
     de.set_ylim(0, max(velocidad) * 1.25)
 
-    fig.suptitle("100 clientes simultáneos: 0 errores en las dos corridas", y=1.03, fontsize=11, fontweight="bold")
+    fig.suptitle("Prueba de estrés: cinco veces más trabajo sin perder velocidad", y=1.03, fontsize=11, fontweight="bold")
     fig.savefig(OUT / "80-01-reservas-tiempo-velocidad.png")
     plt.close(fig)
 
@@ -118,11 +118,11 @@ def g2():
     ax.bar_label(b1, labels=es(a, 1), padding=2, fontsize=8, color=INK)
     ax.bar_label(b2, labels=es(b, 1), padding=2, fontsize=8, color=INK)
     ax.axhline(0.8, color=INK, linestyle="--", linewidth=1.2)
-    ax.text(len(claves) - 0.5, 0.95, "meta p95 = 0,8 s", ha="right", fontsize=9, color=INK)
+    ax.text(len(claves) - 0.5, 1.25, "meta de carga normal (0,8 s), de referencia", ha="right", fontsize=9, color=INK)
     ax.set_xticks(list(x))
     ax.set_xticklabels(nombres)
     ax.set_ylabel("segundos por reserva")
-    ax.set_title("Tiempo de respuesta al registrar una reserva (100 clientes sin pausa)")
+    ax.set_title("Prueba de estrés: tiempo de respuesta por reserva")
     ax.legend(frameon=False)
     fig.savefig(OUT / "80-02-latencia-reservas.png")
     plt.close(fig)
