@@ -41,6 +41,26 @@ k6 run -e BASE_URL=http://localhost:8000/api/v1 -e VUS=150 -e PAUSA=10 tests/k6/
 La prueba dura 60 s: 15 s subiendo, 40 s sostenidos y 5 s bajando. Mide por separado `login_ms` y `reserva_ms`,
 y cuenta las reservas creadas y las que encontraron la habitación ocupada (409, que es la respuesta correcta).
 
+### Prueba de reservas en tres pasos
+
+```bash
+bash tests/k6/preparar.sh 50 --limpiar
+k6 run -e BASE_URL=http://localhost:8000/api/v1 -e CLIENTES=50 -e RESERVAS=5000 -e BUSCAR=una-vez tests/k6/clientes-1000-reservas.js
+bash tests/k6/restaurar.sh
+```
+
+`preparar.sh` enciende los contenedores, sube los límites de peticiones solo para la prueba, siembra los
+clientes y calienta la API. `--limpiar` borra además las reservas que dejaron las pruebas anteriores: hace
+falta cuando el calendario se llena, porque con el hotel lleno las reservas nuevas chocan y el resultado deja
+de medir el sistema. `restaurar.sh` devuelve la API a su configuración normal.
+
+**Cuántos clientes poner.** Medido en la laptop del equipo:
+
+| Clientes a la vez | Resultado |
+| ---: | --- |
+| 50 | 16,8 reservas/s, 0% de errores. Es el número que da resultados útiles |
+| 500 | Nginx rechaza las conexiones: 94% de fallos y solo 246 reservas de 5000 |
+
 ### 50 clientes registrando 1000 reservas
 
 Trabajo fijo: la prueba termina cuando se completan las 1000 reservas, no a los X segundos. Cada iteración es

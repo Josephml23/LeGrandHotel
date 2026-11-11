@@ -31,6 +31,28 @@ docker compose exec app php artisan migrate --seed
 
 API: http://localhost:8000/api/v1/health · Web: http://localhost:5173
 
+### Día a día: encender la página
+
+Una vez instalado, para volver a levantarlo basta con esto:
+
+1. **Abre Docker Desktop** y espera a que el ícono de la ballena deje de moverse (~1 minuto). De él cuelga todo.
+2. En una terminal, dentro del proyecto:
+
+```bash
+docker compose up -d mysql redis app nginx
+```
+
+3. En otra terminal, la web:
+
+```bash
+cd web && npm run dev
+```
+
+Web: http://localhost:5173 · API: http://localhost:8000/api/v1/health
+
+La primera petición a la API tarda unos segundos porque PHP arranca en frío; si ves un 503 al principio,
+espera y recarga. Para apagar todo al terminar: `docker compose down`.
+
 ### Sin Docker (SQLite)
 
 ```bash
