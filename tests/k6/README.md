@@ -52,6 +52,9 @@ k6 run -e BASE_URL=http://localhost:8000/api/v1 -e PAUSA=6 tests/k6/clientes-100
 ```
 
 `CLIENTES` (50), `RESERVAS` (1000) y `PAUSA` (segundos entre una reserva y la siguiente) se cambian con `-e`.
+`BUSCAR=una-vez` consulta los tipos de habitación una sola vez al empezar: cada iteración solo reserva, es la
+mitad de peticiones y las 1000 salen en ~35 s en vez de ~58 s. Con `BUSCAR=cada-vez` (por defecto) cada cliente
+busca antes de reservar, como en la web.
 Con `PAUSA=0` mide la velocidad máxima; con `PAUSA=6` imita a clientes reales y cumple las metas del 80%.
 
 ## Cómo correrlas

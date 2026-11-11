@@ -20,6 +20,12 @@ import { BASE_URL, auth, isoDate, ok } from './lib/config.js'
 const CLIENTES = Number(__ENV.CLIENTES || 50)
 const RESERVAS = Number(__ENV.RESERVAS || 1000)
 const PAUSA = Number(__ENV.PAUSA || 0)
+/**
+ * BUSCAR=cada-vez (por defecto): el cliente busca los tipos libres y luego reserva, como en la web.
+ * BUSCAR=una-vez: los tipos se consultan una sola vez al empezar y cada iteración solo reserva.
+ * Es la mitad de peticiones, así que mide la velocidad de reservar sin la búsqueda de por medio.
+ */
+const BUSCAR_CADA_VEZ = (__ENV.BUSCAR || 'cada-vez') !== 'una-vez'
 const TOKENS = JSON.parse(open('./.tokens-clientes.json'))
 
 const buscarMs = new Trend('buscar_ms', true)
@@ -38,7 +44,8 @@ export const options = {
     },
   },
   thresholds: {
-    'buscar_ms': ['p(95)<800'],
+    // Con BUSCAR=una-vez no hay búsquedas, así que ese umbral no se evalúa.
+    ...(BUSCAR_CADA_VEZ ? { 'buscar_ms': ['p(95)<800'] } : {}),
     'reserva_ms': ['p(95)<800'],
     'http_req_failed': ['rate<0.01'],
     // Casi todas deben quedar registradas; un 409 ocasional es correcto (se agotó ese tipo en esas fechas).
@@ -55,9 +62,16 @@ export function setup() {
   if (http.get(`${BASE_URL}/auth/me`, auth(TOKENS[0])).status !== 200) {
     fail('Los tokens de clientes ya no sirven: vuelve a correr LoadTestClientsSeeder.')
   }
+
+  // Con BUSCAR=una-vez los tipos se leen aquí y se reparten a todos los usuarios virtuales.
+  if (BUSCAR_CADA_VEZ) return {}
+  const tipos = http.get(`${BASE_URL}/portal/room-types?from=${isoDate(400)}&to=${isoDate(401)}&guests=1`, auth(TOKENS[0])).json('data') || []
+  const ids = tipos.map((t) => t.id)
+  if (ids.length === 0) fail('No hay tipos de habitación: corre el seeder de demostración.')
+  return { ids }
 }
 
-export default function () {
+export default function (datos) {
   const token = TOKENS[(__VU - 1) % TOKENS.length]
 
   // Fechas repartidas en un año para que casi siempre haya cupo (70 habitaciones × 365 noches).
@@ -65,30 +79,50 @@ export default function () {
   const from = isoDate(dia)
   const to = isoDate(dia + 1)
 
-  const tipos = http.get(`${BASE_URL}/portal/room-types?from=${from}&to=${to}&guests=1`, {
-    ...auth(token),
-    tags: { tipo: 'busqueda', name: 'portal/room-types' },
-  })
-  buscarMs.add(tipos.timings.duration)
-  if (!ok(tipos, 'buscar')) return
+  let tipoId
+  if (BUSCAR_CADA_VEZ) {
+    const tipos = http.get(`${BASE_URL}/portal/room-types?from=${from}&to=${to}&guests=1`, {
+      ...auth(token),
+      tags: { tipo: 'busqueda', name: 'portal/room-types' },
+    })
+    buscarMs.add(tipos.timings.duration)
+    if (!ok(tipos, 'buscar')) return
 
-  const libres = (tipos.json('data') || []).filter((t) => t.available_rooms > 0)
-  if (libres.length === 0) {
-    sinCupo.add(1)
-    return
+    const libres = (tipos.json('data') || []).filter((t) => t.available_rooms > 0)
+    if (libres.length === 0) {
+      sinCupo.add(1)
+      return
+    }
+    tipoId = libres[Math.floor(Math.random() * libres.length)].id
+  } else {
+    tipoId = datos.ids[Math.floor(Math.random() * datos.ids.length)]
   }
 
-  const tipo = libres[Math.floor(Math.random() * libres.length)]
-  const res = http.post(`${BASE_URL}/portal/reservations`, JSON.stringify({ room_type_id: tipo.id, check_in: from, check_out: to, guests: 1 }), {
+  const res = http.post(`${BASE_URL}/portal/reservations`, JSON.stringify({ room_type_id: tipoId, check_in: from, check_out: to, guests: 1 }), {
     ...auth(token),
     tags: { tipo: 'escritura', name: 'portal/reservations:create' },
     // 409 = otro cliente tomó la última habitación de ese tipo: es la respuesta correcta, no un error.
     responseCallback: http.expectedStatuses(201, 409),
   })
   reservaMs.add(res.timings.duration)
-  if (res.status === 201) creadas.add(1)
-  else if (res.status === 409) sinCupo.add(1)
-  else ok(res, 'reservar')
+  if (res.status === 201) {
+    creadas.add(1)
+  } else if (res.status === 409) {
+    // Se agotó ese tipo en esas fechas: se intenta una vez más con otras, como haría el cliente.
+    const otroDia = 30 + Math.floor(Math.random() * 365)
+    const reintento = http.post(`${BASE_URL}/portal/reservations`, JSON.stringify({
+      room_type_id: BUSCAR_CADA_VEZ ? tipoId : datos.ids[Math.floor(Math.random() * datos.ids.length)],
+      check_in: isoDate(otroDia), check_out: isoDate(otroDia + 1), guests: 1,
+    }), {
+      ...auth(token),
+      tags: { tipo: 'escritura', name: 'portal/reservations:create' },
+      responseCallback: http.expectedStatuses(201, 409),
+    })
+    reservaMs.add(reintento.timings.duration)
+    reintento.status === 201 ? creadas.add(1) : sinCupo.add(1)
+  } else {
+    ok(res, 'reservar')
+  }
 
   if (PAUSA > 0) sleep(PAUSA * (0.75 + Math.random() * 0.5))
 }

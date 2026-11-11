@@ -151,6 +151,26 @@ cliente entre una reserva y la siguiente.
 | 3 s | 1 min 23 s | 1 000 | 0% | 775 ms | 995 ms | casi |
 | **6 s (cliente real)** | **2 min 19 s** | **1 000** | **0%** | **467 ms** | **604 ms** | **sí** |
 
+**Cuál es la forma más rápida de registrar las 1000** (2026-11-10, misma laptop, base ya con ~14 500 reservas):
+
+| Forma de reservar | Duración | Creadas | p95 de la reserva | Errores |
+| --- | ---: | ---: | ---: | ---: |
+| Como en la web: busca los tipos y reserva (`BUSCAR=cada-vez`) | 57,9 s | 999 | 1,86 s | 0% |
+| **Reserva directa con reintento** (`BUSCAR=una-vez`) | **35,2 s** | **1 000** | 2,04 s | 0% |
+| Reserva directa con 44 procesos PHP en vez de 20 | 28,9 s | 991 | 2,31 s | 0% |
+
+**La forma más conveniente es la segunda:** `-e BUSCAR=una-vez`. Los tipos de habitación se consultan una
+sola vez al empezar y cada iteración solo reserva, así que son 1 petición en vez de 2 y el tiempo baja casi a
+la mitad. El reintento cubre los choques (409) cuando dos clientes piden el mismo tipo en las mismas fechas,
+y por eso llegan las 1000 completas.
+
+Subir PHP-FPM de 20 a 44 procesos acelera un poco más (28,9 s) pero **responde peor** (p95 de 2,04 s a 2,31 s)
+y vuelve a perder reservas por choques: con 20 hilos de CPU, más procesos solo alargan la cola. No compensa.
+
+Ninguna de las tres cumple el p95 < 800 ms, y es esperable: 50 clientes reservando sin pausa es una prueba de
+saturación. Para cumplir el tiempo de respuesta hay que darles una pausa realista (6 s → 2 min 19 s, ver arriba)
+o más capacidad de servidor.
+
 **Lectura:** en los tres casos se registran **las 1000 reservas sin un solo error**; lo único que cambia es cuánto
 tarda y qué tan rápido responde. A toda velocidad el sistema sostiene **17 reservas por segundo**. Con clientes
 que se toman 6 segundos entre una reserva y otra —lo normal al elegir fechas y habitación— cumple las dos metas

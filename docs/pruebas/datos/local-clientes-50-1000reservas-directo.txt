@@ -1,0 +1,162 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: tests/k6/clientes-1000-reservas.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 50 max VUs, 3m30s max duration (incl. graceful stop):
+              * reservas: 1000 iterations shared among 50 VUs (maxDuration: 3m0s, gracefulStop: 30s)
+
+
+running (0m01.0s), 50/50 VUs, 8 complete and 0 interrupted iterations
+reservas   [   1% ] 50 VUs  0m00.4s/3m0s  0008/1000 shared iters
+
+running (0m02.0s), 50/50 VUs, 24 complete and 0 interrupted iterations
+reservas   [   2% ] 50 VUs  0m01.4s/3m0s  0024/1000 shared iters
+
+running (0m03.0s), 50/50 VUs, 47 complete and 0 interrupted iterations
+reservas   [   5% ] 50 VUs  0m02.4s/3m0s  0047/1000 shared iters
+
+running (0m04.0s), 50/50 VUs, 71 complete and 0 interrupted iterations
+reservas   [   7% ] 50 VUs  0m03.4s/3m0s  0071/1000 shared iters
+
+running (0m05.0s), 50/50 VUs, 93 complete and 0 interrupted iterations
+reservas   [   9% ] 50 VUs  0m04.4s/3m0s  0093/1000 shared iters
+
+running (0m06.0s), 50/50 VUs, 119 complete and 0 interrupted iterations
+reservas   [  12% ] 50 VUs  0m05.4s/3m0s  0119/1000 shared iters
+
+running (0m07.0s), 50/50 VUs, 144 complete and 0 interrupted iterations
+reservas   [  14% ] 50 VUs  0m06.4s/3m0s  0144/1000 shared iters
+
+running (0m08.0s), 50/50 VUs, 170 complete and 0 interrupted iterations
+reservas   [  17% ] 50 VUs  0m07.4s/3m0s  0170/1000 shared iters
+
+running (0m09.0s), 50/50 VUs, 209 complete and 0 interrupted iterations
+reservas   [  21% ] 50 VUs  0m08.4s/3m0s  0209/1000 shared iters
+
+running (0m10.0s), 50/50 VUs, 239 complete and 0 interrupted iterations
+reservas   [  24% ] 50 VUs  0m09.4s/3m0s  0239/1000 shared iters
+
+running (0m11.0s), 50/50 VUs, 265 complete and 0 interrupted iterations
+reservas   [  26% ] 50 VUs  0m10.4s/3m0s  0265/1000 shared iters
+
+running (0m12.0s), 50/50 VUs, 287 complete and 0 interrupted iterations
+reservas   [  29% ] 50 VUs  0m11.4s/3m0s  0287/1000 shared iters
+
+running (0m13.0s), 50/50 VUs, 316 complete and 0 interrupted iterations
+reservas   [  32% ] 50 VUs  0m12.4s/3m0s  0316/1000 shared iters
+
+running (0m14.0s), 50/50 VUs, 351 complete and 0 interrupted iterations
+reservas   [  35% ] 50 VUs  0m13.4s/3m0s  0351/1000 shared iters
+
+running (0m15.0s), 50/50 VUs, 377 complete and 0 interrupted iterations
+reservas   [  38% ] 50 VUs  0m14.4s/3m0s  0377/1000 shared iters
+
+running (0m16.0s), 50/50 VUs, 414 complete and 0 interrupted iterations
+reservas   [  41% ] 50 VUs  0m15.4s/3m0s  0414/1000 shared iters
+
+running (0m17.0s), 50/50 VUs, 444 complete and 0 interrupted iterations
+reservas   [  44% ] 50 VUs  0m16.4s/3m0s  0444/1000 shared iters
+
+running (0m18.0s), 50/50 VUs, 471 complete and 0 interrupted iterations
+reservas   [  47% ] 50 VUs  0m17.4s/3m0s  0471/1000 shared iters
+
+running (0m19.0s), 50/50 VUs, 505 complete and 0 interrupted iterations
+reservas   [  50% ] 50 VUs  0m18.4s/3m0s  0505/1000 shared iters
+
+running (0m20.0s), 50/50 VUs, 525 complete and 0 interrupted iterations
+reservas   [  52% ] 50 VUs  0m19.4s/3m0s  0525/1000 shared iters
+
+running (0m21.0s), 50/50 VUs, 561 complete and 0 interrupted iterations
+reservas   [  56% ] 50 VUs  0m20.4s/3m0s  0561/1000 shared iters
+
+running (0m22.0s), 50/50 VUs, 582 complete and 0 interrupted iterations
+reservas   [  58% ] 50 VUs  0m21.4s/3m0s  0582/1000 shared iters
+
+running (0m23.0s), 50/50 VUs, 614 complete and 0 interrupted iterations
+reservas   [  61% ] 50 VUs  0m22.4s/3m0s  0614/1000 shared iters
+
+running (0m24.0s), 50/50 VUs, 648 complete and 0 interrupted iterations
+reservas   [  65% ] 50 VUs  0m23.4s/3m0s  0648/1000 shared iters
+
+running (0m25.0s), 50/50 VUs, 677 complete and 0 interrupted iterations
+reservas   [  68% ] 50 VUs  0m24.4s/3m0s  0677/1000 shared iters
+
+running (0m26.0s), 50/50 VUs, 709 complete and 0 interrupted iterations
+reservas   [  71% ] 50 VUs  0m25.4s/3m0s  0709/1000 shared iters
+
+running (0m27.0s), 50/50 VUs, 743 complete and 0 interrupted iterations
+reservas   [  74% ] 50 VUs  0m26.4s/3m0s  0743/1000 shared iters
+
+running (0m28.0s), 50/50 VUs, 764 complete and 0 interrupted iterations
+reservas   [  76% ] 50 VUs  0m27.4s/3m0s  0764/1000 shared iters
+
+running (0m29.0s), 50/50 VUs, 797 complete and 0 interrupted iterations
+reservas   [  80% ] 50 VUs  0m28.4s/3m0s  0797/1000 shared iters
+
+running (0m30.0s), 50/50 VUs, 817 complete and 0 interrupted iterations
+reservas   [  82% ] 50 VUs  0m29.4s/3m0s  0817/1000 shared iters
+
+running (0m31.0s), 50/50 VUs, 848 complete and 0 interrupted iterations
+reservas   [  85% ] 50 VUs  0m30.4s/3m0s  0848/1000 shared iters
+
+running (0m32.0s), 50/50 VUs, 881 complete and 0 interrupted iterations
+reservas   [  88% ] 50 VUs  0m31.4s/3m0s  0881/1000 shared iters
+
+running (0m33.0s), 50/50 VUs, 916 complete and 0 interrupted iterations
+reservas   [  92% ] 50 VUs  0m32.4s/3m0s  0916/1000 shared iters
+
+running (0m34.0s), 48/50 VUs, 952 complete and 0 interrupted iterations
+reservas   [  95% ] 50 VUs  0m33.4s/3m0s  0952/1000 shared iters
+
+running (0m35.0s), 12/50 VUs, 988 complete and 0 interrupted iterations
+reservas   [  99% ] 50 VUs  0m34.4s/3m0s  0988/1000 shared iters
+
+
+  █ THRESHOLDS 
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+    reserva_ms
+    ✗ 'p(95)<800' p(95)=2.04s
+
+    reservas_creadas
+    ✓ 'count>=950' count=1000
+
+
+  █ TOTAL RESULTS 
+
+    CUSTOM
+    reserva_ms.....................: avg=1.63s min=315.91ms med=1.62s p(90)=1.95s p(95)=2.04s p(99)=2.4s  max=2.51s
+    reservas_creadas...............: 1000   28.405148/s
+
+    HTTP
+    http_req_duration..............: avg=1.63s min=135.18ms med=1.62s p(90)=1.95s p(95)=2.04s p(99)=2.4s  max=2.51s
+      { expected_response:true }...: avg=1.63s min=135.18ms med=1.62s p(90)=1.95s p(95)=2.04s p(99)=2.4s  max=2.51s
+    http_req_failed................: 0.00%  0 out of 1044
+    http_reqs......................: 1044   29.654974/s
+
+    EXECUTION
+    iteration_duration.............: avg=1.7s  min=317.2ms  med=1.63s p(90)=2.01s p(95)=2.41s p(99)=3.49s max=4.4s 
+    iterations.....................: 1000   28.405148/s
+    vus............................: 12     min=12        max=50
+    vus_max........................: 50     min=50        max=50
+
+    NETWORK
+    data_received..................: 1.7 MB 48 kB/s
+    data_sent......................: 345 kB 9.8 kB/s
+
+
+
+
+running (0m35.2s), 00/50 VUs, 1000 complete and 0 interrupted iterations
+reservas ✓ [ 100% ] 50 VUs  0m34.6s/3m0s  1000/1000 shared iters
+time="2026-11-10T21:55:04-05:00" level=error msg="thresholds on metrics 'reserva_ms' have been crossed"
