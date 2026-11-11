@@ -99,6 +99,157 @@ Dentro de Docker ya no hay rechazos, pero aparece el tope real de la laptop: 20 
 clientes a la vez las peticiones esperan más de 10 s y Nginx las corta con 504. Para que la prueba termine
 sin errores hay que quedarse en ~50–100 clientes, o subir `pm.max_children` (y la CPU que lo aguante).
 
+## Tutorial: las pruebas de 1000 y 5000 usuarios en un minuto
+
+Los cinco comandos, en orden, desde **Git Bash** en la raíz del proyecto. En cmd escribir `bash` a
+secas abre el bash de WSL, que no sirve aquí: abre Git Bash con
+`"C:\Program Files\Git\git-bash.exe" --cd=C:\Proyectos\LeGrandHotel`.
+
+Antes de empezar: abre Docker Desktop y espera a que arranque del todo.
+
+### 1. Preparar la API
+
+```bash
+bash tests/k6/preparar.sh 50
+```
+
+Hace cinco cosas: enciende los contenedores (`mysql`, `redis`, `app`, `nginx`); sube los límites de
+peticiones a 100.000 en `api/.env`, porque si no los 429 contarían como errores de la prueba;
+siembra 50 clientes del portal; cachea la configuración y las rutas; y calienta la API con tres
+llamadas a `/health`, para que la primera petición de la prueba no pague el arranque en frío.
+
+El número es cuántos clientes del portal sembrar. Añadiendo `--limpiar` borra además las reservas
+que dejaron las pruebas anteriores; hace falta cuando el calendario se llena, porque con el hotel
+lleno las reservas nuevas chocan entre sí y el resultado deja de medir el sistema.
+
+### 2. Sembrar las cuentas de recepción
+
+```bash
+docker exec -e K6_USERS=50 legrandhotel-app-1 php artisan db:seed --class=LoadTestUsersSeeder --force
+```
+
+`docker exec` ejecuta un comando dentro del contenedor de la API, que ya está corriendo.
+`-e K6_USERS=50` es la variable que lee el seeder: cuántas cuentas crear. El seeder crea
+`k6-0@carga.legrandhotel.test` … `k6-49@…`, todas recepcionistas y con la misma contraseña de
+prueba. `--force` evita la pregunta de confirmación que artisan hace cuando cree estar en producción.
+
+Hace falta porque `reservas.js` inicia sesión con esas cuentas: sin ellas la prueba se detiene de
+entrada con un 401. `preparar.sh` no las crea, solo siembra los clientes del portal.
+
+### 3. Los 1000 usuarios en un minuto
+
+```bash
+SALIDA=local-bloques-1000vu-1min bash tests/k6/dentro.sh reservas.js PROFILE=bloques VUS=1000 BLOCK_RAMP=1s BLOCK_HOLD=4s RAMP_DOWN=10s
+```
+
+| Trozo | Qué hace |
+| --- | --- |
+| `SALIDA=…` | Nombre de los resultados: `docs/pruebas/<nombre>.html` con gráficos y `.json` y `.txt` en `datos/` |
+| `dentro.sh` | Lanza k6 **dentro de la red de Docker**, hablando con `http://nginx` en vez de `localhost:8000` |
+| `reservas.js` | El escenario: cada usuario hace lo de un turno de recepción (70% consultas, 20% inicios de sesión, 10% reservas) |
+| `PROFILE=bloques` | El perfil que sube la carga de 100 en 100 en vez de golpe |
+| `VUS=1000` | Tope de usuarios simultáneos |
+| `BLOCK_RAMP=1s` | Lo que tarda en entrar cada bloque |
+| `BLOCK_HOLD=4s` | Lo que se sostiene antes del siguiente bloque |
+| `RAMP_DOWN=10s` | Bajada al terminar |
+
+La cuenta del minuto: 1000 ÷ 100 = **10 bloques**, cada uno de 1 + 4 = 5 s → 50 s, más 10 s de
+bajada = **60 s**.
+
+### 4. Los 5000 usuarios en un minuto
+
+```bash
+SALIDA=local-bloques-5000vu-1min bash tests/k6/dentro.sh reservas.js PROFILE=bloques VUS=5000 BLOCK_RAMP=500ms BLOCK_HOLD=500ms RAMP_DOWN=10s
+```
+
+Lo mismo con otros números: 5000 ÷ 100 = **50 bloques**, y para que quepan en el mismo minuto cada
+uno dura 0,5 + 0,5 = 1 s → 50 s, más 10 s de bajada = **60 s**.
+
+### 5. Devolver la API a la normalidad
+
+```bash
+bash tests/k6/restaurar.sh
+```
+
+Deshace lo del paso 1: devuelve `RATE_LIMIT_API=60`, `RATE_LIMIT_LOGIN=5` y `RATE_LIMIT_REGISTER=3`,
+recrea el contenedor de la API y limpia la caché de configuración para que los lea, y comprueba que
+responde 200. **No te lo saltes**: la web se quedaría aceptando 100.000 peticiones por minuto, o
+sea sin protección contra fuerza bruta. Al revés también sirve de pista: si la web dice «Demasiadas
+peticiones» sin motivo, suele ser que una prueba quedó a medias.
+
+## Cómo cambiar la prueba
+
+### Sin tocar el código, con variables
+
+Todo lo que va después del nombre del script son variables (`CLAVE=valor`). Estas son las que
+entiende cada escenario:
+
+`reservas.js` (personal del hotel):
+
+| Variable | Por defecto | Para qué |
+| --- | --- | --- |
+| `PROFILE` | `carga-25` | Qué forma tiene la carga: `bloques`, `escalon`, `aguante`, `estres`, `pico`, `resistencia` |
+| `VUS` | según el perfil | Tope de usuarios simultáneos |
+| `USERS` | 50 | Cuántas cuentas distintas se reparten entre los usuarios |
+| `BLOCK` | 100 | Tamaño de cada bloque en el perfil `bloques` |
+| `BLOCK_RAMP` | 10s | Lo que tarda en entrar cada bloque |
+| `BLOCK_HOLD` | 20s | Lo que se sostiene cada bloque |
+| `RAMP_DOWN` | 30s | Bajada final |
+| `DURATION` | 45s | Duración del escalón en el perfil `escalon` |
+| `HOLD` | 3m | Lo que se sostiene el tope en el perfil `aguante` |
+
+`clientes-1000-reservas.js` (clientes del portal):
+
+| Variable | Por defecto | Para qué |
+| --- | --- | --- |
+| `CLIENTES` | 50 | Cuántos clientes reservan a la vez |
+| `RESERVAS` | 1000 | Cuántas reservas hay que completar (la prueba acaba al llegar) |
+| `PAUSA` | 0 | Segundos entre una reserva y la siguiente; 6 imita a una persona real |
+| `BUSCAR` | `cada-vez` | `una-vez` consulta los tipos al empezar y luego solo reserva: la mitad de peticiones |
+| `MAX_DURATION` | 10m | Corta la prueba si se alarga |
+
+Ejemplos:
+
+```bash
+# Que salga limpia: 600 usuarios es el techo sin errores de esta laptop
+SALIDA=local-bloques-600vu bash tests/k6/dentro.sh reservas.js PROFILE=bloques VUS=600 BLOCK_RAMP=1s BLOCK_HOLD=4s RAMP_DOWN=10s
+
+# Bloques de 50 en vez de 100, para ver el quiebre con más detalle
+SALIDA=local-bloques-fino bash tests/k6/dentro.sh reservas.js PROFILE=bloques VUS=1000 BLOCK=50 BLOCK_RAMP=1s BLOCK_HOLD=2s
+
+# Clientes del portal con pausa realista
+SALIDA=local-clientes-pausa bash tests/k6/dentro.sh clientes-1000-reservas.js CLIENTES=50 RESERVAS=1000 PAUSA=6
+```
+
+### Tocando el código
+
+| Qué quieres cambiar | Dónde |
+| --- | --- |
+| La mezcla de acciones (70% consultas, 20% login, 10% reservas) | `tests/k6/reservas.js`, en la función `export default`: los cortes `dice < 0.7` y `dice < 0.9` |
+| Qué pantallas consulta cada usuario | `tests/k6/reservas.js`, el grupo `lecturas` |
+| Las metas que deciden si la prueba pasa o falla | `tests/k6/reservas.js`, el `thresholds` de cada perfil (`p(95)<800`, `rate<0.01`) |
+| Añadir un perfil nuevo | `tests/k6/reservas.js`, el objeto `profiles`: una clave más con sus `stages` |
+| Los pasos de una reserva de cliente | `tests/k6/clientes-1000-reservas.js` |
+| Qué prepara y restaura cada script | `tests/k6/preparar.sh` y `tests/k6/restaurar.sh` |
+| Cómo se lanza k6 dentro de Docker | `tests/k6/dentro.sh` |
+
+Un perfil es una lista de escalones: cada uno dice a cuántos usuarios llegar (`target`) y en cuánto
+tiempo (`duration`). Por ejemplo, un perfil que sube a 2000 en 30 s, los sostiene 2 minutos y baja:
+
+```js
+mi_perfil: {
+  stages: [
+    { duration: '30s', target: VUS || 2000 },
+    { duration: '2m', target: VUS || 2000 },
+    { duration: '20s', target: 0 },
+  ],
+  thresholds: { http_req_duration: ['p(95)<800'], http_req_failed: ['rate<0.01'] },
+},
+```
+
+Se corre con `PROFILE=mi_perfil`. Si el nombre no existe, el script avisa al arrancar en vez de
+correr una prueba equivocada.
+
 ## Cómo correrlas
 
 1. **Nunca desde la laptop**: desde una EC2 generadora en `us-east-1` (para 10 000+ VU, 3–5 generadoras que se apagan al terminar).
