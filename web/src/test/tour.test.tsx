@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
 import * as api from '../lib/api'
 import { tutorialDe } from '../lib/tutoriales'
+import { tourStore } from '../lib/tour'
 import { loginAs, renderApp } from './utils'
 
 vi.mock('../lib/api', async (importOriginal) => {
@@ -15,6 +16,7 @@ const sendMock = vi.mocked(api.send)
 const seen = { id: 1, name: 'Ana Prueba', email: 'ana@test.pe', email_verified: true, roles: ['storekeeper'], tutorial_seen: true }
 
 beforeEach(() => {
+  tourStore.stop()
   sendMock.mockReset()
   sendMock.mockResolvedValue(seen)
   vi.mocked(api.getOne).mockResolvedValue({})
@@ -51,7 +53,7 @@ describe('tutorial de bienvenida', () => {
     }
 
     // El almacenero ve Panel y Almacén; no Recepción ni Administración.
-    expect(titles).toEqual(['Hola, Ana', 'Panel', 'Almacén', 'Configuración', 'Tu cuenta', '¡Listo!'])
+    expect(titles).toEqual(['Hola, Ana', 'Panel', 'Almacén', 'Configuración', 'Tu cuenta', 'El botón «?»', '¡Listo!'])
     await waitFor(() => expect(sendMock).toHaveBeenCalledWith('post', '/auth/tutorial', { outcome: 'completed' }))
   })
 
@@ -60,12 +62,12 @@ describe('tutorial de bienvenida', () => {
     renderApp(<App />, '/configuracion')
 
     await userEvent.click(await screen.findByRole('button', { name: 'Ver el tutorial' }))
-    expect(await screen.findByText('Paso 1 de 7')).toBeInTheDocument()
+    expect(await screen.findByText('Paso 1 de 8')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
     expect(screen.getByRole('heading', { name: 'Reservar' })).toBeInTheDocument()
 
     await userEvent.keyboard('{Escape}')
-    expect(screen.queryByText(/Paso \d de 7/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Paso \d de 8/)).not.toBeInTheDocument()
   })
 })
 

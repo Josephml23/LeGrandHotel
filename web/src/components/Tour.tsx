@@ -52,7 +52,9 @@ function stepsFor(user: AuthUser): Step[] {
   steps.push(
     { target: '[data-tour="/configuracion"]', title: t('Configuración'), text: t('Cambia entre modo claro y oscuro, el idioma, y vuelve a ver este tutorial cuando quieras.') },
     { target: '[data-tour="cuenta"]', title: t('Tu cuenta'), text: t('Aquí ves con qué cuenta entraste y cierras sesión al terminar.') },
-    { title: t('¡Listo!'), text: t('Ya conoces lo principal. Si lo necesitas, el tutorial está en Configuración.') },
+    // Lo último que se resalta es el «?»: desde ahí se abre el tutorial de cada pantalla.
+    { target: '.ayuda', title: t('El botón «?»'), text: t('Este botón está al lado del título de cada pantalla. Ábrelo y te explica, una por una, para qué sirve cada cosa de esa pantalla.') },
+    { title: t('¡Listo!'), text: t('Ya conoces lo principal. Recuerda el botón «?» de cada pantalla, y este recorrido lo repites cuando quieras desde Configuración.') },
   )
 
   // En el teléfono el menú se abre junto con el recorrido: basta con que exista, aunque aún no se vea.
