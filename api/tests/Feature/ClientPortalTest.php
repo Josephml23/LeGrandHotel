@@ -236,12 +236,47 @@ describe('separación entre clientes y personal', function () {
         'registrar personal' => ['POST', '/api/v1/auth/register'],
     ]);
 
-    it('una cuenta de cliente no recibe roles del personal', function () {
-        $guest = User::factory()->withRole(Role::CLIENT)->create();
+    it('pasa una cuenta de cliente al personal cuando le pone contraseña', function () {
+        // El cliente entra con Google y no tiene contraseña; el personal entra con contraseña.
+        $guest = User::factory()->withRole(Role::CLIENT)->create(['password' => null]);
         actingAsRole(Role::ADMIN);
 
+        // Sin contraseña la cuenta se quedaría sin forma de entrar, así que se rechaza.
         expect($this->putJson("/api/v1/users/{$guest->id}/roles", ['roles' => [Role::ADMIN]]))
-            ->toBeApiError(409, 'CLIENT_ROLES_LOCKED');
+            ->toBeApiError(409, 'PASSWORD_REQUIRED_FOR_STAFF');
+
+        $this->putJson("/api/v1/users/{$guest->id}/roles", ['roles' => [Role::ADMIN], 'password' => 'Clave1234'])
+            ->assertOk();
+
+        $guest->refresh();
+        expect($guest->hasRole(Role::ADMIN))->toBeTrue()
+            ->and($guest->hasRole(Role::CLIENT))->toBeFalse();
+
+        // Y ya puede entrar con su correo y la contraseña nueva.
+        $this->postJson('/api/v1/auth/login', ['email' => $guest->email, 'password' => 'Clave1234'])->assertOk();
+    });
+
+    it('al volver a cliente borra la contraseña, porque entrará con Google', function () {
+        $staff = User::factory()->withRole(Role::RECEPTIONIST)->create(['password' => 'Clave1234']);
+        actingAsRole(Role::ADMIN);
+
+        $this->putJson("/api/v1/users/{$staff->id}/roles", ['roles' => [Role::CLIENT]])->assertOk();
+
+        $staff->refresh();
+        expect($staff->hasRole(Role::CLIENT))->toBeTrue()
+            ->and($staff->password)->toBeNull();
+
+        expect($this->postJson('/api/v1/auth/login', ['email' => $staff->email, 'password' => 'Clave1234']))
+            ->toBeApiError(401, 'INVALID_CREDENTIALS');
+    });
+
+    it('no mezcla el rol de Cliente con los del personal', function () {
+        $guest = User::factory()->withRole(Role::CLIENT)->create(['password' => null]);
+        actingAsRole(Role::ADMIN);
+
+        $this->putJson("/api/v1/users/{$guest->id}/roles", ['roles' => [Role::CLIENT, Role::ADMIN], 'password' => 'Clave1234'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['roles'], 'error.details');
     });
 
     it('el personal no usa el portal del cliente', function () {

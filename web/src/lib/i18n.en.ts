@@ -473,8 +473,9 @@ export const en: Record<string, string> = {
   '¿Eliminar la cuenta de {name}?': 'Delete {name}’s account?',
   'Usuario guardado.': 'User saved.',
   'Nuevo usuario': 'New user',
-  'Cuenta de cliente: entra con Google, no tiene contraseña y sus roles no se cambian desde aquí.': 'Guest account: signs in with Google, has no password and its roles are not changed here.',
-  'El rol de Programador no se asigna ni se quita: el hotel tiene un solo Programador.': 'The Developer role is neither assigned nor removed: the hotel has a single Developer.',
+  'Cuenta de cliente: entra con Google con este correo y no usa contraseña.': 'Guest account: signs in with Google using this address and has no password.',
+  'Pasa de cliente a personal: ponle una contraseña, porque el personal entra con correo y contraseña, no con Google.': 'Going from guest to staff: set a password, because staff sign in with an email and a password, not with Google.',
+  'Cliente y personal se excluyen. El rol de Programador no se asigna ni se quita: el hotel tiene un solo Programador.': 'Guest and staff are mutually exclusive. The Developer role is neither assigned nor removed: the hotel has a single Developer.',
 
   // ── Reportes y auditoría ──
   'Ocupación del rango elegido e ingresos de los últimos seis meses.': 'Occupancy for the chosen range and revenue for the last six months.',
@@ -691,7 +692,7 @@ export const en: Record<string, string> = {
   'Todas las cuentas del sistema, incluidas las de los clientes que entran con Google.': 'Every account in the system, including the guests who sign in with Google.',
   'Por nombre o por correo.': 'By name or email.',
   '«Editar» cambia el nombre, el correo, la contraseña o los roles. «Eliminar» borra la cuenta.': '"Edit" changes the name, email, password or roles. "Delete" removes the account.',
-  'Una cuenta puede tener varios roles. El de Programador no se da ni se quita desde aquí: hay uno solo.': 'An account can have several roles. The Developer one is neither granted nor removed here: there is only one.',
+  'Una cuenta del personal puede tener varios roles, y un cliente puede pasar a personal: al hacerlo le pones una contraseña, porque el personal entra con correo y contraseña y el cliente con Google. El rol de Programador no se da ni se quita: hay uno solo.': 'A staff account can hold several roles, and a guest can become staff: when you do it you set a password, because staff sign in with an email and a password and guests with Google. The Developer role is neither given nor taken away: there is only one.',
   'Dos miradas al negocio: cuánto se ocupó el hotel y cuánto se facturó.': 'Two views of the business: how full the hotel was and how much it billed.',
   'El rango de fechas': 'The date range',
   'Elige desde cuándo y hasta cuándo quieres ver los números.': 'Choose from when and until when you want to see the numbers.',

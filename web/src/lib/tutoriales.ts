@@ -88,7 +88,7 @@ export const TUTORIALES: Record<string, () => PasoPagina[]> = {
     { target: FILTROS, title: t('Filtros por rol'), text: t('Muestra solo administradores, recepcionistas, almaceneros, programador o clientes.') },
     { target: BUSCAR, title: t('Buscar'), text: t('Por nombre o por correo.') },
     { target: FILA, title: t('Editar y eliminar'), text: t('«Editar» cambia el nombre, el correo, la contraseña, los roles y la fecha de ingreso. «Eliminar» borra la cuenta.') },
-    { target: TABLA, title: t('Los roles'), text: t('Una cuenta puede tener varios roles. El de Programador no se da ni se quita desde aquí: hay uno solo.') },
+    { target: TABLA, title: t('Los roles'), text: t('Una cuenta del personal puede tener varios roles, y un cliente puede pasar a personal: al hacerlo le pones una contraseña, porque el personal entra con correo y contraseña y el cliente con Google. El rol de Programador no se da ni se quita: hay uno solo.') },
   ],
 
   '/reportes': () => [

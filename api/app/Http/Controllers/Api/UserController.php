@@ -63,11 +63,7 @@ class UserController extends Controller
     public function updateRoles(UserRolesRequest $request, User $user): JsonResponse
     {
         $roles = $request->validated('roles');
-
-        // Las cuentas de cliente se crean con Google y no pasan a ser personal.
-        if ($user->hasRole(Role::CLIENT)) {
-            throw ApiException::conflict('CLIENT_ROLES_LOCKED', 'Una cuenta de cliente no puede recibir roles del personal.');
-        }
+        $seraCliente = in_array(Role::CLIENT, $roles, true);
 
         if ($user->is($request->user()) && ! in_array(Role::ADMIN, $roles, true)) {
             throw ApiException::conflict('CANNOT_REMOVE_OWN_ADMIN', 'No puedes quitarte tu propio rol de administrador.');
@@ -75,8 +71,26 @@ class UserController extends Controller
 
         Role::guardDeveloper($user, $roles);
 
-        $user->roles()->sync(Role::whereIn('name', $roles)->pluck('id'));
-        $user->tokens()->delete();
+        // El personal entra con correo y contraseña; el cliente, solo con Google. Al pasar una
+        // cuenta de cliente al personal hay que ponerle contraseña o se queda sin forma de entrar.
+        if (! $seraCliente && ! $user->password && ! $request->filled('password')) {
+            throw ApiException::conflict(
+                'PASSWORD_REQUIRED_FOR_STAFF',
+                'Esta cuenta entra con Google. Para pasarla al personal ponle una contraseña.',
+            );
+        }
+
+        DB::transaction(function () use ($user, $roles, $seraCliente, $request) {
+            if ($seraCliente) {
+                // Desde ahora entra con Google: se borra la contraseña, que ya no sirve para entrar.
+                $user->forceFill(['password' => null])->save();
+            } elseif ($request->filled('password')) {
+                $user->forceFill(['password' => $request->string('password')])->save();
+            }
+
+            $user->roles()->sync(Role::whereIn('name', $roles)->pluck('id'));
+            $user->tokens()->delete();
+        });
 
         return ApiResponse::success($user->load('roles'));
     }

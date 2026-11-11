@@ -5,7 +5,9 @@ El plan técnico y el estado de cada requisito están en `docs/entregas.md`. Esc
 Dos tipos de cuenta: el **personal** (admin, receptionist, storekeeper, developer) entra con correo y contraseña y lo
 registran el Administrador o el Programador (`/auth/register`; hay un solo Programador: nadie crea otro ni le quita el rol); los **clientes**
 (`client`) entran solo con Google; su nombre completo, DNI y celular son opcionales hasta reservar (Mi perfil, `clients.user_id`)
-y reservan desde `/api/v1/portal/*`.
+y reservan desde `/api/v1/portal/*`. El Administrador puede cambiar el rol de cualquier cuenta desde
+«Personal y usuarios» (`PUT /users/{id}/roles`): Cliente y personal se excluyen, al pasar de cliente a personal hay que
+darle contraseña (si no, la cuenta se queda sin forma de entrar) y al volver a cliente se le borra.
 
 ## Reglas del proyecto
 

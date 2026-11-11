@@ -4,7 +4,7 @@ import { formatDate, formatNumber } from '../lib/format'
 import { remove, useAction, useServerList } from '../lib/hooks'
 import { useAuth } from '../auth/AuthContext'
 import { DataTable, Field, FormError, Modal, Pagination, PasswordField, Pill, SearchInput, TitleRow, fieldError, soloLetras, type Column } from '../components/ui'
-import { ROLE_LABELS, STAFF_ROLES, type RoleName, type UserRow } from '../types'
+import { ROLE_LABELS, type RoleName, type UserRow } from '../types'
 import { StaffForm } from './StaffForm'
 import { t } from '../lib/i18n'
 
@@ -62,8 +62,8 @@ export function UsersPage() {
 }
 
 function UserForm({ value: current, onClose }: { value: UserRow; onClose: () => void }) {
-  // Una cuenta de cliente entra con Google: no tiene contraseña y sus roles no se editan aquí.
-  const isClient = !!current.roles.some((r) => r.name === 'client')
+  // Una cuenta de cliente entra con Google y no tiene contraseña; el personal, al revés.
+  const eraCliente = !!current.roles.some((r) => r.name === 'client')
   const hoy = new Date().toISOString().slice(0, 10)
   const [form, setForm] = useState(() => ({
     name: current.name,
@@ -73,56 +73,74 @@ function UserForm({ value: current, onClose }: { value: UserRow; onClose: () => 
     hired_at: current.staff?.hired_at.slice(0, 10) ?? '',
   }))
 
+  const seraCliente = form.roles.includes('client')
+  // Al pasar de cliente a personal hay que poner una contraseña: hasta ahora entraba con Google.
+  const claveObligatoria = eraCliente && !seraCliente
+
   const save = useAction(async () => {
     const body: Record<string, string> = { name: form.name, email: form.email }
-    if (form.password && !isClient) body.password = form.password
-    const actualizado = await send('put', `/users/${current.id}`, body)
+    // La contraseña de quien ya es personal se cambia en la cuenta; la de una promoción viaja
+    // junto con los roles, para que el cambio entero sea una sola operación.
+    if (form.password && !eraCliente) body.password = form.password
+    await send('put', `/users/${current.id}`, body)
     // La fecha de ingreso vive en la ficha de personal, no en la cuenta.
     if (current.staff && form.hired_at !== current.staff.hired_at.slice(0, 10)) {
       await send('put', `/staff/${current.staff.id}`, { hired_at: form.hired_at })
     }
-    return isClient ? actualizado : send('put', `/users/${current.id}/roles`, { roles: form.roles })
+    const roles: Record<string, unknown> = { roles: form.roles }
+    if (form.password && claveObligatoria) roles.password = form.password
+    return send('put', `/users/${current.id}/roles`, roles)
   }, { invalidate: ['users', 'staff'], success: t('Usuario guardado.') })
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
     save.mutate(undefined, { onSuccess: onClose })
   }
+
+  /** Cliente y personal se excluyen: un huésped no trabaja en el hotel. */
   const toggle = (role: RoleName) =>
-    setForm((f) => ({ ...f, roles: f.roles.includes(role) ? f.roles.filter((r) => r !== role) : [...f.roles, role] }))
+    setForm((f) => {
+      if (role === 'client') return { ...f, roles: f.roles.includes('client') ? [] : ['client' as RoleName] }
+      const sinCliente = f.roles.filter((r) => r !== 'client')
+      return { ...f, roles: sinCliente.includes(role) ? sinCliente.filter((r) => r !== role) : [...sinCliente, role] }
+    })
 
   return (
     <Modal open title={current.name} onClose={() => { save.reset(); onClose() }}
-      footer={<><button className="btn" onClick={onClose}>{t('Cancelar')}</button><button className="btn btn-primary" form="user-form" disabled={save.isPending || (!isClient && form.roles.length === 0)}>{t('Guardar')}</button></>}>
+      footer={<><button className="btn" onClick={onClose}>{t('Cancelar')}</button><button className="btn btn-primary" form="user-form" disabled={save.isPending || form.roles.length === 0}>{t('Guardar')}</button></>}>
       <FormError error={save.error} />
       <form id="user-form" className="form-grid" onSubmit={submit}>
         <Field className="full" label={t('Nombre')} hint={t('Obligatorio. Solo letras, hasta 120.')} required maxLength={120}
           value={form.name} onChange={(e) => setForm({ ...form, name: soloLetras(e.target.value) })} error={fieldError(save.error, 'name')} />
         <Field label={t('Correo')} hint={t('Obligatorio. Correo válido, sin repetir.')} type="email" required value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })} error={fieldError(save.error, 'email')} />
-        {isClient ? (
-          <p className="full muted small" style={{ margin: 0 }}>{t('Cuenta de cliente: entra con Google, no tiene contraseña y sus roles no se cambian desde aquí.')}</p>
+        {claveObligatoria && (
+          <p className="full muted small" style={{ margin: 0 }}>{t('Pasa de cliente a personal: ponle una contraseña, porque el personal entra con correo y contraseña, no con Google.')}</p>
+        )}
+        {seraCliente ? (
+          <p className="full muted small" style={{ margin: 0 }}>{t('Cuenta de cliente: entra con Google con este correo y no usa contraseña.')}</p>
         ) : (
-          <PasswordField label={t('Nueva contraseña (opcional)')} value={form.password}
+          <PasswordField label={claveObligatoria ? t('Contraseña') : t('Nueva contraseña (opcional)')} value={form.password}
+            required={claveObligatoria}
             onChange={(valor) => setForm({ ...form, password: valor })} error={fieldError(save.error, 'password')} />
         )}
         {current.staff && (
           <Field label={t('Fecha de ingreso')} hint={t('Obligatorio. Hoy o antes.')} type="date" required max={hoy}
             value={form.hired_at} onChange={(e) => setForm({ ...form, hired_at: e.target.value })} error={fieldError(save.error, 'hired_at')} />
         )}
-        {!isClient && <fieldset className="full field" style={{ border: 0, padding: 0, margin: 0 }}>
+        <fieldset className="full field" style={{ border: 0, padding: 0, margin: 0 }}>
           <legend style={{ fontWeight: 500, marginBottom: 6 }}>{t('Roles')}</legend>
           <div className="actions">
-            {STAFF_ROLES.map((r) => (
+            {ALL_ROLES.map((r) => (
               <label key={r} className="btn btn-sm" style={{ background: form.roles.includes(r) ? 'var(--active)' : undefined }}>
                 {/* El Programador es único: no se da ni se quita desde aquí. */}
                 <input type="checkbox" checked={form.roles.includes(r)} disabled={r === 'developer'} onChange={() => toggle(r)} /> {ROLE_LABELS[r]}
               </label>
             ))}
           </div>
-          <span className="muted small">{t('El rol de Programador no se asigna ni se quita: el hotel tiene un solo Programador.')}</span>
+          <span className="muted small">{t('Cliente y personal se excluyen. El rol de Programador no se asigna ni se quita: el hotel tiene un solo Programador.')}</span>
           {fieldError(save.error, 'roles') && <span className="error">{fieldError(save.error, 'roles')}</span>}
-        </fieldset>}
+        </fieldset>
       </form>
     </Modal>
   )
