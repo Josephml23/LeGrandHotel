@@ -24,3 +24,6 @@ Thumbs.db
 
 # Tokens de los clientes de prueba de k6 (LoadTestClientsSeeder)
 tests/k6/.tokens-clientes.json
+
+# Archivos temporales que Word deja al abrir un .docx
+~$*
