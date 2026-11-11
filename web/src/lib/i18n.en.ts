@@ -164,6 +164,8 @@ export const en: Record<string, string> = {
   'Ingresando…': 'Signing in…',
   'Ingresar': 'Sign in',
   'Espera {seconds} s': 'Wait {seconds} s',
+  'Te queda 1 intento antes de que haya que esperar.': 'You have 1 attempt left before you have to wait.',
+  'Te quedan {n} intentos antes de que haya que esperar.': 'You have {n} attempts left before you have to wait.',
   'Por seguridad, espera {seconds} s antes de volver a intentar. Cada intento fallido alarga la espera.': 'For security, wait {seconds} s before trying again. Each failed attempt makes the wait longer.',
   '¿Eres huésped?': 'Are you a guest?',
   'Continuar con Google': 'Continue with Google',

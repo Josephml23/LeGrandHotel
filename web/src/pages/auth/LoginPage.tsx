@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { API_URL, ApiError, send } from '../../lib/api'
 import { t } from '../../lib/i18n'
 import { homeFor, useAuth } from '../../auth/AuthContext'
-import { Field, FormError, fieldError } from '../../components/ui'
+import { Field, FormError, PasswordField, fieldError } from '../../components/ui'
 import type { Session } from '../../types'
 import { AuthLayout } from './AuthLayout'
 
@@ -36,7 +36,8 @@ const saveLock = (until: number) => {
 /**
  * Una sola pantalla con dos entradas: el personal usa correo y contraseña;
  * los huéspedes entran (y se registran la primera vez) con Google.
- * Tras una contraseña incorrecta la API pide esperar (30 s, 1 min, 2 min…): se muestra la cuenta regresiva.
+ * Los tres primeros intentos fallidos solo avisan cuántos quedan; a partir de ahí la API pide
+ * esperar (30 s, 1 min, 2 min…) y se muestra la cuenta regresiva.
  */
 export function LoginPage() {
   const { setSession } = useAuth()
@@ -80,6 +81,11 @@ export function LoginPage() {
 
   const locked = remaining > 0
 
+  // Los primeros fallos no penalizan: se avisa cuántos quedan antes de que empiece la espera.
+  const intentosRestantes = login.error instanceof ApiError && login.error.code === 'INVALID_CREDENTIALS'
+    ? Number(login.error.details?.attempts_left ?? 0)
+    : 0
+
   const submit = (e: FormEvent) => {
     e.preventDefault()
     if (!locked) login.mutate()
@@ -99,11 +105,19 @@ export function LoginPage() {
           {t('Por seguridad, espera {seconds} s antes de volver a intentar. Cada intento fallido alarga la espera.', { seconds: remaining })}
         </div>
       )}
+      {!locked && intentosRestantes > 0 && (
+        <div className="form-warning" role="status" aria-live="polite">
+          {intentosRestantes === 1
+            ? t('Te queda 1 intento antes de que haya que esperar.')
+            : t('Te quedan {n} intentos antes de que haya que esperar.', { n: intentosRestantes })}
+        </div>
+      )}
       <form onSubmit={submit} className="stack" style={{ gap: 14 }} noValidate>
         <Field label={t('Correo')} type="email" autoComplete="email" required value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })} error={fieldError(login.error, 'email')} />
-        <Field label={t('Contraseña')} type="password" autoComplete="current-password" required value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })} error={fieldError(login.error, 'password')} />
+        {/* Sin reglas de longitud: aquí se escribe la contraseña que ya existe, no una nueva. */}
+        <PasswordField label={t('Contraseña')} reglas={false} required value={form.password}
+          onChange={(valor) => setForm({ ...form, password: valor })} error={fieldError(login.error, 'password')} />
         <button className="btn btn-primary" type="submit" disabled={login.isPending || locked}>
           {login.isPending ? t('Ingresando…') : locked ? t('Espera {seconds} s', { seconds: remaining }) : t('Ingresar')}
         </button>

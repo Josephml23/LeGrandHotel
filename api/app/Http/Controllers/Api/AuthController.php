@@ -56,7 +56,12 @@ class AuthController extends Controller
 
         if (! $user || ! $user->password || ! Hash::check($request->string('password'), $user->password)) {
             $wait = $lockout->fail($email, (string) $request->ip());
-            throw new ApiException('INVALID_CREDENTIALS', 'Correo o contraseña incorrectos.', 401, ['retry_after' => $wait]);
+
+            throw new ApiException('INVALID_CREDENTIALS', 'Correo o contraseña incorrectos.', 401, [
+                'retry_after' => $wait,
+                // Intentos que quedan antes de que empiece la espera, para avisarlo en la pantalla.
+                'attempts_left' => $lockout->attemptsLeft($email, (string) $request->ip()),
+            ]);
         }
 
         $lockout->clear($email, (string) $request->ip());

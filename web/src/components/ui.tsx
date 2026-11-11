@@ -204,6 +204,9 @@ export function PasswordField({
   error,
   required,
   className,
+  // Al entrar no se crea una contraseña sino que se escribe la que ya existe: ahí no van las
+  // reglas de longitud ni el aviso, solo el botón para verla.
+  reglas = true,
 }: {
   label: string
   value: string
@@ -211,31 +214,32 @@ export function PasswordField({
   error?: string
   required?: boolean
   className?: string
+  reglas?: boolean
 }) {
   const id = useId()
   const [visible, setVisible] = useState(false)
-  const falta = value.length > 0 && !claveValida(value)
+  const falta = reglas && value.length > 0 && !claveValida(value)
   const aviso = t('Mínimo 8 caracteres, con letras y números.')
 
   return (
     <div className={`field ${className ?? ''}`}>
       <div className="field-head">
         <label htmlFor={id}>{label}</label>
-        <span id={`${id}-hint`} className={falta ? 'error' : 'hint'}>{aviso}</span>
+        {reglas && <span id={`${id}-hint`} className={falta ? 'error' : 'hint'}>{aviso}</span>}
       </div>
       <div className="con-boton">
         <input
           id={id}
           className="input"
           type={visible ? 'text' : 'password'}
-          autoComplete="new-password"
+          autoComplete={reglas ? 'new-password' : 'current-password'}
           required={required}
           value={value}
-          minLength={8}
-          pattern="(?=.*[\p{L}])(?=.*\d).{8,}"
-          title={aviso}
+          minLength={reglas ? 8 : undefined}
+          pattern={reglas ? '(?=.*[\\p{L}])(?=.*\\d).{8,}' : undefined}
+          title={reglas ? aviso : undefined}
           aria-invalid={!!error || falta}
-          aria-describedby={`${id}-hint${error ? ` ${id}-error` : ''}`}
+          aria-describedby={[reglas ? `${id}-hint` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined}
           onChange={(e) => onChange(e.target.value)}
         />
         <button type="button" className="btn btn-sm" aria-pressed={visible} onClick={() => setVisible((v) => !v)}>

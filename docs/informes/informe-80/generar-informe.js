@@ -167,6 +167,7 @@ const s2 = [
     ['Scripts de preparación', 'preparar.sh deja la API lista (límites, clientes, caché) y restaurar.sh la devuelve a la normalidad', 'tests/k6/preparar.sh, restaurar.sh', 'Extra'],
     ['Límite de peticiones corregido', 'Una variable vacía en el archivo de configuración dejaba el límite en 0 y la API respondía 429 a todo', 'config/hotel.php; RateLimitConfigTest', 'Corrección'],
     ['Respaldos en GitHub', 'Copia de seguridad cifrada de la base en un repositorio aparte', 'infra/scripts/backup-mysql-to-github.sh', 'Evaluado 80%'],
+    ['Ingreso más tolerante y contraseña visible', 'Los tres primeros intentos fallidos no penalizan y la pantalla avisa cuántos quedan; el campo de contraseña tiene un botón «Ver»', 'LoginLockout, LoginPage.tsx; AuthTest', 'Mejora'],
     ['Cambio de rol de cualquier cuenta', 'El Administrador pasa un cliente a personal y al revés desde «Personal y usuarios»; al promover se pide contraseña, porque hasta entonces esa cuenta entraba con Google', 'UserController::updateRoles, UsersPage.tsx', 'Mejora'],
     ['Datos de demostración completos', 'Un seeder llena las pantallas que quedaban vacías: estadías en curso y pasadas, reservas en los cinco estados, habitaciones en limpieza y mantenimiento, autos en la cochera y movimientos de inventario', 'DemoActivitySeeder', 'Extra'],
     ['Historial de estadías corregido', 'La pestaña «Historial» listaba también a los huéspedes que seguían dentro del hotel: el filtro no separaba unos de otros', 'StayController; ReservationModuleTest', 'Corrección'],
@@ -426,6 +427,19 @@ const s4 = [
     ['Personal y usuarios', '8 cuentas', '14, con varios recepcionistas y almaceneros'],
   ], [1.3, 1.9, 2.4]),
   p('Al cargar esos datos salió a la luz un error que con la base vacía no se veía: la pestaña «Historial» de Estadías mostraba también a los huéspedes que seguían dentro del hotel, porque el filtro no separaba unos de otros. Quedó corregido y con una prueba que lo cubre.'),
+
+  h2('5.8 Entrar al sistema: tres intentos y ver la contraseña'),
+  p('La pantalla de ingreso tenía dos asperezas. La primera: el primer error de contraseña ya hacía esperar 30 segundos, de modo que una tecla mal puesta costaba medio minuto de espera. La segunda: la contraseña se escribía a ciegas, sin forma de comprobar lo que uno había tecleado.'),
+  p('Ahora los tres primeros intentos no penalizan y la pantalla avisa cuántos quedan; a partir del tercero empieza la cuenta regresiva, que sigue duplicándose con cada fallo hasta un máximo de 15 minutos. El campo de contraseña tiene además un botón «Ver» que la muestra y la vuelve a ocultar; a diferencia de los formularios donde se crea una contraseña, aquí no se muestran las reglas de longitud, porque no se está creando una sino escribiendo la que ya existe.'),
+  ...table('Lo que responde la API en cada intento fallido', ['Intento', 'Respuesta', 'Espera', 'Intentos que quedan'], [
+    ['1.º', 'Correo o contraseña incorrectos', '0 s', '2'],
+    ['2.º', 'Correo o contraseña incorrectos', '0 s', '1'],
+    ['3.º', 'Correo o contraseña incorrectos', '30 s', '0'],
+    ['4.º', 'Demasiados intentos fallidos', 'Lo que falte de los 30 s', '—'],
+    ['5.º', 'Demasiados intentos fallidos', '60 s, luego 2 min, 4 min…', '—'],
+  ], [0.8, 2.4, 1.4, 1.2]),
+  p('La cuenta de intentos es por correo y por equipo, se reinicia con un ingreso correcto y se olvida sola tras una hora sin intentos. El equilibrio es el de siempre: no castigar al que se equivoca escribiendo, pero frenar a quien prueba contraseñas una tras otra.'),
+  ...shot('23-login-ver-clave', 'La pantalla de ingreso con la contraseña a la vista y el aviso de los intentos que quedan'),
 ]
 
 // ── 5. Pruebas de carga ──────────────────────────────────

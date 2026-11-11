@@ -24,7 +24,7 @@ DERECHA = 1428
 # «Agregar persona» lleva su contorno a mano: la tabla que queda detrás es casi igual de
 # blanca que la ventana y la detección automática se la lleva puesta.
 EMERGENTES = {"18-nuevo-insumo"}
-A_MANO = {"14-agregar-persona": (380, 235, 1046, 665), "22-cambio-de-rol": (387, 138, 1052, 762)}
+A_MANO = {"14-agregar-persona": (380, 235, 1046, 665), "22-cambio-de-rol": (387, 138, 1052, 762), "23-login-ver-clave": (862, 185, 1332, 715)}
 
 # Las del tutorial necesitan ver la pantalla detrás, así que solo se les quita la barra lateral.
 MARGEN_EMERGENTE = 14
