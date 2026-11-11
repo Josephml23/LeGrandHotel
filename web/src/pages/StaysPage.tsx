@@ -8,7 +8,8 @@ import { t } from '../lib/i18n'
 
 export function StaysPage() {
   const [active, setActive] = useState(true)
-  const list = useServerList<Stay>('stays', { active: active ? 1 : undefined })
+  // active=1 los que están dentro del hotel; active=0 el historial de los que ya salieron.
+  const list = useServerList<Stay>('stays', { active: active ? 1 : 0 })
   const checkOut = useAction((id: number) => send('post', `/stays/${id}/check-out`), {
     invalidate: ['stays', 'reservations', 'rooms', 'parking-assignments', 'parking-spots'],
     success: t('Check-out registrado. La habitación pasó a limpieza.'),

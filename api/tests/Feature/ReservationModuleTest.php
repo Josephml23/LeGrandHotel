@@ -79,6 +79,32 @@ describe('recepción', function () {
         expect($this->postJson("/api/v1/stays/{$stayId}/check-out"))->toBeApiError(409, 'ALREADY_CHECKED_OUT');
     });
 
+    it('separa las estadías en curso del historial', function () {
+        $dentro = Reservation::factory()->for($this->room)->for($this->client)->create($this->dates);
+        $this->postJson("/api/v1/reservations/{$dentro->id}/check-in")->assertCreated();
+
+        $pasada = Reservation::factory()->for(Room::factory()->for(RoomType::factory()))->for(Client::factory())->create([
+            'check_in' => now()->addDays(20)->toDateString(), 'check_out' => now()->addDays(22)->toDateString(),
+        ]);
+        $salida = $this->postJson("/api/v1/reservations/{$pasada->id}/check-in")->json('data.id');
+        $this->postJson("/api/v1/stays/{$salida}/check-out")->assertOk();
+
+        // «En curso»: solo quien sigue dentro del hotel.
+        $this->getJson('/api/v1/stays?active=1')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.reservation_id', $dentro->id);
+
+        // «Historial»: solo quien ya hizo check-out.
+        $this->getJson('/api/v1/stays?active=0')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.reservation_id', $pasada->id);
+
+        // Sin el parámetro vienen las dos.
+        $this->getJson('/api/v1/stays')->assertOk()->assertJsonCount(2, 'data');
+    });
+
     it('no hace check-in en una habitación que todavía tiene un huésped dentro', function () {
         // Dos reservas de la misma habitación con fechas que no se cruzan: el primero aún no hizo check-out.
         $first = Reservation::factory()->for($this->room)->for($this->client)->create($this->dates);

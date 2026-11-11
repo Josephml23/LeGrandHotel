@@ -19,7 +19,11 @@ class StayController extends Controller
     {
         $stays = Stay::query()
             ->with(['reservation:id,client_id,room_id,check_in,check_out,status', 'reservation.client:id,full_name', 'reservation.room:id,number'])
-            ->when($request->boolean('active'), fn ($q) => $q->whereNull('checked_out_at'))
+            // active=1 son los huéspedes dentro del hotel y active=0 el historial (los que ya
+            // salieron). Sin el parámetro vienen todas.
+            ->when($request->has('active'), fn ($q) => $request->boolean('active')
+                ? $q->whereNull('checked_out_at')
+                : $q->whereNotNull('checked_out_at'))
             ->latest('checked_in_at')
             ->paginate($this->perPage($request));
 
