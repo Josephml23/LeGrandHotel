@@ -47,6 +47,11 @@ class DeveloperController extends Controller
                 'laravel' => Application::VERSION,
                 'opcache' => function_exists('opcache_get_status') && (opcache_get_status(false)['opcache_enabled'] ?? false),
             ],
+            // Dónde está corriendo y con qué versión de la base (config/hotel.php lo lee del entorno).
+            'deploy' => [
+                ...config('hotel.deploy'),
+                'migration' => DB::table('migrations')->latest('id')->value('migration'),
+            ],
             'drivers' => [
                 'database' => DB::connection()->getDriverName(),
                 'cache' => config('cache.default'),

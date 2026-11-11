@@ -22,31 +22,41 @@ describe('formularios de acceso', () => {
     expect(screen.queryByRole('link', { name: /crear cuenta/i })).not.toBeInTheDocument()
   })
 
-  it('sin sesión, /registro lleva al login: nadie de afuera puede registrarse', async () => {
-    renderApp(<App />, '/registro')
+  it('sin sesión, /usuarios lleva al login: nadie de afuera registra cuentas', async () => {
+    renderApp(<App />, '/usuarios')
     expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
   })
 
-  it('el administrador registra cuentas del personal en su propia pantalla', async () => {
+  it('el administrador agrega una persona y se crea su ficha con su cuenta', async () => {
     loginAs(['admin'])
-    sendMock.mockResolvedValueOnce({ id: 9, name: 'Rosa Díaz', email: 'rosa@hotel.pe', email_verified: false, roles: ['storekeeper'] })
-    renderApp(<App />, '/registro')
+    sendMock.mockResolvedValueOnce({ id: 9 })
+    renderApp(<App />, '/usuarios')
 
-    await userEvent.type(await screen.findByLabelText('Nombre completo'), 'Rosa Díaz')
+    await userEvent.click(await screen.findByRole('button', { name: 'Agregar persona' }))
+    await userEvent.type(screen.getByLabelText('Nombre completo'), 'Rosa Díaz')
     await userEvent.type(screen.getByLabelText('Correo'), 'rosa@hotel.pe')
-    await userEvent.type(screen.getByLabelText('Contraseña inicial'), 'Clave1234')
-    await userEvent.type(screen.getByLabelText('Repite la contraseña'), 'Clave1234')
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'Clave1234')
     await userEvent.selectOptions(screen.getByLabelText('Rol'), 'storekeeper')
-    await userEvent.click(screen.getByRole('button', { name: 'Registrar cuenta' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
 
-    await waitFor(() => expect(sendMock).toHaveBeenCalledWith('post', '/auth/register', {
-      name: 'Rosa Díaz', email: 'rosa@hotel.pe', password: 'Clave1234', password_confirmation: 'Clave1234', role: 'storekeeper',
-    }))
+    await waitFor(() => expect(sendMock).toHaveBeenCalledWith('post', '/staff', expect.objectContaining({
+      name: 'Rosa Díaz', email: 'rosa@hotel.pe', password: 'Clave1234', role: 'storekeeper',
+    })))
   })
 
-  it('un recepcionista no puede abrir el registro (403)', async () => {
+  it('el nombre de una persona solo acepta letras', async () => {
+    loginAs(['admin'])
+    renderApp(<App />, '/usuarios')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Agregar persona' }))
+    const nombre = screen.getByLabelText('Nombre completo')
+    await userEvent.type(nombre, 'Rosa123 Díaz!')
+    expect(nombre).toHaveValue('Rosa Díaz')
+  })
+
+  it('un recepcionista no puede abrir Personal y usuarios (403)', async () => {
     loginAs(['receptionist'])
-    renderApp(<App />, '/registro')
+    renderApp(<App />, '/usuarios')
     expect(await screen.findByRole('heading', { name: 'No tienes acceso a esta sección' })).toBeInTheDocument()
   })
 
@@ -75,14 +85,19 @@ describe('formularios de acceso', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Correo o contraseña incorrectos.')
   })
 
-  it('marca los campos inválidos del registro (422) junto a cada campo', async () => {
+  it('marca los campos inválidos del alta (422) junto a cada campo', async () => {
     sendMock.mockRejectedValueOnce(new ApiError(422, 'VALIDATION_FAILED', 'Los datos enviados no son válidos.', {
       email: ['El correo ya está registrado.'],
     }))
     loginAs(['admin'])
-    renderApp(<App />, '/registro')
+    renderApp(<App />, '/usuarios')
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Registrar cuenta' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Agregar persona' }))
+    // Se llena bien: el formulario no deja enviar si falta algo o la contraseña no cumple.
+    await userEvent.type(screen.getByLabelText('Nombre completo'), 'Rosa Díaz')
+    await userEvent.type(screen.getByLabelText('Correo'), 'rosa@hotel.pe')
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'Clave1234')
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
 
     const email = screen.getByLabelText('Correo')
     await waitFor(() => expect(email).toHaveAttribute('aria-invalid', 'true'))

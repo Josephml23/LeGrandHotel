@@ -4,7 +4,6 @@ import { GuestRoute, ProtectedRoute } from './auth/ProtectedRoute'
 import { AppEvents } from './components/AppEvents'
 import { Layout } from './components/Layout'
 import { LoginPage } from './pages/auth/LoginPage'
-import { RegisterPage } from './pages/auth/RegisterPage'
 import { AuthCallbackPage } from './pages/auth/AuthCallbackPage'
 import { VerifyEmailPage } from './pages/auth/VerifyEmailPage'
 import { CompleteProfilePage } from './pages/client/CompleteProfilePage'
@@ -12,7 +11,6 @@ import { BookPage } from './pages/client/BookPage'
 import { MyReservationsPage } from './pages/client/MyReservationsPage'
 import { ProfilePage } from './pages/client/ProfilePage'
 import { SettingsPage } from './pages/SettingsPage'
-import { t } from './lib/i18n'
 import { DashboardPage } from './pages/DashboardPage'
 import { RoomsPage } from './pages/RoomsPage'
 import { RoomTypesPage } from './pages/RoomTypesPage'
@@ -21,7 +19,6 @@ import { StaysPage } from './pages/StaysPage'
 import { ClientsPage } from './pages/ClientsPage'
 import { ParkingPage } from './pages/ParkingPage'
 import { InventoryPage } from './pages/InventoryPage'
-import { StaffPage } from './pages/StaffPage'
 import { UsersPage } from './pages/UsersPage'
 import { ReportsPage } from './pages/ReportsPage'
 import { AuditPage } from './pages/AuditPage'
@@ -78,15 +75,13 @@ export function App() {
             <Route element={<ProtectedRoute roles={['admin', 'storekeeper']} />}>
               <Route path="/inventario" element={<InventoryPage />} />
             </Route>
+            {/* El Programador también registra personal, igual que el Administrador. */}
             <Route element={<ProtectedRoute roles={['admin', 'developer']} />}>
-              <Route path="/registro" element={<RegisterPage />} />
+              <Route path="/usuarios" element={<UsersPage />} />
             </Route>
             <Route element={<ProtectedRoute roles={['admin']} />}>
-              <Route path="/personal" element={<StaffPage />} />
-              <Route path="/usuarios" element={<UsersPage />} />
               <Route path="/reportes" element={<ReportsPage />} />
               <Route path="/auditoria" element={<AuditPage />} />
-              <Route path="/facturacion" element={<UnderConstructionPage module={t('Facturación electrónica')} />} />
             </Route>
             <Route element={<ProtectedRoute roles={['developer', 'admin']} />}>
               <Route path="/programador" element={<DeveloperPage />} />

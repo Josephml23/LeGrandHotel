@@ -11,7 +11,7 @@ class UserRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'name' => [$this->required(), 'string', 'max:120'],
+            'name' => [$this->required(), 'string', 'max:120', self::SOLO_LETRAS],
             'email' => [$this->required(), 'email', 'max:255', Rule::unique('users')->ignore($this->routeId('user'))],
             'password' => [$this->isMethod('POST') ? 'required' : 'sometimes', Password::min(8)->letters()->numbers()],
             'roles' => [$this->isMethod('POST') ? 'required' : 'prohibited', 'array', 'min:1'],

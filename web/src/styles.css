@@ -169,6 +169,10 @@ textarea.input { height: auto; min-height: 72px; padding: 8px 10px; }
 .field-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .field .hint { color: var(--muted); font-size: var(--fs-small); text-align: right; }
 .field .error { color: var(--negative); font-size: var(--fs-small); }
+/* Casilla con un botón al lado (por ejemplo, «Ver» en la contraseña). */
+.con-boton { display: flex; gap: 6px; align-items: stretch; }
+.con-boton .input { flex: 1; min-width: 0; }
+.con-boton .btn { flex: none; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .form-grid .full { grid-column: 1 / -1; }
 .form-error { padding: 10px 12px; border-radius: var(--radius-control); background: var(--pill-negative-bg); color: var(--pill-negative-ink); }

@@ -44,12 +44,9 @@ const NAV: { group: string; items: NavItem[] }[] = [
   {
     group: 'Administración',
     items: [
-      { to: '/personal', label: 'Personal', roles: ['admin'] },
-      { to: '/registro', label: 'Registrar personal', roles: ['admin', 'developer'] },
-      { to: '/usuarios', label: 'Usuarios y roles', roles: ['admin'] },
+      { to: '/usuarios', label: 'Personal y usuarios', roles: ['admin', 'developer'] },
       { to: '/reportes', label: 'Reportes', roles: ['admin'] },
       { to: '/auditoria', label: 'Auditoría', roles: ['admin'] },
-      { to: '/facturacion', label: 'Facturación', roles: ['admin'] },
     ],
   },
   {

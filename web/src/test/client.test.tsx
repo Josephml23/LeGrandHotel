@@ -132,21 +132,13 @@ describe('cliente con Google', () => {
   })
 })
 
-describe('registro de personal', () => {
-  it('el programador crea cuentas, pero no puede elegir Programador', async () => {
-    loginAs(['developer'])
-    renderApp(<App />, '/registro')
+describe('alta de personal', () => {
+  it.each([['developer'], ['admin']] as const)('%s crea cuentas, pero no puede elegir Programador', async (rol) => {
+    loginAs([rol])
+    renderApp(<App />, '/usuarios')
 
-    const role = await screen.findByLabelText('Rol')
-    const options = within(role).getAllByRole('option').map((o) => o.textContent)
-    expect(options).toEqual(['Recepcionista', 'Almacenero', 'Administrador'])
-  })
-
-  it('el administrador tampoco crea Programadores: solo existe uno', async () => {
-    loginAs(['admin'])
-    renderApp(<App />, '/registro')
-
-    const role = await screen.findByLabelText('Rol')
+    await userEvent.click(await screen.findByRole('button', { name: 'Agregar persona' }))
+    const role = screen.getByLabelText('Rol')
     const options = within(role).getAllByRole('option').map((o) => o.textContent)
     expect(options).toEqual(['Recepcionista', 'Almacenero', 'Administrador'])
   })

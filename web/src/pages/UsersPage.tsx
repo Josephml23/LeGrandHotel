@@ -1,33 +1,39 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { send } from '../lib/api'
-import { formatNumber } from '../lib/format'
+import { formatDate, formatNumber } from '../lib/format'
 import { remove, useAction, useServerList } from '../lib/hooks'
 import { useAuth } from '../auth/AuthContext'
-import { DataTable, Field, FormError, Modal, Pagination, Pill, SearchInput, TitleRow, fieldError, type Column } from '../components/ui'
+import { DataTable, Field, FormError, Modal, Pagination, PasswordField, Pill, SearchInput, TitleRow, fieldError, soloLetras, type Column } from '../components/ui'
 import { ROLE_LABELS, STAFF_ROLES, type RoleName, type UserRow } from '../types'
+import { StaffForm } from './StaffForm'
 import { t } from '../lib/i18n'
 
-/** Pestañas del listado: el personal y los clientes (que entran con Google). */
+/** Pestañas del listado: el personal del hotel y los clientes (que entran con Google). */
 const ALL_ROLES = Object.keys(ROLE_LABELS) as RoleName[]
 
+/**
+ * Personal y usuarios en una sola pantalla: todas las cuentas del sistema, las del equipo del
+ * hotel y las de los clientes. «Agregar persona» crea la ficha y su cuenta de una sola vez.
+ */
 export function UsersPage() {
   const { user: me } = useAuth()
   const [role, setRole] = useState<'' | RoleName>('')
   const list = useServerList<UserRow>('users', { role })
-  const [editing, setEditing] = useState<UserRow | 'new' | null>(null)
+  const [editing, setEditing] = useState<UserRow | null>(null)
+  const [creating, setCreating] = useState(false)
   const destroy = useAction(remove('users'), { invalidate: ['users', 'staff'], success: t('Usuario eliminado.') })
 
   const columns: Column<UserRow>[] = [
     { key: 'name', header: t('Usuario'), render: (u) => <span className="identity"><strong>{u.name}</strong><span>{u.email}</span></span> },
     { key: 'roles', header: t('Roles'), render: (u) => u.roles.map((r) => ROLE_LABELS[r.name]).join(', ') || <span className="muted">—</span> },
+    { key: 'hired', header: t('Ingreso'), className: 'hide-sm', render: (u) => (u.staff ? <span className="num">{formatDate(u.staff.hired_at)}</span> : <span className="muted">—</span>) },
     { key: 'verified', header: t('Correo'), className: 'hide-sm', render: (u) => (u.email_verified_at ? <Pill tone="positive">{t('Verificado')}</Pill> : <Pill tone="warning">{t('Sin verificar')}</Pill>) },
   ]
 
   return (
     <>
-      <TitleRow title={t('Usuarios y roles')} lede={t('Al cambiar los roles de alguien se cierran sus sesiones abiertas.')}>
-        <Link className="btn btn-primary" to="/registro">{t('Registrar usuario')}</Link>
+      <TitleRow title={t('Personal y usuarios')} lede={t('Todas las cuentas del sistema. Al cambiar los roles de alguien se cierran sus sesiones abiertas.')}>
+        <button className="btn btn-primary" onClick={() => setCreating(true)}>{t('Agregar persona')}</button>
       </TitleRow>
       <div className="tabs" role="tablist" aria-label={t('Filtrar por rol')}>
         {(['', ...ALL_ROLES] as const).map((r) => (
@@ -49,28 +55,33 @@ export function UsersPage() {
           </>
         )} />
       <Pagination meta={list.meta} onPage={list.setPage} noun={t('usuarios')} />
-      {editing !== null && <UserForm key={editing === 'new' ? 'new' : editing.id} value={editing} onClose={() => setEditing(null)} />}
+      {creating && <StaffForm open onClose={() => setCreating(false)} />}
+      {editing && <UserForm key={editing.id} value={editing} onClose={() => setEditing(null)} />}
     </>
   )
 }
 
-function UserForm({ value, onClose }: { value: UserRow | 'new' | null; onClose: () => void }) {
-  const current = value && value !== 'new' ? value : null
+function UserForm({ value: current, onClose }: { value: UserRow; onClose: () => void }) {
   // Una cuenta de cliente entra con Google: no tiene contraseña y sus roles no se editan aquí.
-  const isClient = !!current?.roles.some((r) => r.name === 'client')
+  const isClient = !!current.roles.some((r) => r.name === 'client')
+  const hoy = new Date().toISOString().slice(0, 10)
   const [form, setForm] = useState(() => ({
-    name: current?.name ?? '',
-    email: current?.email ?? '',
+    name: current.name,
+    email: current.email,
     password: '',
-    roles: current ? current.roles.map((r) => r.name) : (['receptionist'] as RoleName[]),
+    roles: current.roles.map((r) => r.name),
+    hired_at: current.staff?.hired_at.slice(0, 10) ?? '',
   }))
 
   const save = useAction(async () => {
-    if (!current) return send('post', '/users', form)
     const body: Record<string, string> = { name: form.name, email: form.email }
     if (form.password && !isClient) body.password = form.password
-    const updated = await send('put', `/users/${current.id}`, body)
-    return isClient ? updated : send('put', `/users/${current.id}/roles`, { roles: form.roles })
+    const actualizado = await send('put', `/users/${current.id}`, body)
+    // La fecha de ingreso vive en la ficha de personal, no en la cuenta.
+    if (current.staff && form.hired_at !== current.staff.hired_at.slice(0, 10)) {
+      await send('put', `/staff/${current.staff.id}`, { hired_at: form.hired_at })
+    }
+    return isClient ? actualizado : send('put', `/users/${current.id}/roles`, { roles: form.roles })
   }, { invalidate: ['users', 'staff'], success: t('Usuario guardado.') })
 
   const submit = (e: FormEvent) => {
@@ -81,17 +92,23 @@ function UserForm({ value, onClose }: { value: UserRow | 'new' | null; onClose: 
     setForm((f) => ({ ...f, roles: f.roles.includes(role) ? f.roles.filter((r) => r !== role) : [...f.roles, role] }))
 
   return (
-    <Modal open={value !== null} title={current ? current.name : t('Nuevo usuario')} onClose={() => { save.reset(); onClose() }}
+    <Modal open title={current.name} onClose={() => { save.reset(); onClose() }}
       footer={<><button className="btn" onClick={onClose}>{t('Cancelar')}</button><button className="btn btn-primary" form="user-form" disabled={save.isPending || (!isClient && form.roles.length === 0)}>{t('Guardar')}</button></>}>
       <FormError error={save.error} />
       <form id="user-form" className="form-grid" onSubmit={submit}>
-        <Field className="full" label={t('Nombre')} hint={t('Obligatorio. Hasta 120 caracteres.')} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} error={fieldError(save.error, 'name')} />
-        <Field label={t('Correo')} hint={t('Obligatorio. Correo válido, sin repetir.')} type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} error={fieldError(save.error, 'email')} />
+        <Field className="full" label={t('Nombre')} hint={t('Obligatorio. Solo letras, hasta 120.')} required maxLength={120}
+          value={form.name} onChange={(e) => setForm({ ...form, name: soloLetras(e.target.value) })} error={fieldError(save.error, 'name')} />
+        <Field label={t('Correo')} hint={t('Obligatorio. Correo válido, sin repetir.')} type="email" required value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })} error={fieldError(save.error, 'email')} />
         {isClient ? (
           <p className="full muted small" style={{ margin: 0 }}>{t('Cuenta de cliente: entra con Google, no tiene contraseña y sus roles no se cambian desde aquí.')}</p>
         ) : (
-          <Field label={current ? t('Nueva contraseña (opcional)') : t('Contraseña')} type="password" autoComplete="new-password" value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })} error={fieldError(save.error, 'password')} hint={t('Mínimo 8 caracteres, con letras y números.')} />
+          <PasswordField label={t('Nueva contraseña (opcional)')} value={form.password}
+            onChange={(valor) => setForm({ ...form, password: valor })} error={fieldError(save.error, 'password')} />
+        )}
+        {current.staff && (
+          <Field label={t('Fecha de ingreso')} hint={t('Obligatorio. Hoy o antes.')} type="date" required max={hoy}
+            value={form.hired_at} onChange={(e) => setForm({ ...form, hired_at: e.target.value })} error={fieldError(save.error, 'hired_at')} />
         )}
         {!isClient && <fieldset className="full field" style={{ border: 0, padding: 0, margin: 0 }}>
           <legend style={{ fontWeight: 500, marginBottom: 6 }}>{t('Roles')}</legend>

@@ -18,28 +18,24 @@ use Illuminate\Database\Seeder;
 class DemoSeeder extends Seeder
 {
     public const USERS = [
-        ['Administrador Demo', 'admin@legrandhotel.test', Role::ADMIN, 'Gerente'],
-        ['Recepción Demo', 'recepcion@legrandhotel.test', Role::RECEPTIONIST, 'Recepcionista'],
-        ['Almacén Demo', 'almacen@legrandhotel.test', Role::STOREKEEPER, 'Almacenero'],
-        ['Programador Demo', 'dev@legrandhotel.test', Role::DEVELOPER, 'Programador'],
+        ['Administrador Demo', 'admin@legrandhotel.test', Role::ADMIN],
+        ['Recepción Demo', 'recepcion@legrandhotel.test', Role::RECEPTIONIST],
+        ['Almacén Demo', 'almacen@legrandhotel.test', Role::STOREKEEPER],
+        ['Programador Demo', 'dev@legrandhotel.test', Role::DEVELOPER],
     ];
 
     public function run(): void
     {
         $password = env('DEMO_PASSWORD', 'LeGrand2026');
 
-        foreach (self::USERS as [$name, $email, $role, $position]) {
+        foreach (self::USERS as [$name, $email, $role]) {
             $user = User::updateOrCreate(['email' => $email], [
                 'name' => $name,
                 'password' => $password,
                 'email_verified_at' => now(),
             ]);
             $user->assignRole($role);
-            Staff::firstOrCreate(['user_id' => $user->id], [
-                'position' => $position,
-                'shift' => 'morning',
-                'hired_at' => now()->subYear()->toDateString(),
-            ]);
+            Staff::firstOrCreate(['user_id' => $user->id], ['hired_at' => now()->subYear()->toDateString()]);
         }
 
         // Nombre, descripción, capacidad, precio y servicios que ve el cliente al reservar.

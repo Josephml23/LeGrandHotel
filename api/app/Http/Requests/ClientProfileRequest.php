@@ -11,7 +11,7 @@ class ClientProfileRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'full_name' => ['required', 'string', 'min:3', 'max:120'],
+            'full_name' => ['required', 'string', 'min:3', 'max:120', self::SOLO_LETRAS],
             'document_number' => ['nullable', 'digits:8'],
             'phone' => ['nullable', 'regex:/^9\d{8}$/'],
         ];

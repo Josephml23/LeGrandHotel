@@ -11,11 +11,9 @@ class Staff extends Model
 {
     use Auditable, HasFactory;
 
-    public const SHIFTS = ['morning', 'afternoon', 'night'];
-
     protected $table = 'staff';
 
-    protected $fillable = ['user_id', 'position', 'shift', 'hired_at'];
+    protected $fillable = ['user_id', 'hired_at'];
 
     protected function casts(): array
     {

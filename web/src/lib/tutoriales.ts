@@ -82,22 +82,12 @@ export const TUTORIALES: Record<string, () => PasoPagina[]> = {
     { target: TABLA, title: t('Bajo el mínimo'), text: t('Los insumos que quedaron por debajo de su mínimo se marcan para reponer, y también salen en el Panel.') },
   ],
 
-  '/personal': () => [
-    intro(t('Personal'), t('Las fichas del equipo del hotel: su cargo, su turno y desde cuándo trabajan.')),
-    { target: TITULO, title: t('Agregar persona'), text: t('Crea la ficha y la cuenta con la que esa persona entra al sistema.') },
-    { target: FILA, title: t('Editar y eliminar'), text: t('«Editar» cambia el cargo, el turno o la contraseña. «Eliminar» quita a la persona y su cuenta.') },
-  ],
-
-  '/registro': () => [
-    intro(t('Registrar personal'), t('Crea la cuenta con la que una persona del hotel entra al sistema. No inicia sesión por ella: recibe un correo para verificar su dirección.')),
-    { target: 'form', title: t('Los datos'), text: t('Nombre, correo, contraseña y rol. Al costado de cada casilla están las reglas que debe cumplir.') },
-    { target: 'select', title: t('El rol'), text: t('Recepcionista, Almacenero o Administrador. El rol de Programador no se puede dar: el hotel tiene uno solo.') },
-  ],
-
   '/usuarios': () => [
-    intro(t('Usuarios y roles'), t('Todas las cuentas del sistema, incluidas las de los clientes que entran con Google.')),
+    intro(t('Personal y usuarios'), t('Todas las cuentas del sistema: las del equipo del hotel y las de los clientes que entran con Google.')),
+    { target: TITULO, title: t('Agregar persona'), text: t('Crea de una vez la ficha de la persona y la cuenta con la que entra. Su cargo sale del rol que le das.') },
+    { target: FILTROS, title: t('Filtros por rol'), text: t('Muestra solo administradores, recepcionistas, almaceneros, programador o clientes.') },
     { target: BUSCAR, title: t('Buscar'), text: t('Por nombre o por correo.') },
-    { target: FILA, title: t('Editar y eliminar'), text: t('«Editar» cambia el nombre, el correo, la contraseña o los roles. «Eliminar» borra la cuenta.') },
+    { target: FILA, title: t('Editar y eliminar'), text: t('«Editar» cambia el nombre, el correo, la contraseña, los roles y la fecha de ingreso. «Eliminar» borra la cuenta.') },
     { target: TABLA, title: t('Los roles'), text: t('Una cuenta puede tener varios roles. El de Programador no se da ni se quita desde aquí: hay uno solo.') },
   ],
 
@@ -117,6 +107,27 @@ export const TUTORIALES: Record<string, () => PasoPagina[]> = {
     intro(t('Vista del programador'), t('El estado técnico del sistema. Sirve para revisar una falla sin entrar al servidor.')),
     { target: FILTROS, title: t('Las pestañas'), text: t('Resumen de salud, peticiones recientes, errores y rutas de la API.') },
     { target: 'main', title: t('Para qué sirve'), text: t('Si algo falla, aquí ves el código del incidente que devolvió la API y puedes buscarlo en los registros.') },
+  ],
+
+  // ── Pantallas del cliente ─────────────────────────────
+  '/reservar': () => [
+    intro(t('Reservar una habitación'), t('En tres pasos: eliges tus fechas, miras lo que hay libre y reservas.')),
+    { target: '.search-bar', title: t('1. Tus fechas'), text: t('Pon la llegada, la salida y cuántas personas van. Solo se muestran los tipos con sitio para ese número.') },
+    { target: '.offers', title: t('2. Lo que hay libre'), text: t('Cada tarjeta es un tipo de habitación: lo que incluye, cuántas quedan y el total por todas las noches.') },
+    { target: '.offer .btn-primary', title: t('3. Reservar'), text: t('Te pedimos confirmar. Si te falta el DNI o el celular, te los pide ahí mismo; si ya los tienes, te dice a nombre de quién queda.') },
+    { target: '[data-tour="/mis-reservas"]', title: t('Y después'), text: t('Tu reserva queda en «Mis reservas». Recepción hace el check-in cuando llegas.') },
+  ],
+
+  '/mis-reservas': () => [
+    intro(t('Mis reservas'), t('Todas tus reservas, con su estado y lo que vas a pagar. Recepción ve lo mismo que tú.')),
+    { target: TABLA, title: t('Lo que ves de cada una'), text: t('La habitación, las fechas, cuántas noches y el total. El estado dice si está por confirmar, confirmada, en curso o finalizada.') },
+    { target: FILA, title: t('Cancelar'), text: t('Puedes cancelar mientras la estadía no haya empezado; te pide confirmar antes. Una vez que hiciste el check-in ya no se puede.') },
+    { target: PAGINAS, title: t('Páginas'), text: t('Si tienes muchas, aquí avanzas entre ellas.') },
+  ],
+
+  '/perfil': () => [
+    intro(t('Mi perfil'), t('Tus datos. El DNI y el celular son necesarios para reservar; puedes ponerlos aquí o al momento de reservar.')),
+    { target: 'form', title: t('Lo que puedes cambiar'), text: t('El nombre, el DNI y el celular. El correo viene de Google y no se puede cambiar.') },
   ],
 
   '/configuracion': () => [

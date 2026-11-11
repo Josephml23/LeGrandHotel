@@ -7,6 +7,7 @@ import { Kpi, Pill, SearchInput, TitleRow, useDebounced } from '../components/ui
 
 interface Overview {
   app: { name: string; version: string; environment: string; debug: boolean; timezone: string; php: string; laravel: string; opcache: boolean }
+  deploy: { platform: string; service: string | null; url: string | null; commit: string | null; branch: string | null; migration: string | null }
   drivers: Record<string, string>
   security: { token_minutes: number; rate_limits_per_minute: Record<string, number>; cors_origins: string[]; pagination_max: number; google_login_configured: boolean }
   tables: Record<string, number>
@@ -131,6 +132,19 @@ function Summary({ health }: { health?: Health }) {
             <Rows rows={o ? [
               [t('Versión'), o.app.version], [t('Entorno'), o.app.environment], ['Debug', o.app.debug ? t('Activado') : t('Desactivado')],
               ['PHP', o.app.php], ['Laravel', o.app.laravel], ['OPcache', o.app.opcache ? t('Activo') : t('Inactivo')], [t('Zona horaria'), o.app.timezone],
+            ] : []} />
+          </div>
+        </section>
+        <section>
+          <h2 className="section-title">{t('Despliegue')}</h2>
+          <div className="card" style={{ padding: '4px 16px' }}>
+            <Rows rows={o ? [
+              [t('Dónde corre'), o.deploy.platform],
+              ...(o.deploy.service ? [[t('Servicio'), o.deploy.service] as [string, string]] : []),
+              ...(o.deploy.branch ? [[t('Rama'), o.deploy.branch] as [string, string]] : []),
+              ...(o.deploy.commit ? [[t('Commit'), o.deploy.commit] as [string, string]] : []),
+              [t('Dirección'), o.deploy.url ?? '—'],
+              [t('Última migración'), o.deploy.migration ?? '—'],
             ] : []} />
           </div>
         </section>

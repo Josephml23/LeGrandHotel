@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
 import * as api from '../lib/api'
+import { tutorialDe } from '../lib/tutoriales'
 import { loginAs, renderApp } from './utils'
 
 vi.mock('../lib/api', async (importOriginal) => {
@@ -97,9 +98,24 @@ describe('tutorial de cada pestaña', () => {
 
   it('las pantallas sin tutorial no muestran el botón', async () => {
     loginAs(['admin'], true, { tutorial_seen: true })
-    renderApp(<App />, '/facturacion')
+    renderApp(<App />, '/403')
 
-    expect(await screen.findByRole('heading', { name: /Facturación/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'No tienes acceso a esta sección' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '¿Qué hago aquí?' })).not.toBeInTheDocument()
+  })
+})
+
+describe('tutoriales del cliente', () => {
+  it('reservar y ver sus reservas tienen su propio recorrido', () => {
+    const reservar = tutorialDe('/reservar')
+    expect(reservar?.map((p) => p.title)).toEqual(['Reservar una habitación', '1. Tus fechas', '2. Lo que hay libre', '3. Reservar', 'Y después'])
+
+    const misReservas = tutorialDe('/mis-reservas')
+    expect(misReservas?.map((p) => p.title)).toEqual(['Mis reservas', 'Lo que ves de cada una', 'Cancelar', 'Páginas'])
+
+    // Las pantallas que se quitaron ya no tienen tutorial.
+    expect(tutorialDe('/registro')).toBeNull()
+    expect(tutorialDe('/personal')).toBeNull()
+    expect(tutorialDe('/facturacion')).toBeNull()
   })
 })

@@ -173,12 +173,76 @@ export function Field({
   )
 }
 
+/**
+ * Filtros de escritura: la casilla descarta lo que no corresponde mientras se escribe, así el
+ * usuario no llega a enviar algo inválido. La API valida lo mismo (ApiFormRequest::SOLO_LETRAS).
+ */
+export const soloLetras = (valor: string) => valor.replace(/[^\p{L}\p{M}\s'’.-]/gu, '')
+export const soloNumeros = (valor: string) => valor.replace(/\D/g, '')
+
 /** La etiqueta y, al costado, las reglas que debe cumplir el campo (en letra pequeña). */
 function FieldLabel({ id, label, hint }: { id: string; label: string; hint?: string }) {
   return (
     <div className="field-head">
       <label htmlFor={id}>{label}</label>
       {hint && <span id={`${id}-hint`} className="hint">{hint}</span>}
+    </div>
+  )
+}
+
+/** Una contraseña cumple si tiene 8 caracteres o más, con al menos una letra y un número. */
+export const claveValida = (valor: string) => /^(?=.*\p{L})(?=.*\d).{8,}$/u.test(valor)
+
+/**
+ * Contraseña con un botón para verla y la comprobación del mínimo a la vista: mientras no cumpla,
+ * el aviso aparece en rojo y el navegador no deja enviar el formulario (patrón HTML).
+ */
+export function PasswordField({
+  label,
+  value,
+  onChange,
+  error,
+  required,
+  className,
+}: {
+  label: string
+  value: string
+  onChange: (valor: string) => void
+  error?: string
+  required?: boolean
+  className?: string
+}) {
+  const id = useId()
+  const [visible, setVisible] = useState(false)
+  const falta = value.length > 0 && !claveValida(value)
+  const aviso = t('Mínimo 8 caracteres, con letras y números.')
+
+  return (
+    <div className={`field ${className ?? ''}`}>
+      <div className="field-head">
+        <label htmlFor={id}>{label}</label>
+        <span id={`${id}-hint`} className={falta ? 'error' : 'hint'}>{aviso}</span>
+      </div>
+      <div className="con-boton">
+        <input
+          id={id}
+          className="input"
+          type={visible ? 'text' : 'password'}
+          autoComplete="new-password"
+          required={required}
+          value={value}
+          minLength={8}
+          pattern="(?=.*[\p{L}])(?=.*\d).{8,}"
+          title={aviso}
+          aria-invalid={!!error || falta}
+          aria-describedby={`${id}-hint${error ? ` ${id}-error` : ''}`}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <button type="button" className="btn btn-sm" aria-pressed={visible} onClick={() => setVisible((v) => !v)}>
+          {visible ? t('Ocultar') : t('Ver')}
+        </button>
+      </div>
+      {error && <span id={`${id}-error`} className="error">{error}</span>}
     </div>
   )
 }

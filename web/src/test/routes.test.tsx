@@ -19,9 +19,9 @@ describe('rutas protegidas', () => {
     expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
   })
 
-  it('un recepcionista que escribe /personal a mano ve la pantalla 403', async () => {
+  it('un recepcionista que escribe /usuarios a mano ve la pantalla 403', async () => {
     loginAs(['receptionist'])
-    renderApp(<App />, '/personal')
+    renderApp(<App />, '/usuarios')
     expect(await screen.findByRole('heading', { name: 'No tienes acceso a esta sección' })).toBeInTheDocument()
   })
 
@@ -31,10 +31,16 @@ describe('rutas protegidas', () => {
     expect(await screen.findByText('No tienes acceso a esta sección')).toBeInTheDocument()
   })
 
-  it('el administrador sí entra a personal', async () => {
+  it('el administrador entra a Personal y usuarios', async () => {
     loginAs(['admin'])
-    renderApp(<App />, '/personal')
-    expect(await screen.findByRole('heading', { name: 'Personal' })).toBeInTheDocument()
+    renderApp(<App />, '/usuarios')
+    expect(await screen.findByRole('heading', { name: 'Personal y usuarios' })).toBeInTheDocument()
+  })
+
+  it('el Programador también registra personal desde esa pantalla', async () => {
+    loginAs(['developer'])
+    renderApp(<App />, '/usuarios')
+    expect(await screen.findByRole('button', { name: 'Agregar persona' })).toBeInTheDocument()
   })
 
   it('el menú solo muestra los módulos del rol', async () => {
@@ -42,7 +48,7 @@ describe('rutas protegidas', () => {
     renderApp(<App />, '/inventario')
     expect(await screen.findByRole('link', { name: 'Inventario' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Reservas' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Personal' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Personal y usuarios' })).not.toBeInTheDocument()
   })
 
   it('una ruta inexistente muestra la página 404', async () => {
@@ -52,7 +58,7 @@ describe('rutas protegidas', () => {
 
   it('un módulo pendiente muestra "En construcción"', async () => {
     loginAs(['admin'])
-    renderApp(<App />, '/facturacion')
+    renderApp(<App />, '/en-construccion')
     expect(await screen.findByRole('heading', { name: /está en construcción/ })).toBeInTheDocument()
   })
 

@@ -1,4 +1,4 @@
-import { Field, fieldError } from '../../components/ui'
+import { Field, fieldError, soloLetras } from '../../components/ui'
 import { t } from '../../lib/i18n'
 import type { AuthUser } from '../../types'
 
@@ -43,10 +43,10 @@ export function ProfileFields({
   const optional = required ? undefined : t('Opcional')
   return (
     <>
-      <Field label={t('Nombre completo')} autoComplete="name" required value={form.full_name}
-        onChange={(e) => onChange({ ...form, full_name: e.target.value })} error={fieldError(error, 'full_name')} />
+      <Field label={t('Nombre completo')} autoComplete="name" required maxLength={120} value={form.full_name} hint={t('Solo letras.')}
+        onChange={(e) => onChange({ ...form, full_name: soloLetras(e.target.value) })} error={fieldError(error, 'full_name')} />
       <Field label={t('DNI')} inputMode="numeric" autoComplete="off" required={required} value={form.document_number}
-        placeholder={t('8 dígitos')} hint={optional}
+        placeholder={t('8 dígitos')} hint={optional ?? t('Solo números.')}
         onChange={(e) => onChange({ ...form, document_number: digits(e.target.value, 8) })} error={fieldError(error, 'document_number')} />
       <Field label={t('Celular')} type="tel" inputMode="numeric" autoComplete="tel" required={required} value={form.phone}
         placeholder={t('9 dígitos, empieza con 9')} hint={optional}

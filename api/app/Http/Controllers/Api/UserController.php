@@ -18,7 +18,7 @@ class UserController extends Controller
     public function index(Request $request): JsonResponse
     {
         $users = User::query()
-            ->with('roles:id,name')
+            ->with('roles:id,name', 'staff:id,user_id,hired_at')
             ->when($request->query('role'), fn ($q, $r) => $q->whereHas('roles', fn ($w) => $w->where('name', $r)))
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($w) => $w
                 ->where('name', $this->likeOperator(), $this->like($s))

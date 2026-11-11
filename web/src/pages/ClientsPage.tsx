@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { send } from '../lib/api'
 import { formatNumber } from '../lib/format'
 import { remove, useAction, useServerList } from '../lib/hooks'
-import { DataTable, Field, FormError, Modal, Pagination, SearchInput, SelectField, TitleRow, fieldError, type Column } from '../components/ui'
+import { DataTable, Field, FormError, Modal, Pagination, SearchInput, SelectField, TitleRow, fieldError, soloLetras, soloNumeros, type Column } from '../components/ui'
 import type { Client } from '../types'
 import { t } from '../lib/i18n'
 
@@ -43,15 +43,29 @@ export function ClientsPage() {
 }
 
 export function ClientFields({ form, setForm, error }: { form: ClientFormState; setForm: (f: ClientFormState) => void; error: unknown }) {
-  const set = (key: keyof ClientFormState) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value })
+  const set = (key: keyof ClientFormState, filtro?: (v: string) => string) =>
+    (e: { target: { value: string } }) => setForm({ ...form, [key]: filtro ? filtro(e.target.value) : e.target.value })
+
+  // El DNI y el carné de extranjería son numéricos; el pasaporte lleva letras y números.
+  const documento = {
+    DNI: { filtro: soloNumeros, max: 8, regla: t('Obligatorio. Solo números, 8 dígitos.') },
+    CE: { filtro: soloNumeros, max: 12, regla: t('Obligatorio. Solo números, entre 8 y 12.') },
+    PASAPORTE: { filtro: (v: string) => v.replace(/[^A-Za-z0-9]/g, '').toUpperCase(), max: 20, regla: t('Obligatorio. Letras y números, hasta 20.') },
+  }[form.document_type] ?? { filtro: soloNumeros, max: 8, regla: t('Obligatorio. Solo números, 8 dígitos.') }
+
   return (
     <>
-      <Field className="full" label={t('Nombre completo')} hint={t('Obligatorio. Hasta 120 caracteres.')} required value={form.full_name} onChange={set('full_name')} error={fieldError(error, 'full_name')} />
+      <Field className="full" label={t('Nombre completo')} hint={t('Obligatorio. Solo letras, hasta 120.')} required maxLength={120}
+        value={form.full_name} onChange={set('full_name', soloLetras)} error={fieldError(error, 'full_name')} />
       <SelectField label={t('Tipo de documento')} hint={t('Obligatorio.')} value={form.document_type} onChange={set('document_type')}
         options={[{ value: 'DNI', label: 'DNI' }, { value: 'PASAPORTE', label: t('Pasaporte') }, { value: 'CE', label: t('Carné de extranjería') }]} />
-      <Field label={t('Número de documento')} hint={t('Obligatorio. Hasta 20 caracteres, sin repetir.')} required value={form.document_number} onChange={set('document_number')} error={fieldError(error, 'document_number')} />
-      <Field label={t('Teléfono')} hint={t('Opcional. Hasta 30 caracteres.')} type="tel" value={form.phone} onChange={set('phone')} error={fieldError(error, 'phone')} />
-      <Field label={t('Nacionalidad')} hint={t('Opcional. Hasta 60 caracteres.')} value={form.nationality} onChange={set('nationality')} error={fieldError(error, 'nationality')} />
+      <Field label={t('Número de documento')} hint={documento.regla} required maxLength={documento.max}
+        inputMode={form.document_type === 'PASAPORTE' ? 'text' : 'numeric'}
+        value={form.document_number} onChange={set('document_number', documento.filtro)} error={fieldError(error, 'document_number')} />
+      <Field label={t('Teléfono')} hint={t('Opcional. Solo números, entre 6 y 15.')} type="tel" inputMode="numeric" maxLength={15}
+        value={form.phone} onChange={set('phone', soloNumeros)} error={fieldError(error, 'phone')} />
+      <Field label={t('Nacionalidad')} hint={t('Opcional. Solo letras, hasta 60.')} maxLength={60}
+        value={form.nationality} onChange={set('nationality', soloLetras)} error={fieldError(error, 'nationality')} />
     </>
   )
 }

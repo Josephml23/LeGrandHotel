@@ -164,8 +164,6 @@ export interface InventoryMovement {
 export interface Staff {
   id: number
   user_id: number
-  position: string
-  shift: 'morning' | 'afternoon' | 'night'
   hired_at: string
   user: { id: number; name: string; email: string; roles: { id: number; name: RoleName }[] }
 }
@@ -176,6 +174,8 @@ export interface UserRow {
   email: string
   email_verified_at: string | null
   roles: { id: number; name: RoleName }[]
+  /** Solo en cuentas del personal del hotel: su ficha, con la fecha de ingreso. */
+  staff?: { id: number; hired_at: string } | null
 }
 
 export interface AuditLog {

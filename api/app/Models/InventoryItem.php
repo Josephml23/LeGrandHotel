@@ -11,6 +11,9 @@ class InventoryItem extends Model
 {
     use Auditable, HasFactory;
 
+    /** Unidades en las que se mide el stock. Se elige una al crear el insumo y ya no cambia. */
+    public const UNITS = ['unidad', 'paquete', 'caja', 'juego', 'litro', 'kilogramo'];
+
     protected $fillable = ['name', 'unit', 'stock', 'min_stock'];
 
     protected $attributes = ['stock' => 0, 'min_stock' => 0];

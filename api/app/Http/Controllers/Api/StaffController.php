@@ -22,7 +22,6 @@ class StaffController extends Controller
     {
         $staff = Staff::query()
             ->with('user:id,name,email', 'user.roles:id,name')
-            ->when($request->query('shift'), fn ($q, $v) => $q->where('shift', $v))
             ->when($request->query('search'), fn ($q, $s) => $q->whereHas('user', fn ($u) => $u
                 ->where('name', $this->likeOperator(), $this->like($s))
                 ->orWhere('email', $this->likeOperator(), $this->like($s))))
@@ -45,12 +44,7 @@ class StaffController extends Controller
             ]);
             $user->assignRole($data['role']);
 
-            return Staff::create([
-                'user_id' => $user->id,
-                'position' => $data['position'],
-                'shift' => $data['shift'],
-                'hired_at' => $data['hired_at'],
-            ]);
+            return Staff::create(['user_id' => $user->id, 'hired_at' => $data['hired_at']]);
         });
 
         return ApiResponse::created($staff->load('user.roles'));
@@ -70,7 +64,7 @@ class StaffController extends Controller
         }
 
         DB::transaction(function () use ($data, $staff) {
-            $staff->update(array_intersect_key($data, array_flip(['position', 'shift', 'hired_at'])));
+            $staff->update(array_intersect_key($data, array_flip(['hired_at'])));
             $staff->user->update(array_intersect_key($data, array_flip(['name', 'email', 'password'])));
 
             if (isset($data['role'])) {
