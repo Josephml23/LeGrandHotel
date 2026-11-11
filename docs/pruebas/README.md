@@ -177,6 +177,80 @@ que se toman 6 segundos entre una reserva y otra —lo normal al elegir fechas y
 del 80%: p95 por debajo de 800 ms y 0% de errores. Ninguna reserva se perdió ni se duplicó: el bloqueo por
 habitación (`lockForUpdate`) hizo su trabajo con 50 clientes a la vez.
 
+## Carga del portal y estrés (k6, 2026-11-10) — corridas dentro de Docker
+
+Las tres corridas se hicieron con `tests/k6/dentro.sh`, que ejecuta k6 **dentro de la red de Docker**.
+Hasta hoy las pruebas iban por `localhost:8000` y el proxy de Docker Desktop en Windows rechazaba las
+conexiones con cientos de clientes a la vez (94% de fallos que no eran de la aplicación). Desde dentro
+hay **0 conexiones rechazadas** y los números miden la API de verdad.
+
+Antes de empezar se vació el calendario: había 25.187 reservas de pruebas anteriores en la ventana de
+un año (98,6% de ocupación), así que las reservas nuevas chocaban y el resultado no medía nada.
+Con la ventana libre, las **70 habitaciones alcanzan de sobra**: 5000 reservas de una noche sobre
+365 noches son el 20% de las 25.550 noches-habitación disponibles. No hizo falta crear más.
+
+### A. 100 clientes registrando 1000 reservas
+
+| Métrica | Valor |
+| --- | --- |
+| Tiempo total | **34,9 s** |
+| Reservas creadas | **1000 de 1000** |
+| Errores HTTP | **0,00%** (0 de 1003) |
+| Conexiones rechazadas | 0 |
+| Reservas por segundo | 28,7 |
+| p95 de la reserva | 4,26 s |
+
+### B. 100 clientes registrando 5000 reservas
+
+Las 1000 reservas de la prueba A se borraron antes de empezar, para partir del mismo calendario.
+
+| Métrica | Valor |
+| --- | --- |
+| Tiempo total | **2 min 20 s** |
+| Reservas creadas | **5000 de 5000** |
+| Errores HTTP | **0,00%** (0 de 5003) |
+| Conexiones rechazadas | 0 |
+| Reservas por segundo | 35,6 |
+| p95 de la reserva | 3,29 s |
+
+**Lectura de A y B:** sin pausa entre reservas, 100 clientes a la vez no pierden ni duplican ninguna
+reserva —el bloqueo por habitación (`lockForUpdate`) aguanta— y el sistema sostiene unas **29–36
+reservas por segundo**. Lo que no se cumple es el p95 < 800 ms: con 100 clientes disparando sin
+descanso cada reserva tarda 3–4 s. Es una prueba de saturación, no de uso real; con la pausa de 6 s
+de un cliente que elige fechas, el p95 sí entra en la meta (ver la sección del 25%).
+
+### C. 5000 usuarios entrando en bloques de 100 en un minuto
+
+Perfil `bloques` de `reservas.js`: 50 bloques de 100 usuarios, uno por segundo, hasta 5000, y 10 s de
+bajada. Cada usuario hace lo de recepción: 70% consultas, 20% inicio de sesión, 10% reservas.
+
+| Métrica | Valor |
+| --- | --- |
+| Usuarios alcanzados | 5000 |
+| Duración | 1 min 52 s (60 s de subida + la cola de peticiones colgadas) |
+| Peticiones | 36.878 |
+| **Errores HTTP** | **98,63%** (36.376 de 36.878) |
+| Comprobaciones correctas | 1,16% (410 de 35.337) |
+| p95 | 10 s (el corte de Nginx) |
+| Conexiones rechazadas | 0 |
+
+La API no soporta 5000 usuarios simultáneos en esta laptop, y el resultado dice exactamente por qué:
+el contenedor tiene **20 procesos PHP-FPM**, así que a partir de unos 700 usuarios las peticiones
+esperan más de 10 s y Nginx las corta con 504 (`fastcgi_read_timeout 10s`). El punto de quiebre medido
+antes con 1000 usuarios es el mismo: hasta 600 usuarios 0 errores, desde 700 el 85–100% por bloque.
+
+Cuidado al leer el gráfico de rendimiento: las iteraciones por segundo suben hasta ~570 al final de la
+corrida, pero **son iteraciones que fallan rápido**, no trabajo hecho. El dato real es el 1,16% de
+comprobaciones correctas: con 5000 usuarios encima, la API alcanzó a atender unas 410 operaciones.
+
+**Conclusión:** los 1000 y 5000 usuarios simultáneos no son un problema de código sino de capacidad.
+La corrección es la del plan de AWS: varias instancias EC2 con Auto Scaling detrás del ALB, RDS y
+Redis, y subir `pm.max_children` en cada instancia según su CPU. En una laptop el número que da
+resultados limpios es de 50 a 100 usuarios.
+
+Archivos: `local-100clientes-1000reservas`, `local-100clientes-5000reservas` y
+`local-bloques-5000vu-1min` (`.html` con gráficos aquí, `.json` y `.txt` en `datos/`).
+
 ## Carga y estrés (k6)
 
 Los scripts están en `tests/k6/` (ver su README). Cada corrida genera un HTML con gráficos en esta carpeta:
@@ -184,7 +258,7 @@ Los scripts están en `tests/k6/` (ver su README). Cada corrida genera un HTML c
 | Entrega | Usuarios virtuales | Archivo esperado | Meta | Estado |
 | --- | --- | --- | --- | --- |
 | 25% | 50 → 100 | `carga-25-100vu.html` | p95 < 500 ms, 0% errores | pendiente: requiere el servidor en AWS |
-| 80% | 1000 / 3000 / 5000 | `carga-80-1000vu.html`, `-3000vu`, `-5000vu` | p95 < 800 ms, < 1% errores | local 1000 VU hecha (no cumple, ver abajo); falta AWS |
+| 80% | 1000 / 3000 / 5000 | `carga-80-1000vu.html`, `-3000vu`, `-5000vu` | p95 < 800 ms, < 1% errores | local 1000 y 5000 VU hechas (no cumplen: tope de la laptop, ver arriba); falta AWS |
 | 100% | 10 000 / 25 000 / 50 000 | `estres-*.html`, `pico-*.html`, `resistencia-30min.html` | punto de quiebre y mejora | pendiente |
 
 > Las corridas deben hacerse desde EC2 generadoras en us-east-1, nunca desde la laptop, y con los rate limits
