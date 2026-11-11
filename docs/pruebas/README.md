@@ -229,7 +229,7 @@ bajada. Cada usuario hace lo de recepción: 70% consultas, 20% inicio de sesión
 | Usuarios alcanzados | 5000 |
 | Duración | 1 min 52 s (60 s de subida + la cola de peticiones colgadas) |
 | Peticiones | 36.878 |
-| **Errores HTTP** | **98,63%** (36.376 de 36.878) |
+| **Errores HTTP** | **98,64%** (36.376 de 36.878) |
 | Comprobaciones correctas | 1,16% (410 de 35.337) |
 | p95 | 10 s (el corte de Nginx) |
 | Conexiones rechazadas | 0 |
