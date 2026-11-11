@@ -59,7 +59,7 @@ de medir el sistema. `restaurar.sh` devuelve la API a su configuración normal.
 | Clientes a la vez | Resultado |
 | ---: | --- |
 | 50 | 16,8 reservas/s, 0% de errores. Es el número que da resultados útiles |
-| 500 | Nginx rechaza las conexiones: 94% de fallos y solo 246 reservas de 5000 |
+| 500 | Desde Windows el proxy de Docker Desktop rechaza las conexiones (94% de fallos). Desde dentro de Docker no hay rechazos, pero los 20 procesos PHP-FPM no alcanzan y Nginx corta a los 10 s (504) |
 
 ### 50 clientes registrando 1000 reservas
 
@@ -76,6 +76,28 @@ k6 run -e BASE_URL=http://localhost:8000/api/v1 -e PAUSA=6 tests/k6/clientes-100
 mitad de peticiones y las 1000 salen en ~35 s en vez de ~58 s. Con `BUSCAR=cada-vez` (por defecto) cada cliente
 busca antes de reservar, como en la web.
 Con `PAUSA=0` mide la velocidad máxima; con `PAUSA=6` imita a clientes reales y cumple las metas del 80%.
+
+### Si la prueba da «connection refused»
+
+No es Nginx. En Windows, Docker Desktop publica `localhost:8000` con un proxy propio que aguanta unos
+cientos de conexiones a la vez; con 500 clientes de golpe rechaza la mayoría y la prueba mide ese proxy,
+no la API. Se comprobó: la misma corrida de 500 clientes dio 3661 rechazos por `localhost:8000` y **0**
+desde dentro de la red de Docker.
+
+Para medir la API de verdad, corre k6 dentro de Docker:
+
+```bash
+bash tests/k6/preparar.sh 50
+bash tests/k6/dentro.sh clientes-1000-reservas.js CLIENTES=50 RESERVAS=1000 BUSCAR=una-vez
+bash tests/k6/restaurar.sh
+```
+
+El primer argumento es el script de `tests/k6/`; los demás son variables de k6 (`CLAVE=valor`). `BASE_URL`
+lo pone el script solo (`http://nginx/api/v1`), así que no hay que pasarlo.
+
+Dentro de Docker ya no hay rechazos, pero aparece el tope real de la laptop: 20 procesos PHP-FPM. Con 500
+clientes a la vez las peticiones esperan más de 10 s y Nginx las corta con 504. Para que la prueba termine
+sin errores hay que quedarse en ~50–100 clientes, o subir `pm.max_children` (y la CPU que lo aguante).
 
 ## Cómo correrlas
 
