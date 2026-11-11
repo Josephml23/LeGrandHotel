@@ -27,3 +27,7 @@ tests/k6/.tokens-clientes.json
 
 # Archivos temporales que Word deja al abrir un .docx
 ~$*
+
+# Cachés de Python
+__pycache__/
+*.pyc
