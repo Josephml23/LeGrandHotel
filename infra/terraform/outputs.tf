@@ -32,6 +32,28 @@ output "asg_name" {
   value = aws_autoscaling_group.api.name
 }
 
+output "github_variables" {
+  description = "Variables del repositorio en GitHub (Settings → Secrets and variables → Actions → Variables)."
+  value = {
+    ECR_REPOSITORY_URL         = aws_ecr_repository.api.repository_url
+    WEB_BUCKET                 = aws_s3_bucket.web.bucket
+    BACKUP_BUCKET              = aws_s3_bucket.backups.bucket
+    CLOUDFRONT_DISTRIBUTION_ID = aws_cloudfront_distribution.web.id
+    ASG_NAME                   = aws_autoscaling_group.api.name
+    API_URL                    = "https://${var.api_domain}/api/v1"
+  }
+}
+
+output "google_redirect_uri" {
+  description = "URI de redirección autorizada que hay que registrar en Google Cloud Console (cliente OAuth)."
+  value       = "https://${var.api_domain}/api/v1/auth/google/callback"
+}
+
+output "ssm_prefix" {
+  description = "Prefijo de SSM donde cargar a mano APP_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y DEMO_PASSWORD."
+  value       = "/legrandhotel/${var.environment}/"
+}
+
 output "github_deploy_role_arn" {
   description = "Guárdalo en GitHub como secreto AWS_DEPLOY_ROLE_ARN."
   value       = aws_iam_role.github_deploy.arn

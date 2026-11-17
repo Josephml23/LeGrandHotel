@@ -17,10 +17,14 @@ if aws s3 ls "$LOCK" >/dev/null 2>&1; then
 fi
 echo "$(hostname) ${STAMP}" | aws s3 cp - "$LOCK"
 
+# mysqldump de la imagen oficial mysql:8.4, la misma versión que RDS: el cliente de MariaDB que trae
+# Amazon Linux no entiende --set-gtid-purged ni, según la versión, la autenticación caching_sha2_password.
 # --single-transaction: copia consistente sin bloquear la operación del hotel.
-MYSQL_PWD="$DB_PASSWORD" mysqldump \
+# --no-tablespaces: el usuario de RDS no tiene el privilegio PROCESS que pide volcar tablespaces.
+export MYSQL_PWD="$DB_PASSWORD"
+docker run --rm -e MYSQL_PWD mysql:8.4 mysqldump \
   --host="$DB_HOST" --user="$DB_USERNAME" \
-  --single-transaction --routines --triggers --set-gtid-purged=OFF \
+  --single-transaction --routines --triggers --set-gtid-purged=OFF --no-tablespaces \
   "$DB_DATABASE" | gzip -9 | aws s3 cp - "$TARGET" --sse AES256
 
 echo "Respaldo subido a ${TARGET}"

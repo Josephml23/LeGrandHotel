@@ -3,7 +3,12 @@
 #   4. Instance refresh gradual del ASG (el ALB solo envía tráfico a instancias sanas en /health)
 #   5. Smoke test k6 (20 VU, 1 min) contra producción → si falla, rollback a la imagen anterior
 #   6. Invalidación de CloudFront y aviso al equipo
-# Se activa cuando las variables del repositorio están configuradas (ver infra/README.md).
+# Se activa cuando las variables del repositorio están configuradas (ver infra/README.md):
+#   Secreto:   AWS_DEPLOY_ROLE_ARN (output github_deploy_role_arn)
+#   Variables: ECR_REPOSITORY_URL, WEB_BUCKET, BACKUP_BUCKET, CLOUDFRONT_DISTRIBUTION_ID, ASG_NAME,
+#              API_URL (https://<api_domain>/api/v1) — salen de `terraform output github_variables`;
+#              FIRST_DEPLOY ("true" solo en el primer despliegue) y DISCORD_WEBHOOK_URL (opcional).
+#   Environment "production" con Deployment branches = main: el rol de AWS solo confía en ese environment.
 name: Deploy
 
 on:
@@ -57,10 +62,13 @@ jobs:
         id: previous
         run: |
           PREV=$(aws ssm get-parameter --name /legrandhotel/prod/API_IMAGE --query Parameter.Value --output text 2>/dev/null || echo none)
+          # Terraform deja ":bootstrap" como marcador: esa imagen nunca existió, no sirve para volver atrás.
+          case "$PREV" in *:bootstrap) PREV=none ;; esac
           echo "image=$PREV" >> "$GITHUB_OUTPUT"
 
       # ECR es inmutable: cada versión tiene su propio tag (el SHA del commit) y nunca se sobrescribe.
       - name: Build y push de la API
+        id: push
         run: |
           IMAGE="${{ vars.ECR_REPOSITORY_URL }}:${{ github.sha }}"
           docker build -t "$IMAGE" api
@@ -73,6 +81,7 @@ jobs:
           aws s3 cp infra/docker/nginx/default.conf s3://${{ vars.BACKUP_BUCKET }}/deploy/nginx.conf
           aws s3 cp infra/cloudwatch/amazon-cloudwatch-agent.json s3://${{ vars.BACKUP_BUCKET }}/deploy/amazon-cloudwatch-agent.json
           aws s3 cp infra/scripts/backup-mysql-to-s3.sh s3://${{ vars.BACKUP_BUCKET }}/deploy/backup-mysql-to-s3.sh
+          aws s3 cp infra/scripts/restore-test.sh s3://${{ vars.BACKUP_BUCKET }}/deploy/restore-test.sh
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -90,7 +99,11 @@ jobs:
           aws s3 sync dist "s3://${{ vars.WEB_BUCKET }}" --delete --cache-control "public,max-age=31536000,immutable" --exclude index.html
           aws s3 cp dist/index.html "s3://${{ vars.WEB_BUCKET }}/index.html" --cache-control "no-cache"
 
+      # Primer despliegue (FIRST_DEPLOY=true): el ASG está en 0 instancias porque hasta ahora no había
+      # imagen en ECR. Solo se publica la imagen, la web y los archivos; luego se sube asg_min a 1 con
+      # Terraform, la instancia arranca con esta imagen y se pone FIRST_DEPLOY=false.
       - name: Despliegue gradual (instance refresh)
+        if: vars.FIRST_DEPLOY != 'true'
         run: |
           ID=$(aws autoscaling start-instance-refresh --auto-scaling-group-name "${{ vars.ASG_NAME }}" \
             --preferences '{"MinHealthyPercentage":100,"MaxHealthyPercentage":200,"InstanceWarmup":90,"AutoRollback":true}' \
@@ -109,6 +122,7 @@ jobs:
 
       - name: Smoke test posterior (20 VU, 1 minuto)
         id: smoke
+        if: vars.FIRST_DEPLOY != 'true'
         uses: grafana/run-k6-action@4082a08c7e40cf6d65863911077dfb60ae0a4f04 # v1
         env:
           BASE_URL: ${{ vars.API_URL }}
@@ -116,7 +130,8 @@ jobs:
           path: tests/k6/smoke.js
 
       - name: Rollback a la imagen anterior
-        if: failure() && steps.previous.outputs.image != 'none'
+        # Solo si ya se publicó una imagen nueva: si falló antes (CI, smoke previo, build), producción no cambió.
+        if: failure() && steps.push.outcome == 'success' && steps.previous.outputs.image != 'none'
         env:
           PREVIOUS_IMAGE: ${{ steps.previous.outputs.image }}
         run: |

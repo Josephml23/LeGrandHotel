@@ -1,6 +1,7 @@
 # Producción en cada EC2 del Auto Scaling Group. La BD es RDS y la caché/colas ElastiCache:
 # aquí solo corren Nginx, PHP-FPM, el worker de colas y el scheduler.
-# Las variables se generan en /opt/legrandhotel/.env desde SSM (infra/scripts/load-ssm-env.sh).
+# Las variables se generan en /opt/legrandhotel/.env desde SSM (infra/terraform/user_data.sh.tftpl),
+# que además corre las migraciones y el RoleSeeder con "docker compose run" antes de "up".
 
 x-api: &api
   image: ${API_IMAGE:?define API_IMAGE=<cuenta>.dkr.ecr.us-east-1.amazonaws.com/legrandhotel-api:<tag>}
@@ -34,7 +35,9 @@ services:
 
   worker:
     <<: *api
-    command: php artisan queue:work redis --sleep=1 --tries=3 --max-time=3600
+    # Sin nombre de conexión: usa QUEUE_CONNECTION (redis con ElastiCache, database sin él).
+    # Antes decía "queue:work redis" y, con enable_redis=false, el worker se reiniciaba en bucle.
+    command: php artisan queue:work --sleep=1 --tries=3 --max-time=3600
 
   scheduler:
     <<: *api

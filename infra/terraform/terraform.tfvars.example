@@ -1,11 +1,22 @@
 # Copia a terraform.tfvars (está en .gitignore) y completa.
 api_domain          = "api.legrandhotel.example"
 web_domain          = "app.legrandhotel.example"
-acm_certificate_arn = "arn:aws:acm:us-east-1:000000000000:certificate/xxxxxxxx"
+acm_certificate_arn = "arn:aws:acm:us-east-1:000000000000:certificate/xxxxxxxx" # cubre api_domain y web_domain
 budget_email        = "equipo@example.com"
 
-# Para cuidar créditos en la entrega del 25%: sin Redis ni NAT.
+# Orígenes extra para CORS mientras convivan Render y AWS (la app móvil no lo necesita).
+# extra_frontend_origins = ["https://legrandhotel-web.onrender.com"]
+
+# Para cuidar créditos: sin Redis ni NAT (la caché y las colas van a MySQL).
 enable_redis = false
 enable_nat   = false
-asg_min      = 1
-asg_max      = 3
+
+# Primer apply con asg_min = 0: todavía no hay imagen en ECR. Después del primer despliegue
+# (FIRST_DEPLOY=true en GitHub) cámbialo a 1 y vuelve a aplicar.
+asg_min = 0
+asg_max = 3
+
+# Límites por minuto (los mismos que Render). Súbelos solo durante pruebas de carga.
+# rate_limit_login    = 5
+# rate_limit_register = 3
+# rate_limit_api      = 60

@@ -53,9 +53,23 @@ resource "aws_iam_role_policy" "ec2_app" {
         Resource = "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/legrandhotel/${var.environment}/*"
       },
       {
+        # Respaldo diario (lock + subida) y prueba de restauración (lee el último respaldo).
         Effect   = "Allow"
-        Action   = ["s3:PutObject"]
+        Action   = ["s3:PutObject", "s3:GetObject"]
         Resource = "${aws_s3_bucket.backups.arn}/mysql/*"
+      },
+      {
+        # user_data descarga compose, nginx, CloudWatch y el script de respaldo que publica el pipeline.
+        Effect   = "Allow"
+        Action   = ["s3:GetObject"]
+        Resource = "${aws_s3_bucket.backups.arn}/deploy/*"
+      },
+      {
+        # "aws s3 ls" del lock y del último respaldo.
+        Effect    = "Allow"
+        Action    = ["s3:ListBucket"]
+        Resource  = aws_s3_bucket.backups.arn
+        Condition = { StringLike = { "s3:prefix" = ["mysql/*"] } }
       }
     ]
   })
@@ -181,6 +195,11 @@ resource "aws_autoscaling_group" "api" {
     key                 = "Name"
     value               = "${local.name}-api"
     propagate_at_launch = true
+  }
+
+  # La capacidad deseada la mueve la política de CPU; un apply posterior no debe devolverla a asg_min.
+  lifecycle {
+    ignore_changes = [desired_capacity]
   }
 }
 

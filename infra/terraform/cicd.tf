@@ -14,9 +14,14 @@ resource "aws_iam_role" "github_deploy" {
       Principal = { Federated = aws_iam_openid_connect_provider.github.arn }
       Action    = "sts:AssumeRoleWithWebIdentity"
       Condition = {
-        StringEquals = { "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com" }
-        # Solo la rama main del repositorio puede desplegar.
-        StringLike = { "token.actions.githubusercontent.com:sub" = "repo:${var.github_repository}:ref:refs/heads/main" }
+        # El job de deploy.yml declara `environment: production`, y entonces GitHub firma el token con
+        # sub = repo:<owner>/<repo>:environment:production (ya no lleva la rama). Con la condición anterior
+        # (ref:refs/heads/main) AWS rechazaba el AssumeRole. Que solo main despliegue se asegura en GitHub:
+        # Settings → Environments → production → Deployment branches: solo main.
+        StringEquals = {
+          "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repository}:environment:production"
+        }
       }
     }]
   })
@@ -42,7 +47,8 @@ resource "aws_iam_role_policy" "github_deploy" {
         Action   = ["autoscaling:StartInstanceRefresh", "autoscaling:DescribeInstanceRefreshes", "autoscaling:CancelInstanceRefresh", "autoscaling:RollbackInstanceRefresh"]
         Resource = "*"
       },
-      { Effect = "Allow", Action = ["ssm:PutParameter"], Resource = "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/legrandhotel/${var.environment}/API_IMAGE" }
+      # GetParameter: el paso "Imagen actual (para rollback)" lee la imagen vigente; sin él siempre daba "none".
+      { Effect = "Allow", Action = ["ssm:GetParameter", "ssm:PutParameter"], Resource ="arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/legrandhotel/${var.environment}/API_IMAGE" }
     ]
   })
 }

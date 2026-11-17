@@ -1,8 +1,10 @@
 #!/bin/bash
 # Arranque de cada EC2 del Auto Scaling Group (Amazon Linux 2023).
+# Es una plantilla de Terraform: las variables de bash con llaves se escriben con "$$" para que Terraform
+# no intente reemplazarlas; region, environment y ecr_registry sí las reemplaza Terraform.
 set -euo pipefail
 
-dnf install -y docker amazon-cloudwatch-agent mariadb105 cronie
+dnf install -y docker amazon-cloudwatch-agent cronie
 systemctl enable --now docker crond
 mkdir -p /usr/local/lib/docker/cli-plugins
 curl -fsSL "https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-x86_64" -o /usr/local/lib/docker/cli-plugins/docker-compose
@@ -12,27 +14,62 @@ mkdir -p /opt/legrandhotel/nginx
 cd /opt/legrandhotel
 
 # Variables y secretos desde SSM Parameter Store (nunca en el repositorio).
+# Cada valor va entre comillas simples: así Compose (env_file e interpolación) y bash (los scripts de
+# respaldo hacen "source" del archivo) lo toman literal aunque traiga $, #, espacios o =.
 aws ssm get-parameters-by-path --region ${region} --path "/legrandhotel/${environment}/" --with-decryption \
   --query "Parameters[*].[Name,Value]" --output text \
-  | while IFS=$'\t' read -r name value; do echo "$${name##*/}=$${value}"; done > .env
+  | while IFS=$'\t' read -r name value; do
+      if [[ "$value" == *"'"* ]]; then
+        echo "ERROR: el parámetro $name contiene una comilla simple; cámbialo en SSM." >&2
+        exit 1
+      fi
+      echo "$${name##*/}='$${value}'"
+    done > .env
 chmod 600 .env
+
+envget() { grep -m1 "^$1=" .env | cut -d= -f2- | sed "s/^'//; s/'\$//"; }
+
+for required in APP_KEY DB_PASSWORD API_IMAGE BACKUP_BUCKET; do
+  if [ -z "$(envget "$required")" ]; then
+    echo "ERROR: falta /legrandhotel/${environment}/$required en SSM." >&2
+    exit 1
+  fi
+done
 
 aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${ecr_registry}
 
 # Archivos de compose y nginx publicados por el pipeline en el bucket de respaldos (prefijo deploy/).
-BUCKET=$(grep '^BACKUP_BUCKET=' .env | cut -d= -f2)
+BUCKET=$(envget BACKUP_BUCKET)
 aws s3 cp "s3://$BUCKET/deploy/docker-compose.prod.yml" docker-compose.yml
 aws s3 cp "s3://$BUCKET/deploy/nginx.conf" nginx/default.conf
 aws s3 cp "s3://$BUCKET/deploy/amazon-cloudwatch-agent.json" /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 aws s3 cp "s3://$BUCKET/deploy/backup-mysql-to-s3.sh" /usr/local/bin/legrandhotel-backup && chmod +x /usr/local/bin/legrandhotel-backup
+aws s3 cp "s3://$BUCKET/deploy/restore-test.sh" /usr/local/bin/legrandhotel-restore-test && chmod +x /usr/local/bin/legrandhotel-restore-test
 
 /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s \
   -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
-# La imagen a usar vive en SSM (/legrandhotel/<env>/API_IMAGE) y ya está en .env.
-export API_IMAGE=$(grep '^API_IMAGE=' .env | cut -d= -f2-)
+# La imagen a usar vive en SSM (/legrandhotel/<env>/API_IMAGE) y ya está en .env
+# (Compose también la lee de ahí para interpolar API_IMAGE en docker-compose.yml).
+export API_IMAGE=$(envget API_IMAGE)
 docker compose pull
-RUN_MIGRATIONS=true docker compose up -d
+
+# Migraciones y roles ANTES de recibir tráfico, en un contenedor desechable. RoleSeeder es idempotente
+# (updateOrCreate) y sin él no existen los roles admin/receptionist/storekeeper/developer en una BD nueva.
+docker compose run --rm --no-deps app php artisan migrate --force
+docker compose run --rm --no-deps app php artisan db:seed --class=RoleSeeder --force
+
+# Cuentas y datos de demostración solo si se pide (RUN_SEED=true) y hay DEMO_PASSWORD propio: sin él, el
+# DemoSeeder usaría la contraseña por defecto que está escrita en el repositorio.
+if [ "$(envget RUN_SEED)" = "true" ]; then
+  if [ -n "$(envget DEMO_PASSWORD)" ]; then
+    docker compose run --rm --no-deps app php artisan db:seed --force
+  else
+    echo "AVISO: RUN_SEED=true pero falta DEMO_PASSWORD en SSM; no se siembran las cuentas de demostración." >&2
+  fi
+fi
+
+docker compose up -d
 
 # Respaldo diario a S3 a las 03:30 hora de Lima (08:30 UTC). Solo una instancia lo hace gracias al lock en S3.
 echo "30 8 * * * root /usr/local/bin/legrandhotel-backup >> /var/log/legrandhotel-backup.log 2>&1" > /etc/cron.d/legrandhotel-backup

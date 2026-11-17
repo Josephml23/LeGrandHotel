@@ -12,6 +12,8 @@ LATEST=$(aws s3 ls "s3://${BACKUP_BUCKET}/mysql/" --recursive | grep '\.sql\.gz$
 echo "Restaurando s3://${BACKUP_BUCKET}/${LATEST} en ${TEMP_DB}"
 
 export MYSQL_PWD="$DB_PASSWORD"
+# Cliente oficial mysql:8.4 (misma versión que RDS) en vez del de MariaDB del sistema.
+mysql() { docker run --rm -i -e MYSQL_PWD mysql:8.4 mysql "$@"; }
 mysql -h "$DB_HOST" -u "$DB_USERNAME" -e "DROP DATABASE IF EXISTS ${TEMP_DB}; CREATE DATABASE ${TEMP_DB};"
 aws s3 cp "s3://${BACKUP_BUCKET}/${LATEST}" - | gunzip | mysql -h "$DB_HOST" -u "$DB_USERNAME" "$TEMP_DB"
 

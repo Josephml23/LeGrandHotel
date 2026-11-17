@@ -1,4 +1,7 @@
-# ── RDS MySQL 8 en subred privada, cifrada, con snapshots automáticos de 7 días ──
+# ── RDS MySQL 8.4 en subred privada, cifrada, con snapshots automáticos de 7 días ──
+# 8.4 (LTS) y no 8.0: el soporte estándar de 8.0 en RDS terminó en julio de 2026 y desde entonces
+# AWS cobra "Extended Support" por vCPU-hora (más que la propia db.t3.micro). Además es la misma
+# versión que usa docker-compose.yml en local (mysql:8.4).
 resource "random_password" "db" {
   length  = 32
   special = false
@@ -10,8 +13,8 @@ resource "aws_db_subnet_group" "main" {
 }
 
 resource "aws_db_parameter_group" "mysql" {
-  name   = "${local.name}-mysql8"
-  family = "mysql8.0"
+  name   = "${local.name}-mysql84"
+  family = "mysql8.4"
 
   parameter {
     name  = "slow_query_log"
@@ -26,8 +29,10 @@ resource "aws_db_parameter_group" "mysql" {
 resource "aws_db_instance" "main" {
   identifier                      = "${local.name}-mysql"
   engine                          = "mysql"
-  engine_version                  = "8.0"
+  engine_version                  = "8.4"
   instance_class                  = var.db_instance_class
+  # Nunca pasar solo a Extended Support (cobra aparte) cuando la versión deje de tener soporte estándar.
+  engine_lifecycle_support        = "open-source-rds-extended-support-disabled"
   allocated_storage               = 20
   max_allocated_storage           = 50
   storage_type                    = "gp3"
@@ -112,29 +117,68 @@ resource "aws_s3_bucket_lifecycle_configuration" "backups" {
 }
 
 # ── Secretos y variables de producción en SSM Parameter Store ──
+# Las mismas variables que Render (render.yaml) y api/.env.example, adaptadas a AWS. Las que la API lee
+# con env() en api/config/ y no aparecen aquí usan su valor por defecto, que sirve para producción.
+locals {
+  # FRONTEND_URL: el primero es la web oficial (a ella vuelve el login con Google, App\Support\Frontend);
+  # los demás solo se agregan a CORS (p. ej. la web de Render mientras dura la migración).
+  # La app móvil (Flutter, Android/iOS) NO necesita CORS: no es un navegador y no envía Origin.
+  frontend_origins = join(",", concat(["https://${var.web_domain}"], var.extra_frontend_origins))
+
+  ssm_env = merge(tomap({
+    APP_NAME            = "LeGrandHotel"
+    APP_ENV             = "production"
+    APP_DEBUG           = "false"
+    APP_URL             = "https://${var.api_domain}"
+    APP_LOCALE          = "es" # sin esto config/app.php cae en "en"
+    APP_FALLBACK_LOCALE = "en"
+    APP_TIMEZONE        = "America/Lima"
+    # config/hotel.php muestra la plataforma en la vista del Programador: AWS si existe esta variable.
+    AWS_EXECUTION_ENV   = "AWS_EC2_legrandhotel"
+    FRONTEND_URL        = local.frontend_origins
+    LOG_CHANNEL         = "stack"
+    LOG_STACK           = "json"
+    LOG_REQUEST_CHANNEL = "json"
+    LOG_LEVEL           = "info"
+    LOG_JSON_STREAM     = "/var/www/html/storage/logs/laravel.json"
+    DB_CONNECTION       = "mysql"
+    DB_HOST             = aws_db_instance.main.address
+    DB_PORT             = "3306"
+    DB_DATABASE         = "legrandhotel"
+    DB_USERNAME         = "legrandhotel"
+    DB_TIMEOUT          = "3"
+    # Sin Redis la caché va a la BD (tablas cache y cache_locks) y no a archivo: así el bloqueo de login
+    # tras 3 intentos y los límites por minuto se comparten entre las instancias del ASG.
+    CACHE_STORE         = var.enable_redis ? "redis" : "database"
+    QUEUE_CONNECTION    = var.enable_redis ? "redis" : "database"
+    SESSION_DRIVER      = "array" # API sin sesiones (tokens de Sanctum)
+    MAIL_MAILER         = "log"
+    SANCTUM_EXPIRATION  = "60"
+    BCRYPT_ROUNDS       = "12"
+    RATE_LIMIT_LOGIN    = tostring(var.rate_limit_login)
+    RATE_LIMIT_REGISTER = tostring(var.rate_limit_register)
+    RATE_LIMIT_API      = tostring(var.rate_limit_api)
+    BACKUP_BUCKET       = aws_s3_bucket.backups.bucket
+    }),
+    # SSM no acepta valores vacíos: REDIS_HOST solo existe si hay Redis.
+    var.enable_redis ? tomap({ REDIS_HOST = aws_elasticache_cluster.redis[0].cache_nodes[0].address }) : tomap({})
+  )
+}
+
 resource "aws_ssm_parameter" "env" {
-  for_each = {
-    APP_ENV           = "production"
-    APP_DEBUG         = "false"
-    APP_URL           = "https://${var.api_domain}"
-    FRONTEND_URL      = "https://${var.web_domain}"
-    LOG_CHANNEL       = "stack"
-    LOG_STACK         = "json"
-    LOG_JSON_STREAM   = "/var/www/html/storage/logs/laravel.json"
-    DB_CONNECTION     = "mysql"
-    DB_HOST           = aws_db_instance.main.address
-    DB_PORT           = "3306"
-    DB_DATABASE       = "legrandhotel"
-    DB_USERNAME       = "legrandhotel"
-    CACHE_STORE       = var.enable_redis ? "redis" : "file"
-    QUEUE_CONNECTION  = var.enable_redis ? "redis" : "database"
-    REDIS_HOST        = var.enable_redis ? aws_elasticache_cluster.redis[0].cache_nodes[0].address : ""
-    SANCTUM_EXPIRATION = "60"
-    BACKUP_BUCKET     = aws_s3_bucket.backups.bucket
-  }
-  name  = "/legrandhotel/${var.environment}/${each.key}"
+  for_each = local.ssm_env
+  name     = "/legrandhotel/${var.environment}/${each.key}"
+  type     = "String"
+  value    = each.value
+}
+
+# Sembrar las cuentas y datos de demostración (DemoSeeder) al arrancar una instancia. Se cambia a mano,
+# como en Render: "true", instance refresh, y de vuelta a "false". Terraform no pisa el valor.
+resource "aws_ssm_parameter" "run_seed" {
+  name  = "/legrandhotel/${var.environment}/RUN_SEED"
   type  = "String"
-  value = each.value
+  value = "false"
+  lifecycle { ignore_changes = [value] }
 }
 
 # Imagen que arrancan las instancias. El pipeline la actualiza en cada despliegue (y en el rollback).
@@ -151,7 +195,11 @@ resource "aws_ssm_parameter" "db_password" {
   value = random_password.db.result
 }
 
-# APP_KEY y GOOGLE_CLIENT_SECRET se cargan a mano (no quedan en el estado de Terraform):
+# Secretos que se cargan a mano (no quedan en el estado de Terraform). Sin APP_KEY la API no arranca.
+# Ningún valor puede llevar comilla simple (') : user_data los escribe entre comillas simples en .env.
 #   aws ssm put-parameter --name /legrandhotel/prod/APP_KEY --type SecureString --value "base64:..."
 #   aws ssm put-parameter --name /legrandhotel/prod/GOOGLE_CLIENT_ID --type String --value "..."
 #   aws ssm put-parameter --name /legrandhotel/prod/GOOGLE_CLIENT_SECRET --type SecureString --value "..."
+#   aws ssm put-parameter --name /legrandhotel/prod/DEMO_PASSWORD --type SecureString --value "..."
+# DEMO_PASSWORD solo hace falta para sembrar las cuentas de demostración (RUN_SEED=true). Si falta,
+# user_data NO siembra: el DemoSeeder usaría la contraseña por defecto, que está publicada en el repositorio.

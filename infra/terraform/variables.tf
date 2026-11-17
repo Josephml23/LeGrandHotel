@@ -23,6 +23,30 @@ variable "web_domain" {
   type        = string
 }
 
+variable "extra_frontend_origins" {
+  description = "Otros orígenes web permitidos por CORS (p. ej. https://legrandhotel-web.onrender.com durante la migración). La app móvil no lo necesita."
+  type        = list(string)
+  default     = []
+}
+
+variable "rate_limit_login" {
+  description = "Intentos de login por minuto por correo+IP (RATE_LIMIT_LOGIN)."
+  type        = number
+  default     = 5
+}
+
+variable "rate_limit_register" {
+  description = "Registros de personal por minuto (RATE_LIMIT_REGISTER)."
+  type        = number
+  default     = 3
+}
+
+variable "rate_limit_api" {
+  description = "Peticiones autenticadas por minuto por usuario (RATE_LIMIT_API). Súbelo solo durante pruebas de carga."
+  type        = number
+  default     = 60
+}
+
 variable "acm_certificate_arn" {
   description = "Certificado ACM (us-east-1) que cubre api_domain y web_domain."
   type        = string
@@ -34,8 +58,9 @@ variable "instance_type" {
 }
 
 variable "asg_min" {
-  type    = number
-  default = 1
+  description = "Mínimo de instancias. En el primer apply usa 0: la imagen aún no está en ECR y la instancia no podría arrancar."
+  type        = number
+  default     = 1
 }
 
 variable "asg_max" {
